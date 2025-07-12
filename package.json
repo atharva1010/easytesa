@@ -1,0 +1,37 @@
+{
+  "name": "bab-system",
+  "version": "1.0.0",
+  "description": "BALAJI ACTION BUILDEWELL PRIVATE LIMITED Admin & Dashboard Portal",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "nodemon server.js",
+    "preinstall": "npm install -g node-gyp"
+  },
+  "author": "Your Name",
+  "license": "MIT",
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "cors": "^2.8.5",
+    "dotenv": "^16.6.1",
+    "exceljs": "^4.3.0",
+    "express": "^4.21.2",
+    "jsonwebtoken": "^9.0.2",
+    "mongoose": "^7.8.7",
+    "multer": "^1.4.5-lts.1",
+    "socket.io": "^4.8.1",
+    "twilio": "^5.7.1"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/atharva1010/easytesa.git"
+  },
+  "keywords": [],
+  "bugs": {
+    "url": "https://github.com/atharva1010/easytesa/issues"
+  },
+  "homepage": "https://github.com/atharva1010/easytesa#readme"
+}
