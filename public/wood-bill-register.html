@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>WOOD BILL SUBMIT REGISTER</title>
+  <style>
+    * {
+      text-transform: uppercase;
+    }
+    body {
+      background-color: #0f2027;
+      color: #00ffe7;
+      font-family: 'Segoe UI', sans-serif;
+      padding: 20px;
+    }
+    h2 {
+      text-align: center;
+      text-shadow: 0 0 5px #00ffe7;
+    }
+    button {
+      padding: 8px 16px;
+      margin: 10px 5px;
+      border: 1px solid #00ffe7;
+      background: transparent;
+      color: #00ffe7;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    table {
+      width: 100%;
+      margin-top: 20px;
+      border-collapse: collapse;
+      box-shadow: 0 0 10px #00ffe7;
+    }
+    th, td {
+      padding: 10px;
+      border: 1px solid #00ffe7;
+      text-align: center;
+    }
+    input, select {
+      width: 100%;
+      background: #111;
+      color: #00ffe7;
+      border: 1px solid #00ffe7;
+      padding: 5px;
+      border-radius: 4px;
+    }
+    #filters {
+      display: none;
+      margin-top: 10px;
+    }
+    #filters input, #filters select {
+      width: auto;
+      margin: 5px;
+    }
+    .readonly input, .readonly select {
+      pointer-events: none;
+      background: #1c1c1c;
+    }
+  </style>
+</head>
+<body onload="initPage()">
+
+  <h2>WOOD BILL SUBMIT REGISTER</h2>
+
+  <button onclick="showFill()">FILL REPORT</button>
+  <button id="addRowBtn" onclick="addRow()">ADD ROW</button>
+  <button onclick="showView()">VIEW REPORT</button>
+
+  <!-- Filters -->
+  <div id="filters">
+    <input type="date" id="startDate">
+    <input type="date" id="endDate">
+    <select id="receiverFilter">
+      <option value="">Filter Receiver</option>
+    </select>
+    <select id="submittedByFilter">
+      <option value="">Filter Submitted By</option>
+    </select>
+    <input type="text" id="searchBox" placeholder="Search...">
+    <button onclick="filterView()">Search</button>
+  </div>
+
+  <!-- Fill Table -->
+  <div id="fillTableSection">
+    <table id="fillTable">
+      <thead>
+        <tr>
+          <th>S.NO</th>
+          <th>SAP DATE</th>
+          <th>BILL SUBMIT DATE</th>
+          <th>QUANTITY</th>
+          <th>SUBMIT TIME</th>
+          <th>RECEIVER NAME</th>
+          <th>SUBMITTED BY</th>
+          <th>PLANT</th>
+          <th>ACTIONS</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
+
+  <!-- View Table -->
+  <div id="viewSection" style="display: none;">
+    <table id="viewTable">
+      <thead>
+        <tr>
+          <th>S.NO</th>
+          <th>SAP DATE</th>
+          <th>BILL SUBMIT DATE</th>
+          <th>QUANTITY</th>
+          <th>SUBMIT TIME</th>
+          <th>RECEIVER NAME</th>
+          <th>SUBMITTED BY</th>
+          <th>PLANT</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
+
+<script>
+  let currentUser = (localStorage.getItem("username") || "unknown").toUpperCase();
+  let unsavedRowExists = false;
+
+  document.addEventListener("DOMContentLoaded", initPage);
+
+  function initPage() {
+    showFill();
+    loadSavedData();
+    document.getElementById("searchBox").addEventListener("input", filterView);
+    document.getElementById("startDate").addEventListener("change", filterView);
+    document.getElementById("endDate").addEventListener("change", filterView);
+    document.getElementById("receiverFilter").addEventListener("change", filterView);
+    document.getElementById("submittedByFilter").addEventListener("change", filterView);
+  }
+
+  function showFill() {
+    document.getElementById("fillTableSection").style.display = "block";
+    document.getElementById("viewSection").style.display = "none";
+    document.getElementById("filters").style.display = "none";
+    document.getElementById("addRowBtn").style.display = "inline-block";
+  }
+
+  function showView() {
+    document.getElementById("fillTableSection").style.display = "none";
+    document.getElementById("viewSection").style.display = "block";
+    document.getElementById("filters").style.display = "block";
+    document.getElementById("addRowBtn").style.display = "none";
+    loadViewData();
+  }
+
+  function addRow() {
+  if (unsavedRowExists) {
+    alert("Please save the current row before adding a new one.");
+    return;
+  }
+
+  const tbody = document.querySelector("#fillTable tbody");
+  const row = document.createElement("tr");
+  row.innerHTML = `
+    <td class="status">📝</td>
+    <td><input type="date"></td>
+    <td><input type="date"></td>
+    <td><input type="number" min="1"></td>
+    <td><input type="time"></td>
+    <td><input type="text"></td>
+    <td><input type="text" value="${currentUser}" disabled></td>
+    <td>
+      <select>
+        <option value="">Select</option>
+        <option value="C34A">C34A</option>
+        <option value="C2">C2</option>
+        <option value="C3">C3</option>
+      </select>
+    </td>
+    <td><button onclick="saveRow(this)">Save</button></td>
+  `;
+  tbody.prepend(row); // 👈 Add to top instead of bottom
+  unsavedRowExists = true;
+}
+
+
+  async function saveRow(btn) {
+    const row = btn.closest("tr");
+    const inputs = row.querySelectorAll("input, select");
+
+    const data = {
+      sapDate: inputs[0].value,
+      billDate: inputs[1].value,
+      quantity: inputs[2].value,
+      submitTime: inputs[3].value,
+      receiverName: inputs[4].value.toUpperCase(),
+      submittedBy: currentUser,
+      plant: inputs[6].value.toUpperCase()
+    };
+
+    if (!data.sapDate || !data.billDate || !data.quantity || !data.submitTime || !data.receiverName || !data.plant) {
+      alert("Please fill all fields.");
+      return;
+    }
+
+    const res = await fetch("/api/wood-bill", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data)
+    });
+
+    const result = await res.json();
+    if (result.success) {
+      row.innerHTML = `
+        <td class="status">✅</td>
+        <td>${data.sapDate}</td>
+        <td>${data.billDate}</td>
+        <td>${data.quantity}</td>
+        <td>${data.submitTime}</td>
+        <td>${data.receiverName}</td>
+        <td>${data.submittedBy}</td>
+        <td>${data.plant}</td>
+        <td><button onclick="editRow(this)" data-id="${result.id}">Edit</button></td>
+      `;
+      unsavedRowExists = false;
+    } else {
+      alert("Save failed.");
+    }
+  }
+
+  async function loadSavedData() {
+    const res = await fetch("/api/wood-bill");
+    const rows = await res.json();
+    const tbody = document.querySelector("#fillTable tbody");
+    tbody.innerHTML = "";
+
+    rows.forEach((d) => {
+      tbody.innerHTML += `
+        <tr>
+          <td class="status">✅</td>
+          <td>${d.sapDate}</td>
+          <td>${d.billDate}</td>
+          <td>${d.quantity}</td>
+          <td>${d.submitTime}</td>
+          <td>${d.receiverName}</td>
+          <td>${d.submittedBy}</td>
+          <td>${d.plant}</td>
+          <td>
+            ${d.submittedBy === currentUser
+              ? `<button onclick="editRow(this)" data-id="${d._id}">Edit</button>`
+              : `<span style="color:gray;">Locked</span>`}
+          </td>
+        </tr>
+      `;
+    });
+  }
+
+  function editRow(btn) {
+    const row = btn.closest("tr");
+    const submittedBy = row.children[6].textContent;
+    const id = btn.dataset.id;
+
+    if (submittedBy !== currentUser) {
+      alert("You can only edit your own rows.");
+      return;
+    }
+
+    const data = {
+      sapDate: row.children[1].textContent,
+      billDate: row.children[2].textContent,
+      quantity: row.children[3].textContent,
+      submitTime: row.children[4].textContent,
+      receiverName: row.children[5].textContent,
+      plant: row.children[7].textContent,
+    };
+
+    row.innerHTML = `
+      <td class="status">📝</td>
+      <td><input type="date" value="${data.sapDate}"></td>
+      <td><input type="date" value="${data.billDate}"></td>
+      <td><input type="number" value="${data.quantity}"></td>
+      <td><input type="time" value="${data.submitTime}"></td>
+      <td><input type="text" value="${data.receiverName}"></td>
+      <td><input type="text" value="${currentUser}" disabled></td>
+      <td>
+        <select>
+          <option ${data.plant === "C34A" ? "selected" : ""}>C34A</option>
+          <option ${data.plant === "C2" ? "selected" : ""}>C2</option>
+          <option ${data.plant === "C3" ? "selected" : ""}>C3</option>
+        </select>
+      </td>
+      <td><button onclick="updateRow(this, '${id}')">Update</button></td>
+    `;
+  }
+
+  async function updateRow(btn, id) {
+    const row = btn.closest("tr");
+    const inputs = row.querySelectorAll("input, select");
+
+    const data = {
+      sapDate: inputs[0].value,
+      billDate: inputs[1].value,
+      quantity: inputs[2].value,
+      submitTime: inputs[3].value,
+      receiverName: inputs[4].value.toUpperCase(),
+      submittedBy: currentUser,
+      plant: inputs[6].value.toUpperCase()
+    };
+
+    const res = await fetch(`/api/wood-bill/${id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data)
+    });
+
+    const result = await res.json();
+    if (result.success) {
+      loadSavedData();
+    } else {
+      alert("Update failed");
+    }
+  }
+
+  async function loadViewData() {
+    const res = await fetch("/api/wood-bill");
+    const rows = await res.json();
+    const tbody = document.querySelector("#viewTable tbody");
+    tbody.innerHTML = "";
+
+    const receivers = new Set();
+    const submitters = new Set();
+
+    rows.forEach((d, i) => {
+      tbody.innerHTML += `
+        <tr>
+          <td>${i + 1}</td>
+          <td>${d.sapDate}</td>
+          <td>${d.billDate}</td>
+          <td>${d.quantity}</td>
+          <td>${d.submitTime}</td>
+          <td>${d.receiverName}</td>
+          <td>${d.submittedBy}</td>
+          <td>${d.plant}</td>
+        </tr>
+      `;
+      if (d.receiverName) receivers.add(d.receiverName);
+      if (d.submittedBy) submitters.add(d.submittedBy);
+    });
+
+    document.getElementById("receiverFilter").innerHTML =
+      `<option value="">Receiver</option>` +
+      [...receivers].map(r => `<option value="${r}">${r}</option>`).join("");
+
+    document.getElementById("submittedByFilter").innerHTML =
+      `<option value="">Submitted By</option>` +
+      [...submitters].map(s => `<option value="${s}">${s}</option>`).join("");
+  }
+
+  function filterView() {
+    const startDate = document.getElementById("startDate").value;
+    const endDate = document.getElementById("endDate").value;
+    const receiver = document.getElementById("receiverFilter").value.toLowerCase();
+    const submittedBy = document.getElementById("submittedByFilter").value.toLowerCase();
+    const searchText = document.getElementById("searchBox").value.toLowerCase();
+
+    fetch("/api/wood-bill")
+      .then(res => res.json())
+      .then(data => {
+        const filtered = data.filter(d => {
+          const inDateRange =
+            (!startDate || new Date(d.sapDate) >= new Date(startDate)) &&
+            (!endDate || new Date(d.sapDate) <= new Date(endDate));
+          const matchesReceiver = !receiver || d.receiverName?.toLowerCase().includes(receiver);
+          const matchesSubmitter = !submittedBy || d.submittedBy?.toLowerCase().includes(submittedBy);
+          const matchesSearch = !searchText || Object.values(d).some(val => String(val).toLowerCase().includes(searchText));
+          return inDateRange && matchesReceiver && matchesSubmitter && matchesSearch;
+        });
+
+        const tbody = document.querySelector("#viewTable tbody");
+        tbody.innerHTML = "";
+        filtered.forEach((d, i) => {
+          tbody.innerHTML += `
+            <tr>
+              <td>${i + 1}</td>
+              <td>${d.sapDate}</td>
+              <td>${d.billDate}</td>
+              <td>${d.quantity}</td>
+              <td>${d.submitTime}</td>
+              <td>${d.receiverName}</td>
+              <td>${d.submittedBy}</td>
+              <td>${d.plant}</td>
+            </tr>
+          `;
+        });
+      });
+  }
+</script>
+
+
+</body>
+</html>

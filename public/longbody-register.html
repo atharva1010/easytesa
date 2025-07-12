@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>LONG BODY WEIGHT REGISTER</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <style>
+    body {
+      background-color: #0f2027;
+      color: #00ffe7;
+      font-family: 'Segoe UI', sans-serif;
+      padding: 20px;
+    }
+    h2 {
+      text-align: center;
+      text-shadow: 0 0 5px #00ffe7;
+    }
+    button {
+      padding: 8px 16px;
+      margin: 10px 5px;
+      border: 1px solid #00ffe7;
+      background: transparent;
+      color: #00ffe7;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    table {
+      width: 100%;
+      margin-top: 20px;
+      border-collapse: collapse;
+      box-shadow: 0 0 10px #00ffe7;
+    }
+    th, td {
+      padding: 10px;
+      border: 1px solid #00ffe7;
+      text-align: center;
+      text-transform: uppercase;
+    }
+    input, select {
+      width: 100%;
+      background: #111;
+      color: #00ffe7;
+      border: 1px solid #00ffe7;
+      padding: 5px;
+      border-radius: 4px;
+      text-transform: uppercase;
+    }
+    #filters {
+      display: none;
+      margin-top: 10px;
+    }
+    #filters input, #filters select {
+      width: auto;
+      margin: 5px;
+    }
+  </style>
+</head>
+<body>
+  <h2>LONG BODY WEIGHT REGISTER</h2>
+
+  <button onclick="showFill()">FILL REPORT</button>
+  <button onclick="showView()">VIEW REPORT</button>
+  <button id="addRowBtn" onclick="addRow()">ADD ROW</button>
+  <button id="exportBtn" onclick="exportToExcel()" style="display:none;">EXPORT</button>
+
+  <div id="filters">
+  <input type="date" id="startDate">
+  <input type="date" id="endDate">
+  <select id="nameFilter">
+    <option value="">Submitted By</option>
+  </select>
+  <input type="text" id="searchText" placeholder="Search..." />
+  <button onclick="filterView()">Search</button>
+</div>
+
+
+  <div id="fillSection">
+    <table id="fillTable">
+      <thead>
+        <tr>
+          <th>STATUS</th>
+          <th>DATE</th>
+          <th>VEHICLE NO.</th>
+          <th>MATERIAL NAME</th>
+          <th>OUTSIDE WEIGHT</th>
+          <th>80 MT OLD</th>
+          <th>80 MT NEW</th>
+          <th>DIFFERENCE (OLD - NEW)</th>
+          <th>NAME</th>
+          <th>ACTIONS</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
+
+  <div id="viewSection" style="display:none;">
+    <table id="viewTable">
+      <thead>
+        <tr>
+          <th>S.NO</th>
+          <th>DATE</th>
+          <th>VEHICLE NO.</th>
+          <th>MATERIAL NAME</th>
+          <th>OUTSIDE WEIGHT</th>
+          <th>80 MT OLD</th>
+          <th>80 MT NEW</th>
+          <th>DIFFRENCE OLD-NEW	</th>
+          <th>NAME</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
+
+<script>
+  let serial = 1;
+
+  function showFill() {
+    document.getElementById("fillSection").style.display = "block";
+    document.getElementById("viewSection").style.display = "none";
+    document.getElementById("filters").style.display = "none";
+    document.getElementById("exportBtn").style.display = "none";
+    document.getElementById("addRowBtn").style.display = "inline-block";
+    loadFillTable();
+  }
+
+  async function loadFillTable() {
+    const username = localStorage.getItem("username") || "UNKNOWN";
+    const tbody = document.getElementById("fillTable").querySelector("tbody");
+    tbody.innerHTML = "";
+
+    try {
+      const res = await fetch("/api/long-body");
+      const data = await res.json();
+
+      data.reverse().forEach(r => {
+        const tr = document.createElement("tr");
+        const canEdit = r.name?.toUpperCase() === username.toUpperCase();
+
+        tr.innerHTML = `
+          <td style="color:lime;">✔</td>
+          <td><input type="date" value="${r.date}" ${!canEdit ? 'readonly' : ''}></td>
+          <td><input type="text" value="${r.vehicle}" ${!canEdit ? 'readonly' : ''}></td>
+          <td><input type="text" value="${r.material}" ${!canEdit ? 'readonly' : ''}></td>
+          <td><input type="number" value="${r.outsideWeight}" ${!canEdit ? 'readonly' : ''}></td>
+          <td><input type="number" value="${r.old80}" ${!canEdit ? 'readonly' : ''}></td>
+          <td><input type="number" value="${r.new80}" ${!canEdit ? 'readonly' : ''}></td>
+          <td><input type="text" value="${r.difference}" readonly></td>
+          <td><input type="text" value="${r.name}" readonly></td>
+          <td>
+            ${canEdit 
+              ? `<button onclick="editRow(this, '${r._id}')">Edit</button>` 
+              : `<button disabled>Locked</button>`}
+          </td>
+        `;
+
+        if (canEdit) {
+          const inputs = tr.querySelectorAll("input");
+          inputs[5].addEventListener("input", () => calculateDifference(tr));
+          inputs[6].addEventListener("input", () => calculateDifference(tr));
+        }
+
+        tbody.appendChild(tr);
+      });
+
+    } catch (err) {
+      console.error(err);
+      alert("Error loading saved reports");
+    }
+  }
+
+  function addRow() {
+    const username = localStorage.getItem("username") || "";
+    const tbody = document.getElementById("fillTable").querySelector("tbody");
+    const tr = document.createElement("tr");
+
+    tr.innerHTML = `
+      <td>Pending</td>
+      <td><input type="date"></td>
+      <td><input type="text"></td>
+      <td><input type="text"></td>
+      <td><input type="number"></td>
+      <td><input type="number"></td>
+      <td><input type="number"></td>
+      <td><input type="text" readonly></td>
+      <td><input type="text" value="${username}" readonly></td>
+      <td><button onclick="saveRow(this)">Save</button></td>
+    `;
+
+    const inputs = tr.querySelectorAll("input");
+    inputs[5].addEventListener("input", () => calculateDifference(tr));
+    inputs[6].addEventListener("input", () => calculateDifference(tr));
+
+    tbody.prepend(tr);
+  }
+
+  function calculateDifference(row) {
+    const oldVal = parseFloat(row.children[5].querySelector("input").value) || 0;
+    const newVal = parseFloat(row.children[6].querySelector("input").value) || 0;
+    const diff = oldVal - newVal;
+    row.children[7].querySelector("input").value = diff.toFixed(2);
+  }
+
+  function saveRow(button) {
+    const row = button.parentElement.parentElement;
+    const inputs = row.querySelectorAll("input");
+
+    const data = {
+      date: inputs[0].value,
+      vehicle: inputs[1].value.toUpperCase(),
+      material: inputs[2].value.toUpperCase(),
+      outsideWeight: inputs[3].value,
+      old80: inputs[4].value,
+      new80: inputs[5].value,
+      difference: inputs[6].value,
+      name: inputs[7].value.toUpperCase()
+    };
+
+    if (!data.date || !data.vehicle || !data.material || !data.name) {
+      alert("Please fill all required fields.");
+      return;
+    }
+
+    fetch("/api/reports/long-body", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data)
+    })
+    .then(res => res.json())
+    .then(result => {
+      if (result.success) {
+        row.children[0].innerHTML = "✔️";
+        const saveBtn = button;
+        saveBtn.textContent = "Edit";
+        saveBtn.onclick = () => editRow(saveBtn, result.saved._id);
+        alert("Report saved.");
+      } else {
+        alert("Failed to save.");
+      }
+    })
+    .catch(err => {
+      console.error(err);
+      alert("Error occurred");
+    });
+  }
+
+  function editRow(button, id) {
+    const row = button.parentElement.parentElement;
+    const inputs = row.querySelectorAll("input");
+
+    if (button.innerText === "Edit") {
+      for (let i = 0; i < inputs.length; i++) {
+        if (i !== 7 && i !== 8) inputs[i].readOnly = false;
+      }
+      button.innerText = "Update";
+    } else {
+      const data = {
+        date: inputs[0].value,
+        vehicle: inputs[1].value.toUpperCase(),
+        material: inputs[2].value.toUpperCase(),
+        outsideWeight: inputs[3].value,
+        old80: inputs[4].value,
+        new80: inputs[5].value,
+        difference: inputs[6].value
+      };
+
+      fetch(`/api/reports/long-body/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data)
+      })
+      .then(res => res.json())
+      .then(result => {
+        if (result.success) {
+          for (let i = 0; i < inputs.length; i++) {
+            inputs[i].readOnly = true;
+          }
+          button.innerText = "Edit";
+          alert("Row updated");
+        } else {
+          alert("Update failed");
+        }
+      })
+      .catch(err => {
+        console.error(err);
+        alert("Error updating");
+      });
+    }
+  }
+
+  function showView() {
+    document.getElementById("fillSection").style.display = "none";
+    document.getElementById("viewSection").style.display = "block";
+    document.getElementById("filters").style.display = "flex";
+    document.getElementById("exportBtn").style.display = "inline-block";
+    document.getElementById("addRowBtn").style.display = "none";
+    loadViewTable();
+  }
+
+  async function loadViewTable() {
+    try {
+      const res = await fetch("/api/long-body");
+      const data = await res.json();
+      window.fullLongBodyData = data;
+      populateViewTable(data);
+      fillNameDropdown(data);
+    } catch (err) {
+      console.error(err);
+      alert("Failed to load data");
+    }
+  }
+
+  function populateViewTable(data) {
+    const tbody = document.querySelector("#viewTable tbody");
+    tbody.innerHTML = "";
+    serial = 1;
+
+    data.forEach(r => {
+      const row = document.createElement("tr");
+      row.innerHTML = `
+        <td>${serial++}</td>
+        <td>${r.date || "-"}</td>
+        <td>${r.vehicle || "-"}</td>
+        <td>${r.material || "-"}</td>
+        <td>${r.outsideWeight || "-"}</td>
+        <td>${r.old80 || "-"}</td>
+        <td>${r.new80 || "-"}</td>
+        <td>${r.difference || "-"}</td>
+        <td>${r.name || "-"}</td>
+      `;
+      tbody.appendChild(row);
+    });
+  }
+
+  function fillNameDropdown(data) {
+    const select = document.getElementById("nameFilter");
+    const uniqueNames = [...new Set(data.map(r => r.name).filter(Boolean))];
+    select.innerHTML = `<option value="">Submitted By</option>`;
+    uniqueNames.forEach(name => {
+      const opt = document.createElement("option");
+      opt.value = name;
+      opt.textContent = name;
+      select.appendChild(opt);
+    });
+  }
+
+  function filterView() {
+  const start = document.getElementById("startDate").value;
+  const end = document.getElementById("endDate").value;
+  const name = document.getElementById("nameFilter").value.trim().toLowerCase();
+  const search = document.getElementById("searchText").value.trim().toLowerCase();
+
+  const filtered = window.fullLongBodyData.filter(r => {
+    const rDate = new Date(r.date);
+    if (start && rDate < new Date(start)) return false;
+    if (end && rDate > new Date(end)) return false;
+    if (name && r.name.toLowerCase() !== name) return false;
+
+    // ✅ Search filter across all fields
+    if (search) {
+      const values = Object.values(r).map(v => (v || "").toString().toLowerCase());
+      if (!values.some(val => val.includes(search))) return false;
+    }
+
+    return true;
+  });
+
+  populateViewTable(filtered);
+}
+
+  function exportToExcel() {
+    const table = document.getElementById("viewTable");
+    const rows = table.querySelectorAll("tbody tr");
+    if (!rows.length) return alert("No data to export!");
+
+    const wb = XLSX.utils.book_new();
+    const ws_data = [];
+
+    const headers = Array.from(table.querySelectorAll("thead th")).map(th => th.innerText.trim());
+    ws_data.push(headers);
+
+    rows.forEach(row => {
+      const rowData = Array.from(row.querySelectorAll("td")).map(td => td.innerText.trim());
+      if (rowData.length === headers.length) {
+        ws_data.push(rowData);
+      }
+    });
+
+    const ws = XLSX.utils.aoa_to_sheet(ws_data);
+    XLSX.utils.book_append_sheet(wb, ws, "Long Body Report");
+    XLSX.writeFile(wb, "long_body_report.xlsx");
+  }
+</script>
+
+</body>
+</html>

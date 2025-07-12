@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Balaji Action Buildwell Pvt. Ltd.</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+    }
+
+    /* Navbar Styling */
+    .navbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background-color: #002147;
+      padding: 10px 20px;
+      color: white;
+    }
+
+    .navbar img {
+      height: 50px;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 20px;
+      align-items: center;
+    }
+
+    .nav-links a {
+      color: white;
+      text-decoration: none;
+      font-weight: bold;
+    }
+
+    .nav-links a:hover {
+      text-decoration: underline;
+    }
+
+    .login-btn {
+      background-color: #ff8800;
+      padding: 8px 16px;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    /* Slideshow */
+    .slideshow-container {
+      position: relative;
+      max-width: 100%;
+      height: 400px;
+      overflow: hidden;
+    }
+
+    .slide {
+      display: none;
+      width: 100%;
+      height: 100%;
+    }
+
+    .slide img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    /* Navigation buttons */
+    .prev, .next {
+      cursor: pointer;
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      padding: 12px;
+      color: white;
+      font-size: 24px;
+      font-weight: bold;
+      background-color: rgba(0, 0, 0, 0.4);
+      border-radius: 50%;
+      user-select: none;
+    }
+
+    .prev {
+      left: 20px;
+    }
+
+    .next {
+      right: 20px;
+    }
+
+    /* About Section */
+    .about-section {
+      padding: 30px 40px;
+      background-color: #f5f5f5;
+      text-align: justify;
+      line-height: 1.6;
+    }
+
+    .about-section h2 {
+      text-align: center;
+      color: #002147;
+    }
+  </style>
+</head>
+<body>
+   <!-- Navbar -->
+  <div class="navbar">
+    <a href="index.html"><img src="assets/logo.png" alt="Logo"></a>
+    <div class="nav-links">
+       <a href="About.html">Home</a>
+      <a href="about-us.html">About Us</a>
+      <a href="products.html">Products</a>
+      <a href="media.html">Media Gallery</a>
+      <a href="contactus.html">Contact Us</a>
+ 
+</a>
+    </div>
+  </div>
+
+<!-- ✅ Products Section -->
+<section id="products" style="padding: 40px; background: #f9f9f9; font-family: sans-serif;">
+  <!-- Top Image -->
+  <div style="text-align: center;">
+    <img src="assets/products.jpg" alt="Products" style="width: 100%; max-height: 400px; object-fit: cover; border-radius: 8px;" />
+  </div>
+
+  <!-- Product Grid -->
+  <h2 style="text-align: center; margin: 30px 0 10px;">Our Products</h2>
+  <div style="display: flex; flex-wrap: wrap; justify-content: center; gap: 20px;">
+
+    <!-- Product Box Template -->
+    <div style="width: 250px; background: #fff; box-shadow: 0 2px 10px rgba(0,0,0,0.1); border-radius: 10px; overflow: hidden; text-align: center;">
+      <img src="assets/7d hmr particle.jpg" alt="7D HMR Particle Board" style="width: 100%; height: 180px; object-fit: cover;">
+      <div style="padding: 10px; border-top: 1px solid #eee;">
+        <h3 style="font-size: 16px;">7D HMR Particle Board</h3>
+      </div>
+    </div>
+
+    <div style="width: 250px; background: #fff; box-shadow: 0 2px 10px rgba(0,0,0,0.1); border-radius: 10px; overflow: hidden; text-align: center;">
+      <img src="assets/abraze.jpg" alt="Abraze Board" style="width: 100%; height: 180px; object-fit: cover;">
+      <div style="padding: 10px; border-top: 1px solid #eee;">
+        <h3 style="font-size: 16px;">Abraze Board</h3>
+      </div>
+    </div>
+
+    <div style="width: 250px; background: #fff; box-shadow: 0 2px 10px rgba(0,0,0,0.1); border-radius: 10px; overflow: hidden; text-align: center;">
+      <img src="assets/acrylic.jpg" alt="Acrylic Gloss Board" style="width: 100%; height: 180px; object-fit: cover;">
+      <div style="padding: 10px; border-top: 1px solid #eee;">
+        <h3 style="font-size: 16px;">Acrylic Gloss Board</h3>
+      </div>
+    </div>
+
+    <div style="width: 250px; background: #fff; box-shadow: 0 2px 10px rgba(0,0,0,0.1); border-radius: 10px; overflow: hidden; text-align: center;">
+      <img src="assets/boilo.jpg" alt="Boilo Board" style="width: 100%; height: 180px; object-fit: cover;">
+      <div style="padding: 10px; border-top: 1px solid #eee;">
+        <h3 style="font-size: 16px;">Boilo-BWP-FR-HDF-board</h3>
+      </div>
+    </div>
+
+    <div style="width: 250px; background: #fff; box-shadow: 0 2px 10px rgba(0,0,0,0.1); border-radius: 10px; overflow: hidden; text-align: center;">
+      <img src="assets/embossed hdf.jpg" alt="Embossed HDF Boards" style="width: 100%; height: 180px; object-fit: cover;">
+      <div style="padding: 10px; border-top: 1px solid #eee;">
+        <h3 style="font-size: 16px;">Embossed HDF Boards</h3>
+      </div>
+    </div>
+
+    <div style="width: 250px; background: #fff; box-shadow: 0 2px 10px rgba(0,0,0,0.1); border-radius: 10px; overflow: hidden; text-align: center;">
+      <img src="assets/flooring.jpg" alt="Flooring Accessories" style="width: 100%; height: 180px; object-fit: cover;">
+      <div style="padding: 10px; border-top: 1px solid #eee;">
+        <h3 style="font-size: 16px;">Flooring Accessories</h3>
+      </div>
+    </div>
+
+    <div style="width: 250px; background: #fff; box-shadow: 0 2px 10px rgba(0,0,0,0.1); border-radius: 10px; overflow: hidden; text-align: center;">
+      <img src="assets/hdf laminated.jpg" alt="HDF Laminated Flooring" style="width: 100%; height: 180px; object-fit: cover;">
+      <div style="padding: 10px; border-top: 1px solid #eee;">
+        <h3 style="font-size: 16px;">HDF Laminated Flooring</h3>
+      </div>
+    </div>
+
+    <div style="width: 250px; background: #fff; box-shadow: 0 2px 10px rgba(0,0,0,0.1); border-radius: 10px; overflow: hidden; text-align: center;">
+      <img src="assets/hdhmr door.jpg" alt="HDHMR Doors" style="width: 100%; height: 180px; object-fit: cover;">
+      <div style="padding: 10px; border-top: 1px solid #eee;">
+        <h3 style="font-size: 16px;">HDHMR Doors</h3>
+      </div>
+    </div>
+
+    <div style="width: 250px; background: #fff; box-shadow: 0 2px 10px rgba(0,0,0,0.1); border-radius: 10px; overflow: hidden; text-align: center;">
+      <img src="assets/hdhmr.jpg" alt="HDHMR Boards" style="width: 100%; height: 180px; object-fit: cover;">
+      <div style="padding: 10px; border-top: 1px solid #eee;">
+        <h3 style="font-size: 16px;">HDHMR Boards</h3>
+      </div>
+    </div>
+
+    <div style="width: 250px; background: #fff; box-shadow: 0 2px 10px rgba(0,0,0,0.1); border-radius: 10px; overflow: hidden; text-align: center;">
+      <img src="assets/mdf.jpg" alt="MDF Board" style="width: 100%; height: 180px; object-fit: cover;">
+      <div style="padding: 10px; border-top: 1px solid #eee;">
+        <h3 style="font-size: 16px;">MDF Board</h3>
+      </div>
+    </div>
+
+    <div style="width: 250px; background: #fff; box-shadow: 0 2px 10px rgba(0,0,0,0.1); border-radius: 10px; overflow: hidden; text-align: center;">
+      <img src="assets/ornamatte.jpg" alt="Ornamatte" style="width: 100%; height: 180px; object-fit: cover;">
+      <div style="padding: 10px; border-top: 1px solid #eee;">
+        <h3 style="font-size: 16px;">Ornamatte</h3>
+      </div>
+    </div>
+
+    <div style="width: 250px; background: #fff; box-shadow: 0 2px 10px rgba(0,0,0,0.1); border-radius: 10px; overflow: hidden; text-align: center;">
+      <img src="assets/particle.jpg" alt="Particle Boards" style="width: 100%; height: 180px; object-fit: cover;">
+      <div style="padding: 10px; border-top: 1px solid #eee;">
+        <h3 style="font-size: 16px;">Particle Boards</h3>
+      </div>
+    </div>
+
+    <div style="width: 250px; background: #fff; box-shadow: 0 2px 10px rgba(0,0,0,0.1); border-radius: 10px; overflow: hidden; text-align: center;">
+      <img src="assets/uv high glass.jpg" alt="UV High Gloss boards" style="width: 100%; height: 180px; object-fit: cover;">
+      <div style="padding: 10px; border-top: 1px solid #eee;">
+        <h3 style="font-size: 16px;">UV High Gloss Boards</h3>
+      </div>
+    </div>
+
+    <div style="width: 250px; background: #fff; box-shadow: 0 2px 10px rgba(0,0,0,0.1); border-radius: 10px; overflow: hidden; text-align: center;">
+      <img src="assets/value added.jpg" alt="Value Added Flooring" style="width: 100%; height: 180px; object-fit: cover;">
+      <div style="padding: 10px; border-top: 1px solid #eee;">
+        <h3 style="font-size: 16px;">Value Added Flooring</h3>
+      </div>
+    </div>
+
+  </div>
+</section>
+<!-- Footer -->
+<footer style="text-align: center; padding: 15px; background-color: #222; color: #eee; font-family: Arial, sans-serif; font-size: 14px;">
+  &copy; Atharva Creation
+</footer>
+
+<style>
+  @keyframes marquee {
+    0% { transform: translateX(0); }
+    100% { transform: translateX(-50%); }
+  }
+</style>

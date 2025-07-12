@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Balaji Action Buildwell Pvt. Ltd.</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+    }
+
+    /* Navbar Styling */
+    .navbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background-color: #002147;
+      padding: 10px 20px;
+      color: white;
+    }
+
+    .navbar img {
+      height: 50px;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 20px;
+      align-items: center;
+    }
+
+    .nav-links a {
+      color: white;
+      text-decoration: none;
+      font-weight: bold;
+    }
+
+    .nav-links a:hover {
+      text-decoration: underline;
+    }
+
+    .login-btn {
+      background-color: #ff8800;
+      padding: 8px 16px;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    /* Slideshow */
+    .slideshow-container {
+      position: relative;
+      max-width: 100%;
+      height: 400px;
+      overflow: hidden;
+    }
+
+    .slide {
+      display: none;
+      width: 100%;
+      height: 100%;
+    }
+
+    .slide img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    /* Navigation buttons */
+    .prev, .next {
+      cursor: pointer;
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      padding: 12px;
+      color: white;
+      font-size: 24px;
+      font-weight: bold;
+      background-color: rgba(0, 0, 0, 0.4);
+      border-radius: 50%;
+      user-select: none;
+    }
+
+    .prev {
+      left: 20px;
+    }
+
+    .next {
+      right: 20px;
+    }
+
+    /* About Section */
+    .about-section {
+      padding: 30px 40px;
+      background-color: #f5f5f5;
+      text-align: justify;
+      line-height: 1.6;
+    }
+
+    .about-section h2 {
+      text-align: center;
+      color: #002147;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Navbar -->
+  <div class="navbar">
+    <a href="index.html"><img src="assets/logo.png" alt="Logo"></a>
+    <div class="nav-links">
+      <a href="About.html">Home</a>
+      <a href="about-us.html">About Us</a>
+      <a href="products.html">Products</a>
+      <a href="media.html">Media Gallery</a>
+      <a href="contactus.html">Contact Us</a>
+  
+</a>
+    </div>
+  </div>
+
+  <!-- Slideshow -->
+  <div class="slideshow-container">
+    <div class="slide"><img src="assets/banner1.jpg" alt="Slide 1"></div>
+    <div class="slide"><img src="assets/banner2.jpg" alt="Slide 2"></div>
+    <div class="slide"><img src="assets/banner3.jpg" alt="Slide 3"></div>
+    <div class="slide"><img src="assets/banner4.jpg" alt="Slide 4"></div>
+
+
+    <!-- Navigation arrows -->
+    <a class="prev" onclick="plusSlides(-1)">❮</a>
+    <a class="next" onclick="plusSlides(1)">❯</a>
+  </div>
+
+  <!-- About Section -->
+  <div class="about-section">
+    <h2>About Balaji Action Buildwell Private Limited</h2>
+    <p>
+      Balaji Action Buildwell Private Limited, operating under the brand name Action TESA, is a prominent manufacturer in India’s panel industry. Established in 2009, the company has its state-of-the-art manufacturing facility in Sitarganj, Uttarakhand. Known for its wide array of engineered wood products like Plain Particle Boards, MDF Boards, and Decorative Wall Panels, Action TESA has marked several industry-first milestones. It was the first in India to install a thin MDF/HDF plant, introduce DOME Technology, and manufacture True HDF-Based Laminate Wooden Flooring. Additionally, it pioneered the launch of UV High Gloss Panels in the Indian market.
+      The Sitarganj plant is equipped with advanced German technology, notably the 7th generation Contiroll from Seimpelkamp GmbH & Co., making Action TESA the largest MDF manufacturer in India, with an annual capacity of 400,000 cubic meters. The company’s product portfolio includes Pre-laminated Particle Boards, High Gloss Acrylic Boards, UV Coated Boards, HDHMR Boards, and more—serving diverse needs in furniture and interior design.
+   
+      Action TESA is deeply committed to sustainability. It runs large-scale plantation drives, distributes high-yield eucalyptus saplings to farmers at subsidized rates, and offers technical guidance, promoting environmental conservation and farmer welfare. This helps increase green cover, enhances carbon sequestration, and ensures a sustainable raw material supply chain.
+   
+      As of 2024, the company employs around 2,240 individuals and has been recognized as a Great Place to Work, emphasizing its dedication to employee satisfaction and a positive work culture. In conclusion, Balaji Action Buildwell Private Limited, through Action TESA, continues to lead the Indian panel industry with innovation, sustainability, and world-class manufacturing excellence.
+    </p>
+  </div>
+<!-- Chairman Message Section -->
+<div class="chairman-section" style="display: flex; gap: 40px; padding: 40px; background-color: #ffffff; flex-wrap: wrap; align-items: center;">
+  
+  <!-- Left: Chairman Image and Title with 3D effect -->
+  <div style="flex: 1; min-width: 280px; text-align: center;">
+    <div style="
+      display: inline-block;
+      padding: 10px;
+      background: #f9f9f9;
+      border: 1px solid #ccc;
+      border-radius: 10px;
+      box-shadow: 8px 8px 15px rgba(0, 0, 0, 0.2);
+      transform: perspective(800px) rotateY(-2deg);
+      transition: transform 0.3s ease;
+    ">
+      <img src="assets/chairman.png" alt="Chairman" style="width: 100%; max-width: 300px; border-radius: 8px;"/>
+    </div>
+    <h3 style="margin: 15px 0 5px;">Mr. N.K. Aggarwal</h3>
+    <p style="font-weight: bold; color: #555;">(Chairman)</p>
+  </div>
+
+  <!-- Right: Message Text -->
+  <div style="flex: 2; min-width: 300px; text-align: justify;">
+    <p>
+      <strong>Dear Friends,</strong><br><br>
+      It gives me a sense of pride to speak to you. My heart fills up with joy when I see the rapid strides made by our company in the last few years with the active and passionate involvement of all stakeholders. In spite of subdued economic conditions, we could outpace ourselves mainly due to our value-based and innovative marketing strategies focused towards inclusive growth. We owe this success to our highly motivated team of employees and quality trade partners.
+    </p>
+    <p>
+      India, due to its population and demographic assets, presents huge opportunities and therefore I always believe that we have miles to go to realize our vision. There is a renewed hope of a new resurgent India in the making. The spirit embodied in “Sabka Saath, Sabka Vikas” holds a promise & an opportunity to collectively script a new destiny for our nation.
+    </p>
+    <p>
+      Each step taken towards our journey is a milestone which should fuel us to reach greater heights—and this we can only do together as a team with a shared vision. Come, let’s be a part of the new TESA story with true Indian values. Let’s make “Made in India – For the World” tag a matter of pride.
+    </p>
+    <p>
+      Wishing you great success & looking forward to hear from you.
+    </p>
+  </div>
+</div>
+
+<!-- Our Clients Marquee Section -->
+<div style="padding: 30px 40px; background-color: #f4f4f4;">
+  <h2 style="text-align: center; margin-bottom: 20px; font-family: Arial, sans-serif;">Our Clients</h2>
+
+  <div class="marquee-container" style="overflow: hidden; white-space: nowrap;">
+
+    <div class="marquee-track" style="
+      display: inline-block;
+      animation: marquee 20s linear infinite;
+    ">
+      <img src="assets/1.jpg" alt="Client 1" style="width: 120px; height: 80px; object-fit: cover; margin-right: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
+      <img src="assets/2.jpg" alt="Client 2" style="width: 120px; height: 80px; object-fit: cover; margin-right: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
+      <img src="assets/3.jpg" alt="Client 3" style="width: 120px; height: 80px; object-fit: cover; margin-right: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
+      <img src="assets/4.jpg" alt="Client 4" style="width: 120px; height: 80px; object-fit: cover; margin-right: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
+      <img src="assets/5.jpg" alt="Client 5" style="width: 120px; height: 80px; object-fit: cover; margin-right: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
+
+      <!-- Repeat images for smooth loop -->
+      <img src="assets/1.jpg" alt="Client 1" style="width: 120px; height: 80px; object-fit: cover; margin-right: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
+      <img src="assets/2.jpg" alt="Client 2" style="width: 120px; height: 80px; object-fit: cover; margin-right: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
+      <img src="assets/3.jpg" alt="Client 3" style="width: 120px; height: 80px; object-fit: cover; margin-right: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
+      <img src="assets/4.jpg" alt="Client 4" style="width: 120px; height: 80px; object-fit: cover; margin-right: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
+      <img src="assets/5.jpg" alt="Client 5" style="width: 120px; height: 80px; object-fit: cover; margin-right: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
+      <img src="assets/6.jpg" alt="Client 6" style="width: 120px; height: 80px; object-fit: cover; margin-right: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
+      <img src="assets/7.jpg" alt="Client 7" style="width: 120px; height: 80px; object-fit: cover; margin-right: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
+    </div>
+  </div>
+</div>
+
+<style>
+  @keyframes marquee {
+    0% { transform: translateX(0); }
+    100% { transform: translateX(-50%); }
+  }
+</style>
+<!-- Footer -->
+<footer style="text-align: center; padding: 15px; background-color: #222; color: #eee; font-family: Arial, sans-serif; font-size: 14px;">
+  &copy; Atharva Creation
+</footer>
+
+<style>
+  @keyframes marquee {
+    0% { transform: translateX(0); }
+    100% { transform: translateX(-50%); }
+  }
+</style>
+<script>
+  const track = document.querySelector('.clients-track');
+  const prevBtn = document.getElementById('clients-prev');
+  const nextBtn = document.getElementById('clients-next');
+
+  const slideWidth = 135; // image width + margin-right (120 + 15)
+  const visibleSlides = 6; // Number of visible images approx.
+  let position = 0;
+
+  // Max slide left: total slides - visibleSlides
+  const maxPosition = -(slideWidth * (track.children.length - visibleSlides));
+
+  function updateSlider() {
+    track.style.transform = `translateX(${position}px)`;
+  }
+
+  nextBtn.addEventListener('click', () => {
+    position -= slideWidth;
+    if (position < maxPosition) {
+      position = 0;
+    }
+    updateSlider();
+  });
+
+  prevBtn.addEventListener('click', () => {
+    position += slideWidth;
+    if (position > 0) {
+      position = maxPosition;
+    }
+    updateSlider();
+  });
+
+  // Auto slide every 3 seconds
+  setInterval(() => {
+    position -= slideWidth;
+    if (position < maxPosition) {
+      position = 0;
+    }
+    updateSlider();
+  }, 3000);
+</script>
+
+
+  <script>
+    let slideIndex = 0;
+    let slides = document.getElementsByClassName("slide");
+
+    function showSlide(n) {
+      for (let i = 0; i < slides.length; i++) {
+        slides[i].style.display = "none";
+      }
+      slides[n].style.display = "block";
+    }
+
+    function plusSlides(n) {
+      slideIndex += n;
+      if (slideIndex >= slides.length) slideIndex = 0;
+      if (slideIndex < 0) slideIndex = slides.length - 1;
+      showSlide(slideIndex);
+    }
+
+    function autoSlide() {
+      slideIndex++;
+      if (slideIndex >= slides.length) slideIndex = 0;
+      showSlide(slideIndex);
+    }
+
+    showSlide(slideIndex);
+    setInterval(autoSlide, 5000); // Change slide every 5 seconds
+  </script>
+
+</body>
+</html>

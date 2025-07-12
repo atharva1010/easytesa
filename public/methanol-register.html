@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>METHANOL WEIGHT REPORT</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <style>
+    body {
+      background-color: #0f2027;
+      color: #00ffe7;
+      font-family: 'Segoe UI', sans-serif;
+      padding: 20px;
+    }
+    h2 {
+      text-align: center;
+      text-shadow: 0 0 5px #00ffe7;
+    }
+    button {
+      padding: 8px 16px;
+      margin: 10px 5px;
+      border: 1px solid #00ffe7;
+      background: transparent;
+      color: #00ffe7;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    table {
+      width: 100%;
+      margin-top: 20px;
+      border-collapse: collapse;
+      box-shadow: 0 0 10px #00ffe7;
+    }
+    th, td {
+      padding: 10px;
+      border: 1px solid #00ffe7;
+      text-align: center;
+      text-transform: uppercase;
+    }
+    input, select {
+      width: 100%;
+      background: #111;
+      color: #00ffe7;
+      border: 1px solid #00ffe7;
+      padding: 5px;
+      border-radius: 4px;
+      text-transform: uppercase;
+    }
+    #filters {
+      display: none;
+      margin-top: 10px;
+    }
+    #filters input, #filters select {
+      width: auto;
+      margin: 5px;
+    }
+  </style>
+</head>
+<body>
+<h2>METHANOL WEIGHT REPORT</h2>
+
+<button onclick="showFill()">FILL REPORT</button>
+<button onclick="showView()">VIEW REPORT</button>
+<button onclick="addRow()">ADD ROW</button>
+<button id="exportBtn" onclick="exportToExcel()" style="display:none;">EXPORT</button>
+
+<div id="filters">
+  <input type="date" id="startDate">
+  <input type="date" id="endDate">
+  <select id="nameFilter">
+    <option value="">Submitted By</option>
+  </select>
+  <input type="text" id="searchText" placeholder="Search..." />
+  <button onclick="filterView()">Search</button>
+</div>
+
+
+<!-- Fill Table -->
+<div id="fillSection">
+  <table id="fillTable">
+    <thead>
+    <tr>
+      <th>STATUS</th>
+      <th>DATE</th>
+      <th>VEHICLE NO.</th>
+      <th>MATERIAL NAME</th>
+      <th>OUTSIDE WEIGHT</th>
+      <th>100 MT WEIGHT</th>
+      <th>DIFFERENCE (OUTSIDE - 100 MT)</th>
+      <th>NAME</th>
+      <th>ACTIONS</th>
+    </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+</div>
+
+<!-- View Table -->
+<div id="viewSection" style="display:none;">
+  <table id="viewTable">
+    <thead>
+    <tr>
+      <th>S.NO</th>
+      <th>DATE</th>
+      <th>VEHICLE NO.</th>
+      <th>MATERIAL</th>
+      <th>OUTSIDE WEIGHT</th>
+      <th>100 MT WEIGHT</th>
+      <th>DIFFERENCE</th>
+      <th>NAME</th>
+    </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+</div>
+
+<script>
+let currentUser = localStorage.getItem("username") || "unknown";
+let unsavedRowExists = false;
+
+function showFill() {
+  document.getElementById("fillSection").style.display = "block";
+  document.getElementById("viewSection").style.display = "none";
+  document.getElementById("filters").style.display = "none";
+  document.getElementById("exportBtn").style.display = "none";
+  loadSavedData();
+}
+
+function showView() {
+  document.getElementById("fillSection").style.display = "none";
+  document.getElementById("viewSection").style.display = "block";
+  document.getElementById("filters").style.display = "block";
+  document.getElementById("exportBtn").style.display = "inline-block";
+  loadViewData();
+}
+
+function calculateDiff(input) {
+  const row = input.closest("tr");
+  const outsideWeight = parseFloat(row.querySelector('[name="outside"]')?.value || 0);
+  const mtWeight = parseFloat(row.querySelector('[name="mt"]')?.value || 0);
+  const diffInput = row.querySelector('[name="diff"]');
+  const diff = outsideWeight - mtWeight;
+  diffInput.value = isNaN(diff) ? "" : diff.toFixed(2);
+}
+
+function addRow() {
+  if (unsavedRowExists) {
+    alert("Save current row first.");
+    return;
+  }
+  const tbody = document.querySelector("#fillTable tbody");
+  const row = document.createElement("tr");
+  row.innerHTML = `
+    <td>📝</td>
+    <td><input type="date"></td>
+    <td><input type="text"></td>
+    <td><input type="text" value="METHANOL" disabled></td>
+    <td><input type="number" name="outside" oninput="calculateDiff(this)"></td>
+    <td><input type="number" name="mt" oninput="calculateDiff(this)"></td>
+    <td><input type="number" name="diff" disabled></td>
+    <td><input type="text" value="${currentUser}" disabled></td>
+    <td><button onclick="saveRow(this)">Save</button></td>
+  `;
+  tbody.prepend(row);
+  unsavedRowExists = true;
+}
+
+async function saveRow(btn) {
+  const row = btn.closest("tr");
+  const inputs = row.querySelectorAll("input");
+
+  const data = {
+    date: inputs[0].value,
+    vehicleNo: inputs[1].value.toUpperCase(),
+    material: "METHANOL", // auto-filled
+    outsideWeight: parseFloat(inputs[3].value),
+    mtWeight: parseFloat(inputs[4].value),
+    name: localStorage.getItem("username")?.toUpperCase() || "UNKNOWN"
+  };
+
+  // Validate all required fields
+  if (!data.date || !data.vehicleNo || isNaN(data.outsideWeight) || isNaN(data.mtWeight)) {
+    alert("Please fill all fields with valid values.");
+    return;
+  }
+
+  const res = await fetch("/api/methanol", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data)
+  });
+
+  const result = await res.json();
+  if (result.success) {
+    loadSavedData();
+    unsavedRowExists = false;
+  } else {
+    alert("Save failed: " + result.message);
+  }
+}
+
+
+async function loadSavedData() {
+  const res = await fetch("/api/methanol");
+  const data = await res.json();
+  const tbody = document.querySelector("#fillTable tbody");
+  tbody.innerHTML = "";
+  data.forEach(d => {
+    tbody.innerHTML += `
+      <tr>
+        <td>✅</td>
+        <td>${d.date}</td>
+        <td>${d.vehicleNo}</td>
+        <td>${d.material}</td>
+        <td>${d.outsideWeight}</td>
+        <td>${d.mtWeight}</td>
+        <td>${d.difference || ""}</td>
+        <td>${d.name}</td>
+        <td><span style="color:gray;">Saved</span></td>
+      </tr>
+    `;
+  });
+}
+
+async function loadViewData() {
+  const res = await fetch("/api/methanol");
+  const data = await res.json();
+  const tbody = document.querySelector("#viewTable tbody");
+  tbody.innerHTML = "";
+  const nameSet = new Set();
+  data.forEach((d, i) => {
+    tbody.innerHTML += `
+      <tr>
+        <td>${i + 1}</td>
+        <td>${d.date}</td>
+        <td>${d.vehicleNo}</td>
+        <td>${d.material}</td>
+        <td>${d.outsideWeight}</td>
+        <td>${d.mtWeight}</td>
+        <td>${d.difference || ""}</td>
+        <td>${d.name}</td>
+      </tr>
+    `;
+    if (d.name) nameSet.add(d.name);
+  });
+  const nameFilter = document.getElementById("nameFilter");
+  nameFilter.innerHTML = `<option value="">Submitted By</option>` +
+    [...nameSet].map(name => `<option value="${name}">${name}</option>`).join("");
+}
+
+function filterView() {
+  const startDate = document.getElementById("startDate").value;
+  const endDate = document.getElementById("endDate").value;
+  const submittedBy = document.getElementById("nameFilter").value.toLowerCase();
+  const searchText = document.getElementById("searchText").value.trim().toLowerCase();
+
+  fetch("/api/methanol")
+    .then(res => res.json())
+    .then(data => {
+      const filtered = data.filter(d => {
+        const inDateRange =
+          (!startDate || new Date(d.date) >= new Date(startDate)) &&
+          (!endDate || new Date(d.date) <= new Date(endDate));
+
+        const matchSubmitter = !submittedBy || d.name.toLowerCase().includes(submittedBy);
+
+        const values = Object.values(d).map(v => (v || "").toString().toLowerCase());
+        const matchSearch = !searchText || values.some(val => val.includes(searchText));
+
+        return inDateRange && matchSubmitter && matchSearch;
+      });
+
+      const tbody = document.querySelector("#viewTable tbody");
+      tbody.innerHTML = "";
+      filtered.forEach((d, i) => {
+        tbody.innerHTML += `
+          <tr>
+            <td>${i + 1}</td>
+            <td>${d.date}</td>
+            <td>${d.vehicleNo}</td>
+            <td>${d.material}</td>
+            <td>${d.outsideWeight}</td>
+            <td>${d.mtWeight}</td>
+            <td>${d.difference || ""}</td>
+            <td>${d.name}</td>
+          </tr>
+        `;
+      });
+    });
+}
+
+
+  fetch("/api/methanol")
+    .then(res => res.json())
+    .then(data => {
+      const filtered = data.filter(d => {
+        const inDateRange = (!startDate || new Date(d.date) >= new Date(startDate)) &&
+                            (!endDate || new Date(d.date) <= new Date(endDate));
+        const matchSubmitter = !submittedBy || d.name.toLowerCase().includes(submittedBy);
+        return inDateRange && matchSubmitter;
+      });
+      const tbody = document.querySelector("#viewTable tbody");
+      tbody.innerHTML = "";
+      filtered.forEach((d, i) => {
+        tbody.innerHTML += `
+          <tr>
+            <td>${i + 1}</td>
+            <td>${d.date}</td>
+            <td>${d.vehicleNo}</td>
+            <td>${d.material}</td>
+            <td>${d.outsideWeight}</td>
+            <td>${d.mtWeight}</td>
+            <td>${d.difference || ""}</td>
+            <td>${d.name}</td>
+          </tr>
+        `;
+      });
+    });
+
+
+function exportToExcel() {
+  const table = document.getElementById("viewTable");
+  const wb = XLSX.utils.table_to_book(table, { sheet: "MethanolReport" });
+  XLSX.writeFile(wb, "Methanol_Weight_Report.xlsx");
+}
+
+window.onload = showFill;
+</script>
+</body>
+</html>

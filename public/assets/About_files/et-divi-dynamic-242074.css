@@ -1,0 +1,232 @@
+# BEGIN Website Firewall Bypass Prevention
+<If "%{HTTP_HOST} == 'actiontesa.com' || %{HTTP_HOST} == 'www.actiontesa.com'">
+    Require ip 208.109.0.0/22
+    Require ip 192.88.134.0/23
+    Require ip 185.93.228.0/22
+    Require ip 2a02:fe80::/29
+    Require ip 66.248.200.0/22
+    Require ip 173.245.48.0/20
+    Require ip 103.21.244.0/22
+    Require ip 103.22.200.0/22
+    Require ip 103.31.4.0/22
+    Require ip 141.101.64.0/18
+    Require ip 108.162.192.0/18
+    Require ip 190.93.240.0/20
+    Require ip 188.114.96.0/20
+    Require ip 197.234.240.0/22
+    Require ip 198.41.128.0/17
+    Require ip 162.158.0.0/15
+    Require ip 104.16.0.0/13
+    Require ip 104.24.0.0/14
+    Require ip 172.64.0.0/13
+    Require ip 131.0.72.0/22
+    Require ip 2400:cb00::/32
+    Require ip 2606:4700::/32
+    Require ip 2803:f800::/32
+    Require ip 2405:b500::/32
+    Require ip 2405:8100::/32
+    Require ip 2a06:98c0::/29
+    Require ip 2c0f:f248::/32
+</If>
+# END Website Firewall Bypass Prevention
+
+# BEGIN HTTPS Redirection Plugin
+<IfModule mod_rewrite.c>
+	RewriteEngine On
+	RewriteCond %{HTTP:X-Forwarded-Proto} !https
+	RewriteCond %{HTTPS} off
+	RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+</IfModule>
+# END HTTPS Redirection Plugin
+
+# BEGIN LSCACHE
+## LITESPEED WP CACHE PLUGIN - Do not edit the contents of this block! ##
+<IfModule LiteSpeed>
+	RewriteEngine on
+	CacheLookup on
+	RewriteRule .* - [E=Cache-Control:no-autoflush]
+	RewriteRule \.litespeed_conf\.dat - [F,L]
+	
+### marker ASYNC start ###
+	RewriteCond %{REQUEST_URI} /wp-admin/admin-ajax\.php
+	RewriteCond %{QUERY_STRING} action=async_litespeed
+	RewriteRule .* - [E=noabort:1]
+### marker ASYNC end ###
+	
+### marker CACHE RESOURCE start ###
+	RewriteRule wp-content/.*/[^/]*(responsive|css|js|dynamic|loader|fonts)\.php - [E=cache-control:max-age=3600]
+### marker CACHE RESOURCE end ###
+	
+### marker DROPQS start ###
+	CacheKeyModify -qs:fbclid
+	CacheKeyModify -qs:gclid
+	CacheKeyModify -qs:utm*
+	CacheKeyModify -qs:_ga
+### marker DROPQS end ###
+	
+</IfModule>
+## LITESPEED WP CACHE PLUGIN - Do not edit the contents of this block! ##
+# END LSCACHE
+# BEGIN NON_LSCACHE
+## LITESPEED WP CACHE PLUGIN - Do not edit the contents of this block! ##
+## LITESPEED WP CACHE PLUGIN - Do not edit the contents of this block! ##
+# END NON_LSCACHE
+
+# BEGIN WordPress
+# The directives (lines) between "BEGIN WordPress" and "END WordPress" are
+# dynamically generated, and should only be modified via WordPress filters.
+# Any changes to the directives between these markers will be overwritten.
+Options -Indexes
+<IfModule mod_headers.c>
+	Header set X-Endurance-Cache-Level "3"
+	Header set X-nginx-cache "WordPress"
+</IfModule>
+<IfModule mod_rewrite.c>
+	RewriteEngine On
+	RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
+	RewriteBase /
+	RewriteRule ^index\.php$ - [L]
+	RewriteCond %{REQUEST_FILENAME} !-f
+	RewriteCond %{REQUEST_FILENAME} !-d
+	RewriteRule . /index.php [L]
+</IfModule>
+
+
+# TN START GZIP COMPRESSION
+<IfModule mod_gzip.c>
+    mod_gzip_on Yes
+    mod_gzip_dechunk Yes
+    mod_gzip_item_include file .(html?|txt|css|js|php|pl)$
+    mod_gzip_item_include handler ^cgi-script$
+    mod_gzip_item_include mime ^text/.*$
+    mod_gzip_item_include mime ^application/x-javascript.*$
+    mod_gzip_item_exclude mime ^image/.*$
+    mod_gzip_item_exclude rspheader ^Content-Encoding:.*gzip.*$
+</IfModule>
+# TN END GZIP COMPRESSION
+
+
+# TN START DEFLATE COMPRESSION
+<IfModule mod_deflate.c>
+AddOutputFilterByType DEFLATE "application/atom+xml" \
+"application/javascript" \
+"application/json" \
+"application/ld+json" \
+"application/manifest+json" \
+"application/rdf+xml" \
+"application/rss+xml" \
+"application/schema+json" \
+"application/vnd.geo+json" \
+"application/vnd.ms-fontobject" \
+"application/x-font" \
+"application/x-font-opentype" \
+"application/x-font-otf" \
+"application/x-font-truetype" \
+"application/x-font-ttf" \
+"application/x-javascript" \
+"application/x-web-app-manifest+json" \
+"application/xhtml+xml" \
+"application/xml" \
+"font/eot" \
+"font/otf" \
+"font/ttf" \
+"font/opentype" \
+"image/bmp" \
+"image/svg+xml" \
+"image/vnd.microsoft.icon" \
+"image/x-icon" \
+"text/cache-manifest" \
+"text/css" \
+"text/html" \
+"text/javascript" \
+"text/plain" \
+"text/vcard" \
+"text/vnd.rim.location.xloc" \
+"text/vtt" \
+"text/x-component" \
+"text/x-cross-domain-policy" \
+"text/xml"
+</IfModule>
+# END DEFLATE COMPRESSION
+
+# TN – ENABLE LITESPEED CACHE START
+<IfModule LiteSpeed>
+CacheEnable public
+RewriteEngine On
+RewriteCond %{REQUEST_METHOD} ^GET|HEAD$
+RewriteCond %{HTTP_HOST} ^sample.com|sample.net|sample.org [NC]
+RewriteCond %{REQUEST_URI} !login|admin|register|post|cron
+RewriteCond %{QUERY_STRING} !nocache
+RewriteRule .* - [E=Cache-Control:max-age=300]
+</IfModule>
+# TN – ENABLE LITESPEED CACHE END
+
+# TN START BROWSER CACHING
+<IfModule mod_expires.c>
+    ExpiresActive On
+    ExpiresDefault "access plus 1 month"
+    ExpiresByType image/jpg "access plus 1 year"
+    ExpiresByType image/jpeg "access plus 1 year"
+    ExpiresByType image/gif "access plus 1 year"
+    ExpiresByType image/png "access plus 1 year"
+    ExpiresByType image/webp "access plus 1 year"
+    ExpiresByType text/css "access plus 1 month"
+    ExpiresByType application/javascript "access plus 1 month"
+    ExpiresByType application/x-javascript "access plus 1 month"
+    ExpiresByType application/pdf "access plus 1 month"
+    ExpiresByType application/x-shockwave-flash "access plus 1 month"
+    ExpiresByType font/woff2 "access plus 1 year"
+    ExpiresByType font/woff "access plus 1 year"
+</IfModule>
+# TN END BROWSER CACHING
+
+
+# TN START GZIP COMPRESSION
+<IfModule mod_deflate.c>
+    AddOutputFilterByType DEFLATE text/html text/plain text/xml text/css application/javascript application/json
+    AddOutputFilterByType DEFLATE image/svg+xml
+    BrowserMatch ^Mozilla/4 gzip-only-text/html
+    BrowserMatch ^Mozilla/4\.0[678] no-gzip
+    BrowserMatch \bMSIE !no-gzip !gzip-only-text/html
+    Header append Vary User-Agent
+</IfModule>
+# TN END GZIP COMPRESSION
+
+# TN START SECURITY HEADERS
+<IfModule mod_headers.c>
+    Header set X-Content-Type-Options "nosniff"
+    Header set X-XSS-Protection "1; mode=block"
+    Header set X-Frame-Options "DENY"
+    Header set Content-Security-Policy "default-src 'self'"
+</IfModule>
+# TN END SECURITY HEADERS
+
+# TN START GZIP COMPRESSION FOR IMAGES
+#<IfModule mod_deflate.c>
+ #   AddOutputFilterByType DEFLATE image/jpeg
+  #  AddOutputFilterByType DEFLATE image/png
+  #  AddOutputFilterByType DEFLATE image/gif
+  #  AddOutputFilterByType DEFLATE image/webp
+  #  AddOutputFilterByType DEFLATE image/svg+xml
+#</IfModule>
+# TN END GZIP COMPRESSION FOR IMAGES
+
+# TN START OPTIMIZE IMAGE SERVING
+<IfModule mod_headers.c>
+    <FilesMatch "\.(jpg|jpeg|png|gif|webp|svg)$">
+        Header set Cache-Control "max-age=31536000, public"
+    </FilesMatch>
+</IfModule>
+# TN END OPTIMIZE IMAGE SERVING
+
+
+
+# END WordPress
+
+# php -- BEGIN cPanel-generated handler, do not edit
+# Set the “ea-php81” package as the default “PHP” programming language.
+<IfModule mime_module>
+  AddHandler application/x-httpd-ea-php81 .php .php8 .phtml
+</IfModule>
+# php -- END cPanel-generated handler, do not edit.et_pb_with_border .et-pb-icon,.et_pb_with_border .et_pb_image_wrap{border:0 solid #333}.et_pb_blurb_content{max-width:550px;margin:0 auto;position:relative;text-align:center;word-wrap:break-word;width:100%}.et_pb_blurb.et_pb_text_align_left .et_pb_blurb_content .et_pb_blurb_container{text-align:left}.et_pb_blurb.et_pb_text_align_right .et_pb_blurb_content .et_pb_blurb_container{text-align:right}.et_pb_blurb.et_pb_text_align_justified .et_pb_blurb_content .et_pb_blurb_container{text-align:justify}.et_pb_blurb.et_pb_text_align_center .et_pb_blurb_content .et_pb_blurb_container{text-align:center}.et_pb_blurb_content p:last-of-type{padding-bottom:0}.et_pb_blurb .et_pb_module_header a,.et_pb_blurb h4 a{text-decoration:none}.et_pb_blurb .et_pb_image_wrap{display:block;margin:auto}.et_pb_main_blurb_image img{border-radius:inherit}.et_pb_main_blurb_image img[src*=".svg"]{width:auto}.et_pb_sticky_module .et_pb_main_blurb_image .et_pb_image_wrap{width:100%;max-width:100%}.et_pb_blurb_position_left .et_pb_blurb_content,.et_pb_blurb_position_right .et_pb_blurb_content{display:table}.et_pb_blurb_position_left .et_pb_main_blurb_image,.et_pb_blurb_position_right .et_pb_main_blurb_image{width:32px;display:table-cell;line-height:0}.et_pb_blurb_position_left .et_pb_main_blurb_image img,.et_pb_blurb_position_right .et_pb_main_blurb_image img{width:inherit}.et_pb_blurb_position_left .et-pb-icon,.et_pb_blurb_position_right .et-pb-icon{font-size:32px}.et_pb_blurb_position_right .et-pb-icon{display:table-cell}.et_pb_blurb_position_left .et_pb_blurb_container,.et_pb_blurb_position_right .et_pb_blurb_container{display:table-cell;vertical-align:top}.et_pb_blurb_position_left .et_pb_blurb_container{padding-left:15px}.et_pb_blurb_position_left .et_pb_blurb_content{text-align:left}.et_pb_blurb_position_right .et_pb_blurb_container{padding-right:15px}.et_pb_blurb_position_right .et_pb_blurb_content{text-align:right}.et_pb_blurb_position_right .et_pb_main_blurb_image{left:auto;right:0}.et_pb_blurb_position_right .et-pb-icon{margin-right:0;margin-left:20px}.et_pb_main_blurb_image{display:inline-block;margin-bottom:30px;line-height:0;max-width:100%}@media (max-width:980px){.et_pb_blurb_position_left_tablet .et_pb_main_blurb_image,.et_pb_blurb_position_right_tablet .et_pb_main_blurb_image{width:32px;display:table-cell;line-height:0}.et_pb_blurb_position_left_tablet .et_pb_main_blurb_image img,.et_pb_blurb_position_right_tablet .et_pb_main_blurb_image img{width:inherit}.et_pb_blurb_position_left_tablet .et-pb-icon,.et_pb_blurb_position_right_tablet .et-pb-icon{font-size:32px;display:table-cell}.et_pb_blurb_position_left_tablet .et_pb_blurb_container,.et_pb_blurb_position_right_tablet .et_pb_blurb_container{display:table-cell;vertical-align:top}.et_pb_blurb_position_left_tablet .et_pb_blurb_container{padding-left:15px}.et_pb_blurb_position_left_tablet .et_pb_blurb_content{text-align:left}.et_pb_blurb_position_right_tablet .et_pb_blurb_container{padding-right:15px}.et_pb_blurb_position_right_tablet .et_pb_blurb_content{padding-right:52px;text-align:right}.et_pb_blurb_position_right_tablet .et_pb_main_blurb_image{left:auto;right:0}.et_pb_blurb_position_right_tablet .et-pb-icon{margin-right:0;margin-left:20px}.et_pb_blurb_position_top_tablet .et_pb_main_blurb_image{display:block;width:auto}.et_pb_blurb_position_top_tablet .et-pb-icon{font-size:96px;display:initial}.et_pb_blurb_position_top_tablet .et_pb_blurb_container{display:block;padding-left:0;padding-right:0}.et_pb_blurb_position_top_tablet .et_pb_blurb_content{display:inline-block;text-align:center;padding-right:0}}@media (max-width:767px){.et_pb_blurb_position_left_phone .et_pb_main_blurb_image,.et_pb_blurb_position_right_phone .et_pb_main_blurb_image{width:32px;display:table-cell;line-height:0}.et_pb_blurb_position_left_phone .et_pb_main_blurb_image img,.et_pb_blurb_position_right_phone .et_pb_main_blurb_image img{width:inherit}.et_pb_blurb_position_left_phone .et-pb-icon,.et_pb_blurb_position_right_phone .et-pb-icon{font-size:32px;display:table-cell}.et_pb_blurb_position_left_phone .et_pb_blurb_container,.et_pb_blurb_position_right_phone .et_pb_blurb_container{display:table-cell;vertical-align:top}.et_pb_blurb_position_left_phone .et_pb_blurb_container{padding-left:15px}.et_pb_blurb_position_left_phone .et_pb_blurb_content{text-align:left}.et_pb_blurb_position_right_phone .et_pb_blurb_container{padding-right:15px}.et_pb_blurb_position_right_phone .et_pb_blurb_content{padding-right:52px;text-align:right}.et_pb_blurb_position_right_phone .et_pb_main_blurb_image{left:auto;right:0}.et_pb_blurb_position_right_phone .et-pb-icon{margin-right:0;margin-left:20px}.et_pb_blurb_position_top_phone .et_pb_main_blurb_image{display:block;width:auto}.et_pb_blurb_position_top_phone .et-pb-icon{font-size:96px;display:initial}.et_pb_blurb_position_top_phone .et_pb_blurb_container{display:block;padding-left:0;padding-right:0}.et_pb_blurb_position_top_phone .et_pb_blurb_content{display:inline-block;text-align:center;padding-right:0}}@media (max-width:980px){.et_pb_blurb.et_pb_text_align_left-tablet .et_pb_blurb_content .et_pb_blurb_container{text-align:left}.et_pb_blurb.et_pb_text_align_right-tablet .et_pb_blurb_content .et_pb_blurb_container{text-align:right}.et_pb_blurb.et_pb_text_align_justified-tablet .et_pb_blurb_content .et_pb_blurb_container{text-align:justify}.et_pb_blurb.et_pb_text_align_center-tablet .et_pb_blurb_content .et_pb_blurb_container{text-align:center}}@media (max-width:767px){.et_pb_blurb.et_pb_text_align_left-phone .et_pb_blurb_content .et_pb_blurb_container{text-align:left}.et_pb_blurb.et_pb_text_align_right-phone .et_pb_blurb_content .et_pb_blurb_container{text-align:right}.et_pb_blurb.et_pb_text_align_justified-phone .et_pb_blurb_content .et_pb_blurb_container{text-align:justify}.et_pb_blurb.et_pb_text_align_center-phone .et_pb_blurb_content .et_pb_blurb_container{text-align:center}}
+.et-waypoint.et_pb_animation_off,.et-waypoint:not(.et_pb_counters).et_pb_animation_off,.et_pb_animation_off{opacity:1}.et-waypoint.et_pb_animation_left.et-animated,.et_pb_animation_left.et-animated{opacity:1;-webkit-animation:fadeLeft 1s cubic-bezier(.77,0,.175,1) 1;animation:fadeLeft 1s cubic-bezier(.77,0,.175,1) 1}.et-waypoint.et_pb_animation_right.et-animated,.et_pb_animation_right.et-animated{opacity:1;-webkit-animation:fadeRight 1s cubic-bezier(.77,0,.175,1) 1;animation:fadeRight 1s cubic-bezier(.77,0,.175,1) 1}.et-waypoint.et_pb_animation_top.et-animated,.et_pb_animation_top.et-animated{opacity:1;-webkit-animation:fadeTop 1s cubic-bezier(.77,0,.175,1) 1;animation:fadeTop 1s cubic-bezier(.77,0,.175,1) 1}.et-waypoint.et_pb_animation_bottom.et-animated,.et_pb_animation_bottom.et-animated{opacity:1;-webkit-animation:fadeBottom 1s cubic-bezier(.77,0,.175,1) 1;animation:fadeBottom 1s cubic-bezier(.77,0,.175,1) 1}.et-waypoint.et_pb_animation_fade_in.et-animated,.et_pb_animation_fade_in.et-animated{opacity:1;-webkit-animation:fadeIn 1s cubic-bezier(.77,0,.175,1) 1;animation:fadeIn 1s cubic-bezier(.77,0,.175,1) 1}@media (max-width:980px){.et-waypoint.et_pb_animation_off_tablet,.et-waypoint:not(.et_pb_counters).et_pb_animation_off_tablet,.et_pb_animation_off_tablet{opacity:1;-webkit-animation:none;animation:none}.et-waypoint.et_pb_animation_left_tablet.et-animated,.et_pb_animation_left_tablet.et-animated{opacity:1;-webkit-animation:fadeLeft 1s cubic-bezier(.77,0,.175,1) 1;animation:fadeLeft 1s cubic-bezier(.77,0,.175,1) 1}.et-waypoint.et_pb_animation_right_tablet.et-animated,.et_pb_animation_right_tablet.et-animated{opacity:1;-webkit-animation:fadeRight 1s cubic-bezier(.77,0,.175,1) 1;animation:fadeRight 1s cubic-bezier(.77,0,.175,1) 1}.et-waypoint.et_pb_animation_top_tablet.et-animated,.et_pb_animation_top_tablet.et-animated{opacity:1;-webkit-animation:fadeTop 1s cubic-bezier(.77,0,.175,1) 1;animation:fadeTop 1s cubic-bezier(.77,0,.175,1) 1}.et-waypoint.et_pb_animation_bottom_tablet.et-animated,.et_pb_animation_bottom_tablet.et-animated{opacity:1;-webkit-animation:fadeBottom 1s cubic-bezier(.77,0,.175,1) 1;animation:fadeBottom 1s cubic-bezier(.77,0,.175,1) 1}.et-waypoint.et_pb_animation_fade_in_tablet.et-animated,.et_pb_animation_fade_in_tablet.et-animated{opacity:1;-webkit-animation:fadeIn 1s cubic-bezier(.77,0,.175,1) 1;animation:fadeIn 1s cubic-bezier(.77,0,.175,1) 1}}@media (max-width:767px){.et-waypoint.et_pb_animation_off_phone,.et-waypoint:not(.et_pb_counters).et_pb_animation_off_phone,.et_pb_animation_off_phone{opacity:1;-webkit-animation:none;animation:none}.et-waypoint.et_pb_animation_left_phone.et-animated,.et_pb_animation_left_phone.et-animated{opacity:1;-webkit-animation:fadeLeft 1s cubic-bezier(.77,0,.175,1) 1;animation:fadeLeft 1s cubic-bezier(.77,0,.175,1) 1}.et-waypoint.et_pb_animation_right_phone.et-animated,.et_pb_animation_right_phone.et-animated{opacity:1;-webkit-animation:fadeRight 1s cubic-bezier(.77,0,.175,1) 1;animation:fadeRight 1s cubic-bezier(.77,0,.175,1) 1}.et-waypoint.et_pb_animation_top_phone.et-animated,.et_pb_animation_top_phone.et-animated{opacity:1;-webkit-animation:fadeTop 1s cubic-bezier(.77,0,.175,1) 1;animation:fadeTop 1s cubic-bezier(.77,0,.175,1) 1}.et-waypoint.et_pb_animation_bottom_phone.et-animated,.et_pb_animation_bottom_phone.et-animated{opacity:1;-webkit-animation:fadeBottom 1s cubic-bezier(.77,0,.175,1) 1;animation:fadeBottom 1s cubic-bezier(.77,0,.175,1) 1}.et-waypoint.et_pb_animation_fade_in_phone.et-animated,.et_pb_animation_fade_in_phone.et-animated{opacity:1;-webkit-animation:fadeIn 1s cubic-bezier(.77,0,.175,1) 1;animation:fadeIn 1s cubic-bezier(.77,0,.175,1) 1}}

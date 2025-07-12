@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Shift Report</title>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      font-family: 'Orbitron', sans-serif;
+      background: linear-gradient(270deg, #00f2ff, #0051ff, #00ff94);
+      background-size: 600% 600%;
+      animation: backgroundShift 20s ease infinite;
+      color: #fff;
+    }
+
+    @keyframes backgroundShift {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+
+    .header {
+      text-align: center;
+      font-size: 28px;
+      padding: 15px;
+      background-color: rgba(0, 0, 0, 0.5);
+      border-bottom: 2px solid #0ff;
+    }
+
+    .container {
+      height: calc(100% - 70px);
+      display: flex;
+      flex-direction: column;
+      overflow: auto;
+    }
+
+    .filters {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 20px;
+      padding: 20px;
+      justify-content: center;
+      background: rgba(0, 0, 0, 0.3);
+    }
+
+    label {
+      color: #0ff;
+      font-weight: bold;
+    }
+
+    input, select, textarea {
+      padding: 10px;
+      border-radius: 6px;
+      border: none;
+      background: #111;
+      color: #0ff;
+      font-family: 'Orbitron', sans-serif;
+      box-shadow: 0 0 5px #0ff;
+    }
+
+    table {
+      width: 95%;
+      margin: auto;
+      border-collapse: collapse;
+      background-color: rgba(0, 0, 0, 0.5);
+      box-shadow: 0 0 10px #0ff;
+    }
+
+    th, td {
+      border: 1px solid #0ff;
+      padding: 10px;
+      text-align: center;
+    }
+
+    th {
+      background: #111;
+    }
+
+    .highlight td {
+      background: rgba(0, 255, 255, 0.1);
+    }
+
+    .total-sap-row td {
+      background: #002244;
+      font-weight: bold;
+    }
+
+    .save-btn {
+      font-size: 14px;
+      font-family: 'Orbitron', sans-serif;
+      padding: 10px 20px;
+      background: #00e676;
+      border: none;
+      border-radius: 8px;
+      color: #000;
+      cursor: pointer;
+      box-shadow: 0 0 10px #00e676;
+    }
+
+    .token-section {
+      display: flex;
+      flex-direction: row;
+      flex-wrap: wrap;
+      gap: 20px;
+      justify-content: center;
+      align-items: center;
+      padding: 10px;
+    }
+
+    .token-section div {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    #tokenDetailsRow {
+      display: table-row;
+    }
+
+    #tokenDetailsRow.hidden {
+      display: none;
+    }
+
+    .remarks-save-row {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 20px;
+      padding: 10px 0;
+    }
+
+    #remarks {
+      max-width: 300px;
+      width: 100%;
+      min-height: 60px;
+    }
+
+  </style>
+</head>
+<body>
+  <div class="header">✨ SHIFT REPORT - GATE ENTRY ✨</div>
+
+  <div class="container">
+    <div class="filters">
+      <div>
+        <label for="reportDate">Date:</label><br>
+        <input type="date" id="reportDate">
+      </div>
+      <div>
+        <label for="plant">Plant:</label><br>
+        <select id="plant">
+          <option value="C34A">C34A</option>
+          <option value="C2">C2</option>
+          <option value="C3">C3</option>
+        </select>
+      </div>
+      <div>
+        <label for="shift">Shift:</label><br>
+        <select id="shift">
+          <option value="A">A</option>
+          <option value="B">B</option>
+          <option value="C">C</option>
+          <option value="06:00-09:00">06:00 - 09:00</option>
+        </select>
+      </div>
+      <div>
+        <label for="shiftPerson">Shift Person:</label><br>
+        <input type="text" id="shiftPerson" readonly />
+      </div>
+      <div>
+        <label for="lossTokens">Loss/Damage Token:</label><br>
+        <input type="number" id="lossTokens" min="0" value="0" />
+      </div>
+    </div>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Material</th>
+          <th>Received Bills by Security</th>
+          <th>SAP Done</th>
+          <th>Pending</th>
+          <th>Remarks</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>WOOD</td>
+          <td><input type="number" id="woodReceived" min="0"></td>
+          <td><input type="number" id="woodSAP" min="0"></td>
+          <td><input type="number" id="woodPending" readonly></td>
+          <td><input type="text" id="woodRemark"></td>
+        </tr>
+        <tr>
+          <td>STORE</td>
+          <td><input type="number" id="storeReceived" min="0"></td>
+          <td><input type="number" id="storeSAP" min="0"></td>
+          <td><input type="number" id="storePending" readonly></td>
+          <td><input type="text" id="storeRemark"></td>
+        </tr>
+        <tr>
+          <td>DISPATCH</td>
+          <td><input type="number" id="dispatchReceived" min="0"></td>
+          <td><input type="number" id="dispatchSAP" min="0"></td>
+          <td><input type="number" id="dispatchPending" readonly></td>
+          <td><input type="text" id="dispatchRemark"></td>
+        </tr>
+        <tr class="total-sap-row">
+          <td>Total SAP Done</td>
+          <td colspan="4" id="totalSapDone">0</td>
+        </tr>
+
+        <tr id="tokenDetailsRow" class="highlight">
+          <td colspan="5">
+            <div class="token-section">
+              <div>
+                <label>In Stock Token Card</label>
+                <input type="number" id="inStockTokens" min="0">
+              </div>
+              <div>
+                <label>Issued Token Card</label>
+                <input type="number" id="issuedTokens" readonly>
+              </div>
+              <div>
+                <label>Total Token Card</label>
+                <input type="number" id="totalTokens" readonly>
+              </div>
+            </div>
+
+            <div class="remarks-save-row">
+              <textarea id="remarks" placeholder="Remarks/Notes"></textarea>
+              <button id="saveButton">Save Report</button>
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+<script>
+  const today = new Date().toISOString().split('T')[0];
+  document.getElementById('reportDate').value = today;
+  document.getElementById('shiftPerson').value = localStorage.getItem('username') || "Unknown";
+
+  const plantTokens = {
+    C34A: 117,
+    C2: 133,
+    C3: 184
+  };
+
+  const lossTracker = {
+    C34A: { A: 0, B: 0, C: 0 },
+    C2: { A: 0, B: 0, C: 0 },
+    C3: { A: 0, B: 0, C: 0 }
+  };
+
+  function getNextShift(currentShift) {
+    if (currentShift === "A") return "B";
+    if (currentShift === "B") return "C";
+    if (currentShift === "C") return "A";
+    return "";
+  }
+
+  function getPreviousShift(currentShift) {
+    if (currentShift === "A") return "C";
+    if (currentShift === "B") return "A";
+    if (currentShift === "C") return "B";
+    return "";
+  }
+
+  function extractShiftCode(shiftValue) {
+    if (shiftValue === "06:00-14:00") return "A";
+    if (shiftValue === "14:00-22:00") return "B";
+    if (shiftValue === "22:00-06:00") return "C";
+    return shiftValue; // fallback for direct A/B/C
+  }
+
+  async function loadPreviousShiftPending() {
+    const date = document.getElementById('reportDate').value;
+    const shiftValue = document.getElementById('shift').value;
+    const shiftCode = extractShiftCode(shiftValue);
+    const plant = document.getElementById('plant').value;
+
+    if (!plant || !shiftCode || !date) return;
+
+    try {
+      const response = await fetch('/api/shift-report/previous-pending', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ plant, shift: shiftCode, date })
+      });
+
+      const result = await response.json();
+      if (result.success) {
+        document.getElementById('woodPending').value = result.pending.woodPending || 0;
+        document.getElementById('storePending').value = result.pending.storePending || 0;
+        document.getElementById('dispatchPending').value = result.pending.dispatchPending || 0;
+      }
+    } catch (error) {
+      console.error("Error loading previous pending:", error);
+    }
+  }
+
+  function updateTotalToken() {
+    const plant = document.getElementById('plant').value;
+    const shiftValue = document.getElementById('shift').value;
+    const shiftCode = extractShiftCode(shiftValue);
+    const baseToken = plantTokens[plant] || 0;
+
+    const loss = parseInt(document.getElementById('lossTokens').value) || 0;
+
+    // Store loss for next shift
+    const nextShift = getNextShift(shiftCode);
+    if (plant && nextShift) {
+      if (!lossTracker[plant]) lossTracker[plant] = {};
+      lossTracker[plant][nextShift] = loss;
+    }
+
+    // Update total token card
+    const adjustedTotal = baseToken - loss;
+    document.getElementById('totalTokens').value = adjustedTotal >= 0 ? adjustedTotal : 0;
+
+    updateIssuedToken();
+  }
+
+  function updatePendingAndTotalSAP() {
+    const ids = ['wood', 'store', 'dispatch'];
+    let total = 0;
+    ids.forEach(id => {
+      const received = parseInt(document.getElementById(id + 'Received').value) || 0;
+      const sap = parseInt(document.getElementById(id + 'SAP').value) || 0;
+      document.getElementById(id + 'Pending').value = received - sap;
+      total += sap;
+    });
+    document.getElementById('totalSapDone').innerText = total;
+  }
+
+  function updateIssuedToken() {
+    const total = parseInt(document.getElementById('totalTokens').value) || 0;
+    const stock = parseInt(document.getElementById('inStockTokens').value) || 0;
+    document.getElementById('issuedTokens').value = total - stock;
+  }
+
+  function toggleTokenSection() {
+    const shift = document.getElementById('shift').value;
+    const tokenRow = document.getElementById('tokenDetailsRow');
+    tokenRow.classList.toggle('hidden', shift === "06:00-09:00");
+  }
+
+  function trackLossForNextShift() {
+    const plant = document.getElementById('plant').value;
+    const shiftValue = document.getElementById('shift').value;
+    const shiftCode = extractShiftCode(shiftValue);
+    const nextShift = getNextShift(shiftCode);
+    const loss = parseInt(document.getElementById('lossTokens').value) || 0;
+    if (loss > 0 && plant && nextShift) {
+      lossTracker[plant][nextShift] = loss;
+    }
+  }
+
+  function collectShiftData() {
+    return {
+      date: document.getElementById('reportDate').value,
+      shift: document.getElementById('shift').value,
+      plant: document.getElementById('plant').value,
+      shiftPerson: document.getElementById('shiftPerson').value,
+      woodReceived: parseInt(document.getElementById('woodReceived').value) || 0,
+      woodSAP: parseInt(document.getElementById('woodSAP').value) || 0,
+      woodPending: parseInt(document.getElementById('woodPending').value) || 0,
+      storeReceived: parseInt(document.getElementById('storeReceived').value) || 0,
+      storeSAP: parseInt(document.getElementById('storeSAP').value) || 0,
+      storePending: parseInt(document.getElementById('storePending').value) || 0,
+      dispatchReceived: parseInt(document.getElementById('dispatchReceived').value) || 0,
+      dispatchSAP: parseInt(document.getElementById('dispatchSAP').value) || 0,
+      dispatchPending: parseInt(document.getElementById('dispatchPending').value) || 0,
+      lossTokens: parseInt(document.getElementById('lossTokens').value) || 0,
+      totalTokens: parseInt(document.getElementById('totalTokens').value) || 0,
+      inStockTokens: parseInt(document.getElementById('inStockTokens').value) || 0,
+      issuedTokens: parseInt(document.getElementById('issuedTokens').value) || 0,
+      remarks: document.getElementById('remarks')?.value || ""
+    };
+  }
+
+  async function saveShiftReport() {
+  const data = collectShiftData();
+  const token = localStorage.getItem('token'); // 🔑 Fetch the token stored during login
+
+  try {
+    const response = await fetch('/api/shift-report', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + token   // ✅ Add this header
+      },
+      body: JSON.stringify(data)
+    });
+
+    const result = await response.json();
+    if (result.success) {
+      alert("Report Saved Successfully");
+      trackLossForNextShift();
+      window.location.reload();
+    } else {
+      alert("Failed to save report");
+    }
+  } catch (err) {
+    console.error("Error saving shift report:", err);
+    alert("Server error while saving");
+  }
+}
+
+  // Auto-update on input changes
+  document.querySelectorAll('input[type="number"]').forEach(input => {
+    input.addEventListener('input', () => {
+      updatePendingAndTotalSAP();
+      updateIssuedToken();
+    });
+  });
+
+  // Plant or shift changes
+  document.getElementById('plant').addEventListener('change', () => {
+    updateTotalToken();
+    loadPreviousShiftPending();
+  });
+
+  document.getElementById('shift').addEventListener('change', () => {
+    toggleTokenSection();
+    loadPreviousShiftPending();
+
+    const plant = document.getElementById('plant').value;
+    const shift = document.getElementById('shift').value;
+    const shiftCode = extractShiftCode(shift);
+
+    // auto fill lossTokens from previous recorded loss for this shift
+    const prevLoss = lossTracker[plant]?.[shiftCode] || 0;
+    document.getElementById('lossTokens').value = prevLoss;
+
+    updateTotalToken();
+  });
+
+  // Date or loss/inStock change
+  document.getElementById('reportDate').addEventListener('change', loadPreviousShiftPending);
+  document.getElementById('lossTokens').addEventListener('input', updateTotalToken);
+  document.getElementById('inStockTokens').addEventListener('input', updateIssuedToken);
+
+  // On page load
+  document.addEventListener("DOMContentLoaded", () => {
+    const saveBtn = document.getElementById('saveButton');
+    if (saveBtn) {
+      saveBtn.addEventListener('click', saveShiftReport);
+    }
+    updateTotalToken();
+    toggleTokenSection();
+    loadPreviousShiftPending();
+  });
+</script>
+
+
+
+</body>
+</html>

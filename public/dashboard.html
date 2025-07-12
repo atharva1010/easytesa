@@ -1,0 +1,1041 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>User Dashboard</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;700&display=swap');
+
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+
+  html, body {
+    height: 100%;
+    font-family: 'Poppins', sans-serif;
+    overflow: hidden;
+  }
+
+  body {
+    background-image: url('/bg/background.jpg');
+    background-size: cover;
+    background-repeat: no-repeat;
+    background-position: center;
+    background-attachment: fixed;
+  }
+
+  header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 60px;
+    background: rgba(0, 0, 0, 0.8);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 20px;
+    box-shadow: 0 0 10px #00f7ff;
+    z-index: 10;
+  }
+
+  .left {
+    display: flex;
+    align-items: center;
+  }
+
+  .hamburger {
+    font-size: 24px;
+    cursor: pointer;
+    margin-right: 20px;
+    color: #00f7ff;
+  }
+
+  .logo {
+    height: 40px;
+    margin-right: 10px;
+    filter: drop-shadow(0 0 5px #00f7ff);
+  }
+
+  .center-text {
+    flex: 1;
+    text-align: center;
+    font-weight: bold;
+    font-size: 16px;
+    color: #ffffff;
+    text-shadow: 0 0 4px #00f7ff;
+  }
+
+  .right {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .profile-pic {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    cursor: pointer;
+    border: 2px solid #00f7ff;
+    box-shadow: 0 0 8px #00f7ff;
+  }
+
+  .profile-card {
+    position: absolute;
+    top: 60px;
+    right: 10px;
+    background: #111;
+    color: white;
+    padding: 15px;
+    border-radius: 10px;
+    width: 250px;
+    box-shadow: 0 0 12px #00f7ff;
+    z-index: 1000;
+    display: none;
+  }
+
+  .profile-card p {
+    margin: 5px 0;
+    color: #ccc;
+  }
+
+  .sidebar {
+    position: fixed;
+    top: 60px;
+    left: 0;
+    background: rgba(0, 0, 0, 0.9);
+    width: 200px;
+    height: calc(100% - 60px);
+    padding: 20px;
+    display: none;
+    flex-direction: column;
+    gap: 10px;
+    z-index: 9;
+    box-shadow: 0 0 10px #00f7ff;
+  }
+
+  .sidebar.show {
+    display: flex;
+  }
+
+  .sidebar button {
+    padding: 10px;
+    color: white;
+    background: #007bff;
+    border: none;
+    cursor: pointer;
+    border-radius: 6px;
+    font-weight: bold;
+    box-shadow: 0 0 10px #00f7ff;
+    transition: background 0.3s;
+  }
+
+  .sidebar button:hover {
+    background: #005ecb;
+  }
+
+  .content {
+    margin-top: 60px;
+    padding: 20px;
+    height: calc(100% - 60px);
+    overflow-y: auto;
+  }
+
+  .buttons {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    margin-bottom: 15px;
+    flex-wrap: wrap;
+  }
+
+  .buttons input,
+  .buttons select,
+  .buttons button {
+    padding: 10px 16px;
+    font-size: 14px;
+    font-weight: 500;
+    color: rgb(15, 1, 1);
+    background: linear-gradient(135deg, #7b2ff7, #f107a3);
+    border: none;
+    border-radius: 8px;
+    box-shadow: 0 0 8px #00fff7;
+    cursor: pointer;
+    transition: all 0.2s ease-in-out;
+  }
+
+  .buttons button:hover,
+  .buttons input:hover,
+  .buttons select:hover {
+    transform: scale(1.05);
+    box-shadow: 0 0 15px #00fff7;
+  }
+
+  .table-container {
+    width: 100%;
+    margin: auto;
+    max-height: 610px;
+    overflow: auto;
+    border: 2px solid #00f7ff;
+    background: rgba(30, 223, 230, 0.932);
+    box-shadow: 0 0 15px #00f7ff;
+  }
+
+  table {
+    width: max-content;
+    min-width: 100%;
+    border-collapse: collapse;
+    background-color: rgba(0, 0, 0, 0.6); /* translucent black */
+    color: white;
+    border: none;
+  }
+
+  th, td {
+    border: 1px solid #42ecf1;
+    padding: 8px;
+    white-space: nowrap;
+    text-align: center;
+    color: white;
+  }
+
+  table thead tr:first-child th {
+    position: sticky;
+    top: 0;
+    background: rgba(38, 50, 56, 0.95);
+    z-index: 3;
+    font-weight: bold;
+    color: white;
+  }
+
+  .team-modal {
+    position: fixed;
+    top: 10%;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #1c1c1c;
+    width: 80%;
+    max-height: 80%;
+    overflow-y: auto;
+    padding: 20px;
+    border-radius: 10px;
+    display: none;
+    z-index: 20;
+    border: 2px solid #00f7ff;
+    box-shadow: 0 0 12px #00fff7;
+  }
+
+  .user-card {
+    border: 1px solid #00f7ff;
+    padding: 10px;
+    margin: 10px;
+    display: inline-block;
+    width: 200px;
+    text-align: center;
+    border-radius: 8px;
+    background: #212121;
+    color: white;
+    box-shadow: 0 0 8px #00fff7;
+  }
+
+  .user-card img {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    margin-bottom: 10px;
+    border: 2px solid #00fff7;
+  }
+
+  .close-btn {
+    background: red;
+    color: white;
+    border: none;
+    padding: 6px 12px;
+    float: right;
+    cursor: pointer;
+    border-radius: 5px;
+    box-shadow: 0 0 6px red;
+  }
+
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background-color: #00fff7;
+    border-radius: 4px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: #00cccc;
+  }
+
+  /* Freeze 1st 5 columns */
+  .shift-schedule-freeze td.freeze-col-1,
+  .shift-schedule-freeze th.freeze-col-1,
+  .shift-schedule-freeze td.freeze-col-2,
+  .shift-schedule-freeze th.freeze-col-2,
+  .shift-schedule-freeze td.freeze-col-3,
+  .shift-schedule-freeze th.freeze-col-3,
+  .shift-schedule-freeze td.freeze-col-4,
+  .shift-schedule-freeze th.freeze-col-4,
+  .shift-schedule-freeze td.freeze-col-5,
+  .shift-schedule-freeze th.freeze-col-5 {
+    position: sticky;
+    left: 0;
+    background: rgba(7, 225, 233, 0.95);
+    z-index: 3;
+    color: white;
+  }
+
+  footer {
+  background-color: linear-gradient(to bottom, #0040ff, #000000);
+  color: white;
+  text-align: center;
+  padding: 12px 0;
+  margin-top: auto; /* Push footer to the bottom */
+}
+
+footer p {
+  font-size: 14px;
+}
+    footer {
+      background: linear-gradient(to bottom, #0040ff, #000000);
+      text-align: center;
+      padding: 12px 0;
+      font-size: 15px;
+      margin-top: auto;
+    }
+</style>
+
+
+
+</head>
+<body onload="loadUserProfile()">
+  <!-- HEADER -->
+<header style="width: 100%; display: flex; justify-content: space-between; align-items: center; padding: 10px 20px; background: rgba(0, 0, 0, 0.85); color: white; position: fixed; top: 0; left: 0; z-index: 999; box-shadow: 0 0 12px #00f7ff;">
+
+  
+  <!-- Left: Hamburger -->
+  <div style="display: flex; align-items: center;">
+    <div id="hamburger" onclick="toggleSidebar()" style="cursor: pointer; font-size: 24px; margin-right: 15px;">&#9776;</div>
+  </div>
+<img src="assets/logo.png"
+         alt="Logo"
+         onclick="goHome()"
+         style="height: 40px; cursor: pointer; border-radius: 6px;">
+
+  <!-- Center: Header Text -->
+  <div style="flex: 1; text-align: center;">
+    <span style="font-weight: bold; font-size: 20px; color: #00f7ff; text-shadow: 0 0 6px #00f7ff;">
+      BALAJI ACTION BUILDEWELL PRIVATE LIMITED
+    </span>
+  </div>
+
+  <!-- Right: Icons + Buttons -->
+  <div style="display: flex; align-items: center; gap: 20px; position: relative;">
+    
+    <!-- Notification Bell -->
+    <div id="notification-icon"
+         onclick="handleNotificationClick()"
+         title="Notifications"
+         style="position: relative; cursor: pointer; font-size: 26px; color: #00fff7; text-shadow: 0 0 8px #00f7ff;">
+      🔔
+      <span id="notification-dot" style="
+        display: none;
+        position: absolute;
+        top: -6px;
+        right: -6px;
+        width: 12px;
+        height: 12px;
+        background: red;
+        border-radius: 50%;
+        box-shadow: 0 0 5px red;
+      "></span>
+    </div>
+
+    <!-- Message Icon -->
+    <div onclick="toggleChatUserList()"
+         title="Messages"
+         style="position: relative; cursor: pointer; font-size: 26px; color: #00fff7; text-shadow: 0 0 8px #00f7ff;">
+      💬
+      <span id="messageNotifyDot" style="
+        display: none;
+        position: absolute;
+        top: -6px;
+        right: -6px;
+        width: 12px;
+        height: 12px;
+        background: red;
+        border-radius: 50%;
+        box-shadow: 0 0 5px red;
+      "></span>
+    </div>
+
+    <!-- Logout Button -->
+    <button onclick="logout()" style="
+      background-color: #ff0080;
+      color: white;
+      border: none;
+      padding: 10px 16px;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+      box-shadow: 0 0 10px #ff0080;
+      transition: 0.3s;
+    ">Logout</button>
+
+    <!-- Profile Image -->
+    <img id="profileImage" src="assets/profile.png"
+         onclick="toggleProfileCard()"
+         style="width: 40px; height: 40px; border-radius: 50%; cursor: pointer; border: 2px solid #00f7ff; box-shadow: 0 0 8px #00f7ff;">
+
+    <!-- Profile Card -->
+    <div id="profileCard" class="profile-card" style="
+      display: none;
+      position: absolute;
+      top: 60px;
+      right: 0;
+      background: #1e1e1e;
+      color: white;
+      padding: 15px;
+      border-radius: 10px;
+      width: 250px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.3);
+      z-index: 1000;
+    ">
+      <p><strong>Name:</strong> Anuj Kushwah</p>
+      <p><strong>Role:</strong> Admin</p>
+      <button onclick="logout()" style="margin-top: 10px; padding: 6px 12px; background: red; color: white; border: none; border-radius: 6px; cursor: pointer;">Logout</button>
+    </div>
+  </div>
+</header>
+
+<!-- Update Notification Panel -->
+<div id="updatePanel" style="
+  display: none;
+  position: fixed;
+  top: 60px;
+  right: 10px;
+  background: #1a1a1a;
+  color: white;
+  border-radius: 10px;
+  padding: 15px;
+  width: 300px;
+  box-shadow: 0 0 15px #00f7ff;
+  z-index: 999;
+">
+  <h4 style="margin-top: 0;">📢 Latest Updates</h4>
+  <div id="updatesList" style="max-height: 300px; overflow-y: auto;"></div>
+</div>
+
+<!-- Chat User List Panel -->
+<div id="chatUserList" style="
+  position: fixed;
+  top: 60px;
+  right: 10px;
+  background: #1a1a1a;
+  color: white;
+  width: 250px;
+  max-height: 400px;
+  overflow-y: auto;
+  border-radius: 10px;
+  box-shadow: 0 0 15px #00f7ff;
+  z-index: 1000;
+  display: none;
+  padding: 10px;
+">
+  <h4 style="margin: 0 0 10px;">💬 Chat with:</h4>
+  <div id="userListContainer">
+    <p>No users available.</p>
+  </div>
+</div>
+
+  <!-- Sidebar -->
+<div class="sidebar" id="sidebar">
+  <button onclick="showTeam()">View Team</button>
+
+  <h4 style="margin-top: 20px; color: white;">Register</h4>
+  <button onclick="openRegister('wood')">Wood Bill Submit</button>
+  <button onclick="openRegister('methanol')">Methanol Weight</button>
+  <button onclick="openRegister('longbody')">Long Body</button>
+  <button onclick="openRegister('shift')">Daily Shift Report</button>
+
+  <h4 style="margin-top: 20px; color: white;">Utility Page</h4>
+  <button onclick="openRegister('download')">Download</button>
+  <button onclick="openRegister('sop')">SOP</button>
+  <button onclick="openRegister('about')">About Company</button>
+
+</div>
+
+<!-- Team Modal -->
+<div class="team-modal" id="teamModal">
+  <button class="close-btn" onclick="hideTeam()">Close</button>
+  <h3>Our Team</h3>
+  <div id="teamContainer"></div>
+</div>
+
+<!-- Main Content -->
+<div class="content" onclick="hideSidebar()">
+
+  <!-- Top Buttons and Filters -->
+  <div class="buttons" id="topButtons">
+    <input type="text" placeholder="Search..." id="searchBox" oninput="applyFilters()" />
+    <button onclick="loadTable('WOOD PO')">WOOD PO</button>
+    <button onclick="loadTable('CONTACTS')">CONTACTS</button>
+    <button onclick="loadTable('ID PASSWORD')">ID PASSWORD</button>
+    <button onclick="loadTable('SHIFT SCHEDULE')">SHIFT SCHEDULE</button>
+    <button onclick="loadTable('T-CODE')">T-CODE</button>
+    <select id="materialFilter" onchange="applyFilters()" style="display: none;"></select>
+  </div>
+
+  <!-- Table Display Area -->
+  <div class="table-container" id="tableSection">
+    <table id="dataTable">
+      <thead></thead>
+      <tbody></tbody>
+    </table>
+  </div>
+
+  <!-- Iframe for Register Forms -->
+  <div id="iframeContainer" style="display:none;">
+    <iframe id="registerIframe" src="" style="width:100%; height:650px; border:none;"></iframe>
+  </div>
+</div>
+
+<!-- Chat Box -->
+<div id="chatBox" style="display:none; position:fixed; bottom:10px; right:10px; width:300px; background:white; border:1px solid #ccc; border-radius:8px; box-shadow:0 0 10px rgba(0,0,0,0.3); z-index:2000;">
+  <div style="background:#007bff; color:white; padding:10px; border-top-left-radius:8px; border-top-right-radius:8px; display:flex; justify-content:space-between; align-items:center;">
+    <span id="chatWith">Chat</span>
+    <button onclick="closeChat()" style="background:none; border:none; color:white; font-size:16px; cursor:pointer;">&times;</button>
+  </div>
+  <div id="chatMessages" style="height:200px; overflow-y:auto; padding:10px;"></div>
+  <div style="padding:10px; display:flex; gap:5px;">
+    <input type="text" id="chatInput" placeholder="Type a message" style="flex:1; padding:5px;" onkeypress="if(event.key==='Enter') sendMessage()" />
+    <button onclick="sendMessage()" style="padding:5px 10px;">Send</button>
+  </div>
+</div>
+
+<!-- Footer -->
+<footer style="width: 100%; background: rgba(0,0,0,0.85); color: white; text-align: center; padding: 10px 0; position: fixed; bottom: 0; left: 0; z-index: 999;">
+  &copy; All Rights Reserved easyGate
+</footer>
+
+
+
+
+<script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+<script>
+  let originalData = [];
+  let currentUser = null;
+  let currentCategory = '';
+
+  function toggleSidebar() {
+    document.getElementById('sidebar').classList.toggle('show');
+  }
+
+  function hideSidebar() {
+    document.getElementById('sidebar').classList.remove('show');
+  }
+
+  function logout() {
+    localStorage.clear();
+    window.location.href = 'index.html';
+  }
+
+  function loadUserProfile() {
+    const token = localStorage.getItem('token');
+    if (!token) return logout();
+
+    fetch('/api/me', {
+      headers: { Authorization: `Bearer ${token}` }
+    })
+      .then(res => res.json())
+      .then(data => {
+        if (!data.success) return logout();
+
+        currentUser = data.user;
+        document.getElementById('profileImage').src = currentUser.profilePic || 'assets/profile.png';
+
+        const card = document.getElementById('profileCard');
+        card.innerHTML = `
+          <h4>${currentUser.username}</h4>
+          <p><strong>User ID:</strong> ${currentUser.userId}</p>
+          <p><strong>Email:</strong> ${currentUser.email}</p>
+          <p><strong>Mobile:</strong> ${currentUser.mobile}</p>
+          <p><strong>Department:</strong> ${currentUser.department}</p>
+          <p><strong>Designation:</strong> ${currentUser.designation}</p>
+          <p><strong>Role:</strong> ${currentUser.role}</p>
+        `;
+      });
+  }
+
+  function toggleProfileCard() {
+    const card = document.getElementById('profileCard');
+    card.style.display = card.style.display === 'block' ? 'none' : 'block';
+  }
+
+  window.addEventListener('click', function (e) {
+    const sidebar = document.getElementById('sidebar');
+    const threeDot = document.getElementById('hamburger');
+    const profileImage = document.getElementById('profileImage');
+    const profileCard = document.getElementById('profileCard');
+
+    if (!sidebar.contains(e.target) && !threeDot.contains(e.target)) {
+      hideSidebar();
+    }
+    if (!profileImage.contains(e.target) && !profileCard.contains(e.target)) {
+      profileCard.style.display = 'none';
+    }
+  });
+
+  function loadTable(category) {
+    currentCategory = category;
+    fetch(`/api/excel-data/${category}`)
+      .then(res => res.json())
+      .then(res => {
+        if (res.success) {
+          originalData = res.data;
+          renderTable(res.data);
+
+          const filter = document.getElementById("materialFilter");
+          if (category === 'WOOD PO') {
+            const materialSet = new Set(res.data.slice(1).map(row => row[3]));
+            filter.innerHTML = '<option value="">All Materials</option>' + [...materialSet].map(m => `<option>${m}</option>`).join('');
+            filter.style.display = 'inline-block';
+          } else {
+            filter.style.display = 'none';
+          }
+        }
+      });
+  }
+
+  function renderTable(data) {
+    const thead = document.querySelector("#dataTable thead");
+    const tbody = document.querySelector("#dataTable tbody");
+    thead.innerHTML = "";
+    tbody.innerHTML = "";
+
+    if (data.length === 0) return;
+
+    const table = document.getElementById("dataTable");
+    table.className = currentCategory === 'SHIFT SCHEDULE' ? 'shift-schedule-freeze' : '';
+
+    const headerRow = document.createElement("tr");
+    data[0].forEach((col, index) => {
+      const th = document.createElement("th");
+      th.textContent = col;
+      if (currentCategory === 'SHIFT SCHEDULE' && index < 5) {
+        th.classList.add(`freeze-col-${index + 1}`);
+      }
+      headerRow.appendChild(th);
+    });
+    thead.appendChild(headerRow);
+
+    data.slice(1).forEach((row, rowIndex) => {
+      const tr = document.createElement("tr");
+
+      const rowText = row.map(cell => String(cell).toUpperCase()).join(" ");
+      if (currentCategory === 'WOOD PO') {
+        if (rowText.includes("RAMPUR")) tr.style.background = "lightgreen";
+        else if (rowText.includes("SITAPUR")) tr.style.background = "magenta";
+        else if (rowText.includes("OTHER")) tr.style.background = "yellow";
+      }
+
+      row.forEach((cell, colIndex) => {
+        const td = document.createElement("td");
+        td.style.color = 'black';
+
+        const value = typeof cell === 'object' ? (cell.text || '') : String(cell);
+
+        if (currentCategory === 'WOOD PO' && colIndex === 0) {
+          td.innerHTML = `<button onclick="copyText('${value}', 'PO Copied')" style="background:#007BFF;color:white;border:none;padding:4px 10px;border-radius:4px;cursor:pointer;">${value}</button>`;
+        } else if (currentCategory === 'ID PASSWORD' && colIndex === 1) {
+          td.innerHTML = `<button onclick="copyText('${value}', 'Password Copied')" style="background:green;color:white;border:none;padding:4px 10px;border-radius:4px;cursor:pointer;">******</button>`;
+        } else {
+          td.textContent = value;
+        }
+
+        if (currentCategory === 'SHIFT SCHEDULE') {
+          if (rowIndex < 2 || colIndex < 5) td.style.background = 'lightblue';
+          if (value === 'R') td.style.background = '#006400';
+          else if (value === 'L') td.style.background = '#8B0000';
+          else if (value === 'G') td.style.background = '#B8860B';
+        }
+
+        if (currentCategory === 'SHIFT SCHEDULE' && colIndex < 5) {
+          td.classList.add(`freeze-col-${colIndex + 1}`);
+        }
+
+        tr.appendChild(td);
+      });
+
+      tbody.appendChild(tr);
+    });
+  }
+
+  function copyText(text, message) {
+    navigator.clipboard.writeText(text).then(() => {
+      alert(message);
+    }).catch(err => {
+      console.error("Copy failed", err);
+    });
+  }
+
+  function applyFilters() {
+    let filtered = [...originalData];
+    const searchVal = document.getElementById("searchBox").value.toLowerCase();
+    const materialVal = document.getElementById("materialFilter").value;
+
+    if (searchVal) {
+      filtered = filtered.filter(row => row.some(cell => String(cell).toLowerCase().includes(searchVal)));
+    }
+    if (materialVal) {
+      filtered = filtered.filter(row => row[3] === materialVal);
+    }
+
+    renderTable([originalData[0], ...filtered]);
+  }
+
+  function showTeam() {
+    document.getElementById('teamModal').style.display = 'block';
+    fetch('/api/users')
+      .then(res => res.json())
+      .then(users => {
+        const container = document.getElementById('teamContainer');
+        container.innerHTML = users.map(user => `
+          <div class="user-card">
+            <img src="${user.profilePic}" alt="">
+            <h4>${user.username}</h4>
+            <p><strong>User ID:</strong> ${user.userId}</p>
+            <p><strong>Department:</strong> ${user.department}</p>
+            <p><strong>Designation:</strong> ${user.designation}</p>
+            <p><strong>Email:</strong> ${user.email}</p>
+            <p><strong>Mobile:</strong> ${user.mobile}</p>
+          </div>
+        `).join('');
+      });
+  }
+
+  function hideTeam() {
+    document.getElementById('teamModal').style.display = 'none';
+  }
+
+let allMessages = [];
+let activeChatUser = null;
+const userId = localStorage.getItem("userId");
+const userElements = {};
+const unreadSenders = new Set();
+const notifySound = new Audio("/assets/notification.mp3");
+
+// Ask permission for desktop notifications
+if ("Notification" in window) {
+  Notification.requestPermission().then(permission => {
+    console.log("Notification permission:", permission);
+    if (permission === "granted") {
+      const test = new Notification("🔔 Test Notification", {
+        body: "Testing your notification system!",
+        icon: "/assets/profile.png"
+      });
+
+      const notifySound = new Audio("/assets/notification.mp3");
+      notifySound.play().catch(e => console.warn("Audio play failed:", e));
+    }
+  });
+}
+
+
+// Connect to socket
+const socket = io();
+socket.emit("join", userId);
+
+// Load messages from server
+socket.on("loadMessages", (messages) => {
+  allMessages = messages;
+
+  const incoming = messages.filter(m => m.to === userId);
+  incoming.forEach(m => {
+    if (!activeChatUser || m.from !== activeChatUser.userId) {
+      unreadSenders.add(m.from);
+
+      if (userElements[m.from]) {
+        addBadge(userElements[m.from]);
+      }
+      document.getElementById("messageNotifyDot").style.display = "block";
+    }
+  });
+
+  if (activeChatUser) renderMessages();
+});
+
+// New message received
+socket.on("chatMessage", (data) => {
+  allMessages.push(data);
+
+  if (!activeChatUser || (data.from !== activeChatUser.userId && data.to !== activeChatUser.userId)) {
+    unreadSenders.add(data.from);
+
+    // Add badge to user
+    if (userElements[data.from]) addBadge(userElements[data.from]);
+
+    // Show message icon red dot
+    document.getElementById("messageNotifyDot").style.display = "block";
+
+    // Show Desktop Notification
+    if ("Notification" in window && Notification.permission === "granted") {
+      new Notification(`Message from ${data.from}`, {
+        body: data.message,
+        icon: "/assets/profile.png"
+      });
+    }
+
+    // Play notification sound
+    notifySound.play();
+    return;
+  }
+
+  // Else, in active chat
+  appendMessage(data);
+});
+
+// Add red badge to user
+function addBadge(el) {
+  let badge = el.querySelector('.msg-count');
+  if (!badge) {
+    badge = document.createElement('span');
+    badge.className = 'msg-count';
+    badge.textContent = '1';
+    badge.style.cssText = 'margin-left:10px; background:red; color:white; padding:2px 6px; border-radius:50%; font-size:12px;';
+    el.appendChild(badge);
+  } else {
+    badge.textContent = parseInt(badge.textContent) + 1;
+  }
+}
+
+// Toggle user list panel
+function toggleChatUserList() {
+  const panel = document.getElementById("chatUserList");
+  panel.style.display = panel.style.display === "none" ? "block" : "none";
+
+  if (panel.style.display === "block") {
+    fetch("/api/users")
+      .then(res => res.json())
+      .then(users => {
+        const container = document.getElementById("userListContainer");
+        container.innerHTML = "";
+
+        users.filter(u => u.userId !== userId).forEach(user => {
+          const div = document.createElement("div");
+          div.id = `user-${user.userId}`;
+          div.textContent = `${user.username} (${user.userId})`;
+          div.style.cssText = "cursor:pointer; padding:5px;";
+          div.onclick = () => openChatWith(user);
+          container.appendChild(div);
+          userElements[user.userId] = div;
+
+          if (unreadSenders.has(user.userId)) {
+            addBadge(div);
+          }
+        });
+      });
+  }
+}
+
+// Open chat with a user
+function openChatWith(user) {
+  activeChatUser = user;
+  document.getElementById("chatWith").innerText = `Chat with ${user.username}`;
+  document.getElementById("chatBox").style.display = "block";
+  document.getElementById("chatMessages").innerHTML = '';
+  document.getElementById("chatInput").value = '';
+
+  const el = userElements[user.userId];
+  if (el) {
+    const badge = el.querySelector(".msg-count");
+    if (badge) badge.remove();
+  }
+
+  unreadSenders.delete(user.userId);
+
+  // Hide icon red dot if none left
+  if (unreadSenders.size === 0) {
+    document.getElementById("messageNotifyDot").style.display = "none";
+  }
+
+  renderMessages();
+}
+
+// Show all messages between active users
+function renderMessages() {
+  const box = document.getElementById("chatMessages");
+  box.innerHTML = "";
+
+  const msgs = allMessages.filter(m =>
+    (m.from === userId && m.to === activeChatUser.userId) ||
+    (m.to === userId && m.from === activeChatUser.userId)
+  );
+
+  msgs.forEach(m => appendMessage(m));
+}
+
+// Add one message to the box
+function appendMessage(msg) {
+  const box = document.getElementById("chatMessages");
+  const div = document.createElement("div");
+  div.innerHTML = `<strong>${msg.from === userId ? "You" : msg.from}:</strong> ${msg.message}`;
+  div.style.textAlign = msg.from === userId ? "right" : "left";
+  div.style.marginBottom = "5px";
+  box.appendChild(div);
+  box.scrollTop = box.scrollHeight;
+}
+
+// Send message to server
+function sendMessage() {
+  const input = document.getElementById("chatInput");
+  const message = input.value.trim();
+  if (!message || !activeChatUser) return;
+
+  const msg = {
+    from: userId,
+    to: activeChatUser.userId,
+    message
+  };
+
+  socket.emit("chatMessage", msg);
+  input.value = "";
+}
+
+// Close chat window
+function closeChat() {
+  document.getElementById("chatBox").style.display = "none";
+  activeChatUser = null;
+}
+
+// Toggle profile box
+function toggleProfileCard() {
+  const card = document.getElementById("profileCard");
+  card.style.display = card.style.display === "none" ? "block" : "none";
+}
+
+// Logout
+function logout() {
+  localStorage.clear();
+  window.location.href = "index.html";
+}
+document.addEventListener("DOMContentLoaded", () => {
+  const notificationIcon = document.getElementById("notification-icon");
+  const notificationDot = document.getElementById("notification-dot");
+  const updatePanel = document.getElementById("updatePanel");
+  const updatesList = document.getElementById("updatesList");
+
+  let updates = [];
+
+  fetch("/api/updates")
+    .then(res => res.json())
+    .then(data => {
+      updates = data.updates || data;
+      if (updates.length > 0) {
+        notificationDot.style.display = "block";
+        updatesList.innerHTML = "";
+
+        updates.forEach((update) => {
+          const div = document.createElement("div");
+          div.style.cursor = "pointer";
+          div.style.marginBottom = "10px";
+
+          const date = new Date(update.createdAt).toLocaleDateString();
+          const message = update.message || "(No message)";
+          const imageHTML = update.image
+            ? `<img src="${update.image}" width="100%" style="max-height:100px; object-fit:cover; margin-top:5px;">`
+            : "";
+
+          div.innerHTML = `
+            <strong>${date}</strong><br>
+            <span>${message}</span><br>
+            ${imageHTML}
+            <hr>
+          `;
+
+          div.addEventListener("click", () => showUpdateDetail(update));
+          updatesList.appendChild(div);
+        });
+      }
+    });
+
+  notificationIcon.addEventListener("click", () => {
+    updatePanel.style.display = updatePanel.style.display === "none" ? "block" : "none";
+    notificationDot.style.display = "none";
+  });
+
+  document.addEventListener("click", (e) => {
+    if (!notificationIcon.contains(e.target) && !updatePanel.contains(e.target)) {
+      updatePanel.style.display = "none";
+    }
+  });
+});
+
+// Show full update detail in modal
+function showUpdateDetail(update) {
+  const date = new Date(update.createdAt).toLocaleString();
+  const message = update.message || "(No message)";
+  const imageHTML = update.image
+    ? `<img src="${update.image}" style="width:100%; max-height:300px; object-fit:contain; margin-top:10px;">`
+    : "";
+
+  const html = `
+    <div style="position: fixed; top: 80px; left: 50%; transform: translateX(-50%); background: white; border-radius: 10px; padding: 20px; max-width: 500px; box-shadow: 0 0 10px rgba(0,0,0,0.3); z-index: 1000;">
+      <h3>📢 Update Detail</h3>
+      <p><strong>Date:</strong> ${date}</p>
+      <p><strong>Message:</strong> ${message}</p>
+      ${imageHTML}
+      <div style="text-align: right; margin-top: 15px;">
+        <button onclick="this.parentElement.parentElement.remove()" style="padding: 5px 10px;">Close</button>
+      </div>
+    </div>
+  `;
+
+  const container = document.createElement("div");
+  container.innerHTML = html;
+  document.body.appendChild(container);
+}
+
+function openRegister(type) {
+    const iframe = document.getElementById("registerIframe");
+    const iframeContainer = document.getElementById("iframeContainer");
+    const tableSection = document.getElementById("tableSection");
+    const topButtons = document.getElementById("topButtons");
+
+    let page = "";
+    switch(type) {
+      case 'wood':
+        page = "wood-bill-register.html"; break;
+      case 'methanol':
+        page = "methanol-register.html"; break;
+      case 'longbody':
+        page = "longbody-register.html"; break;
+      case 'shift':
+        page = "shift-register.html"; break;
+      case 'download':
+        page = "Download.html"; break;
+      case 'sop':
+        page = "SOP.html"; break;  
+      case 'about':
+        page = "About.html"; break;   
+    }
+
+    iframe.src = page;
+    iframeContainer.style.display = "block";
+    tableSection.style.display = "none";
+    topButtons.style.display = "none";
+  }
+</script>
+
+
+
+</body>
+</html>

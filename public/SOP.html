@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>SOP Page</title>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      margin: 0; padding: 0;
+      background-color: #0d0d0d;
+      color: #ffffff;
+    }
+
+    header {
+      background: linear-gradient(90deg, #00f2fe, #4facfe);
+      color: #000;
+      text-align: center;
+      padding: 20px 10px;
+      box-shadow: 0 0 10px #00f2fe;
+    }
+
+    nav {
+      display: flex;
+      justify-content: center;
+      gap: 20px;
+      background: #1c1c1c;
+      padding: 15px 10px;
+      box-shadow: 0 0 10px #00f2fe;
+    }
+
+    nav button {
+      background: #00f2fe;
+      border: none;
+      color: #000;
+      padding: 10px 20px;
+      font-size: 16px;
+      font-weight: bold;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    nav button:hover {
+      background: #4facfe;
+      box-shadow: 0 0 10px #4facfe;
+    }
+
+    .section {
+      display: none;
+      max-width: 1000px;
+      margin: 30px auto;
+      background: #1a1a1a;
+      padding: 25px;
+      border-left: 5px solid #00f2fe;
+      box-shadow: 0 0 15px rgba(0,255,255,0.3);
+    }
+
+    .section.active {
+      display: block;
+    }
+
+    .section h2 {
+      color: #00f2fe;
+      margin-top: 0;
+    }
+
+    .buttons-container {
+      margin-top: 20px;
+      display: flex;
+      gap: 15px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .download-button, .textview-button {
+      background-color: #00ff00;
+      color: #000;
+      padding: 10px 18px;
+      border: none;
+      border-radius: 5px;
+      font-weight: bold;
+      font-size: 15px;
+      cursor: pointer;
+      box-shadow: 0 0 10px #00f2fe;
+      transition: 0.3s;
+      text-decoration: none;
+      display: inline-block;
+    }
+
+    .download-button:hover, .textview-button:hover {
+      background: #00c9db;
+      box-shadow: 0 0 20px #00ff00;
+    }
+
+    .text-content {
+      display: none;
+      margin-top: 20px;
+      background-color: #111;
+      padding: 12px;
+      border-radius: 6px;
+      box-shadow: 0 0 15px #00f2fe;
+      font-size: 16px;
+      color: #0ff;
+      font-family: monospace;
+      user-select: text;
+    }
+
+    iframe {
+      width: 100%;
+      height: 600px;
+      border: none;
+      margin-top: 20px;
+      box-shadow: 0 0 20px #00f2fe;
+    }
+
+    footer {
+      text-align: center;
+      padding: 20px;
+      background: #1c1c1c;
+      color: #999;
+      margin-top: 50px;
+    }
+
+    .section h3 {
+      background-color: #00f2fe;
+      color: #000;
+      padding: 6px 12px;
+      border-radius: 4px;
+      display: inline-block;
+      margin-top: 20px;
+      font-weight: bold;
+      box-shadow: 0 0 10px #00f2fe;
+    }
+
+    .section h4 {
+      border-bottom: 2px solid #00f2fe;
+      padding-bottom: 4px;
+      margin-top: 15px;
+      font-weight: bold;
+      display: inline-block;
+    }
+
+    /* Language Toggle Switch */
+    .switch {
+      position: relative;
+      display: inline-block;
+      width: 50px;
+      height: 24px;
+    }
+
+    .switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    .slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background-color: #ccc;
+      transition: .4s;
+      border-radius: 34px;
+    }
+
+    .slider:before {
+      position: absolute;
+      content: "";
+      height: 18px;
+      width: 18px;
+      left: 4px;
+      bottom: 3px;
+      background-color: #000;
+      transition: .4s;
+      border-radius: 50%;
+    }
+
+    input:checked + .slider {
+      background-color: #00f2fe;
+    }
+
+    input:checked + .slider:before {
+      transform: translateX(26px);
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>Standard Operating Procedures (SOP)</h1>
+  </header>
+
+  <nav>
+    <button onclick="showSection('wood')">Wood SOP</button>
+    <button onclick="showSection('dispatch')">Dispatch SOP</button>
+    <button onclick="showSection('store')">Store SOP</button>
+  </nav>
+
+  <div id="wood" class="section active">
+    <h2>WOOD SOP</h2>
+    <div class="buttons-container">
+      <a href="assets/wood-process.pptx" class="download-button" download>Download WOOD PROCESS PPT</a>
+      <button class="textview-button" onclick="showTextOnly('wood')">Text View</button>
+    </div>
+    <div id="woodText" class="text-content">
+      <div style="display: flex; justify-content: flex-end; align-items: center; gap: 10px; margin-bottom: 10px;">
+        <label style="font-weight: bold; color: #0ff;">EN</label>
+        <label class="switch">
+          <input type="checkbox" id="langToggle" onchange="toggleLanguage()">
+          <span class="slider round"></span>
+        </label>
+        <label style="font-weight: bold; color: #0ff;">HI</label>
+      </div>
+
+      <div class="lang-content en">
+        <h2>Wood Loaded Truck Inbound Process</h2>
+        <h3>Driver Submits Paperwork</h3>
+        <p>> The truck driver arrives at the gate and presents the required material paperwork to the security personnel.</p>
+        <h3>Security Verification</h3>
+        <p>> Security checks the documents and driver identity.</p>
+        <h3>Digital Entry</h3>
+        <p>> Entry personnel logs data into SAP and issues a token card.</p>
+        <h3>Paperwork Validation</h3><br>
+        <h4>Incomplete or Incorrect Documents</h4>
+        <p>> Security returns documents and informs Purchase Dept.</p>
+        <h4>Approved Documents</h4>
+        <p>> Documents are handed to gate personnel for digital entry.</p>
+        <h3>Weighing and Unloading</h3><br>
+        <h4>Truck Enters Facility</h4>
+        <p>> Truck is directed to weighing station and then to unloading area.</p>
+        <h4>Weighing Process</h4>
+        <p>> Truck is weighed before and after unloading. Data is recorded.</p>
+        <h4>Weight Slip Verification</h4>
+        <p>> After unloading, weight slip is stamped and truck exits.</p>
+        <h3>Material Receipt</h3><br>
+        <h4>Documentation</h4>
+        <p>> Weight slip is submitted to wood MRN.</p>
+        <h4>Digital Entry</h4>
+        <p>> Material is logged digitally by wood department.</p>
+        <h4>Storage</h4>
+        <p>> Wood is properly stored in inventory system.</p>
+        <h3>Responsibilities and Coordination</h3><br>
+        <h4>Security</h4>
+        <p>> Verifies documents, records driver info, manages entry.</p>
+        <h4>Gate Entry</h4>
+        <p>> Digitally logs documents and generates token.</p>
+        <h4>Wood Department</h4>
+        <p>> Handles receiving, updating stock, and storage.</p>
+        <h4>Weighing</h4>
+        <p>> Conducts weighing and provides data.</p>
+      </div>
+
+      <div class="lang-content hi" style="display: none;">
+        <h2>लकड़ी लदे ट्रक की आगमन प्रक्रिया</h2>
+        <h3>चालक कागज़ जमा करता है</h3>
+        <p>> ट्रक चालक गेट पर पहुंचकर सुरक्षा गार्ड को कागजात देता है।</p>
+        <h3>सुरक्षा सत्यापन</h3>
+        <p>> सुरक्षा दस्तावेज़ और पहचान की जांच करती है।</p>
+        <h3>डिजिटल एंट्री</h3>
+        <p>> SAP में एंट्री और टोकन कार्ड जारी किया जाता है।</p>
+        <h3>कागज़ों की जांच</h3><br>
+        <h4>गलत या अधूरे कागज़ात</h4>
+        <p>> सुरक्षा दस्तावेज़ वापस करती है और खरीद विभाग को सूचित करती है।</p>
+        <h4>स्वीकृत दस्तावेज़</h4>
+        <p>> दस्तावेज़ गेट स्टाफ को दिए जाते हैं डिजिटल एंट्री के लिए।</p>
+        <h3>तौल और अनलोडिंग</h3><br>
+        <h4>ट्रक परिसर में प्रवेश करता है</h4>
+        <p>> ट्रक तौल स्टेशन और फिर अनलोडिंग यार्ड में जाता है।</p>
+        <h4>तौल प्रक्रिया</h4>
+        <p>> लोड और अनलोड दोनों समय पर तौल होता है।</p>
+        <h4>तौल पर्ची सत्यापन</h4>
+        <p>> तौल के बाद पर्ची पर मुहर लगाई जाती है और ट्रक बाहर निकलता है।</p>
+        <h3>सामग्री की रसीद</h3><br>
+        <h4>दस्तावेज़</h4>
+        <p>> तौल पर्ची MRN विभाग को सौंपी जाती है।</p>
+        <h4>डिजिटल एंट्री</h4>
+        <p>> लकड़ी विभाग डिजिटल रसीद दर्ज करता है।</p>
+        <h4>स्टोरेज</h4>
+        <p>> सामग्री स्टॉक में जोड़ दी जाती है।</p>
+        <h3>जिम्मेदारियाँ और समन्वय</h3><br>
+        <h4>सुरक्षा</h4>
+        <p>> दस्तावेज़ जांचती है और प्रवेश प्रबंधित करती है।</p>
+        <h4>गेट एंट्री</h4>
+        <p>> दस्तावेज़ों की डिजिटल एंट्री और टोकन जारी करती है।</p>
+        <h4>लकड़ी विभाग</h4>
+        <p>> सामग्री रिसीव करता है, स्टॉक अपडेट करता है।</p>
+        <h4>तौल विभाग</h4>
+        <p>> वजन मापता है और डेटा देता है।</p>
+      </div>
+    </div>
+
+    <iframe id="woodIframe" src="https://docs.google.com/presentation/d/e/2PACX-1vRzNOKOs2suOyy-rtKRGrNrYP40rkt5QSrngkzxjWGodV0mRm7SeFEpkdJxLkgTXw/pubembed?start=true&loop=false&delayms=15000" allowfullscreen></iframe>
+  </div>
+
+  <div id="dispatch" class="section">
+    <h2>DISPATCH SOP</h2>
+    <div class="buttons-container">
+      <a href="assets/dispatch-process.pptx" class="download-button" download>Download DISPATCH PROCESS PPT</a>
+      <button class="textview-button" onclick="showTextOnly('dispatch')">Text View</button>
+    </div>
+    <div id="dispatchText" class="text-content">this is text</div>
+    <iframe id="dispatchIframe" src="https://docs.google.com/presentation/d/e/2PACX-1vSRxR-_Yxf3EYjB_owPypm6QRwZiIgr1dogezuU_QxFwd8r8mYgZQnXsaUeT_YY1w/pubembed?start=true&loop=false&delayms=5000" allowfullscreen></iframe>
+  </div>
+
+  <div id="store" class="section">
+    <h2>STORE SOP</h2>
+    <div class="buttons-container">
+      <a href="assets/store-process.pptx" class="download-button" download>Download STORE PROCESS PPT</a>
+      <button class="textview-button" onclick="showTextOnly('store')">Text View</button>
+    </div>
+    <div id="storeText" class="text-content">this is text</div>
+    <iframe id="storeIframe" src="https://docs.google.com/presentation/d/e/2PACX-1vSx-W6Yg4CRQJux7MysUQsjdFlS1AmV5SZuHaoFU288bvd_RaxmsKC_O-jjzdYuLg/pubembed?start=true&loop=false&delayms=15000" allowfullscreen></iframe>
+  </div>
+
+  <footer>
+    &copy; 2025 | SOP System | Powered by AI Glow Theme
+  </footer>
+
+  <script>
+    function showSection(id) {
+      document.querySelectorAll('.section').forEach(sec => {
+        sec.classList.remove('active');
+        sec.querySelector('.text-content').style.display = 'none';
+        sec.querySelector('iframe').style.display = 'block';
+      });
+      document.getElementById(id).classList.add('active');
+    }
+
+    function showTextOnly(sectionId) {
+      const section = document.getElementById(sectionId);
+      section.querySelector('iframe').style.display = 'none';
+      section.querySelector('.text-content').style.display = 'block';
+    }
+
+    function toggleLanguage() {
+      const isHindi = document.getElementById('langToggle').checked;
+      document.querySelectorAll('.lang-content.en').forEach(el => el.style.display = isHindi ? 'none' : 'block');
+      document.querySelectorAll('.lang-content.hi').forEach(el => el.style.display = isHindi ? 'block' : 'none');
+    }
+  </script>
+
+</body>
+</html>

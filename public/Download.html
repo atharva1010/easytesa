@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Downloads</title>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500&display=swap" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    .header .title {
+      font-size: 28px;
+      font-weight: bold;
+      text-align: center;
+      color: #fff;
+      margin-bottom: 20px;
+    }
+
+    body {
+      background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+      font-family: 'Orbitron', sans-serif;
+      color: #ffffff;
+      padding: 40px;
+    }
+
+    h1 {
+      text-align: center;
+      margin-bottom: 30px;
+      font-size: 2.5rem;
+      background: linear-gradient(90deg, #00f, #0ff, #0f0, #ff0, #f00);
+      background-size: 400% 400%;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      animation: gradientText 5s ease infinite;
+    }
+
+    @keyframes gradientText {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 0 20px rgba(0,255,255,0.2);
+      background: rgba(255, 255, 255, 0.05);
+      backdrop-filter: blur(10px);
+    }
+
+    th, td {
+      padding: 14px 20px;
+      text-align: left;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    th {
+      background: rgba(0, 0, 0, 0.3);
+      color: #0ff;
+      text-transform: uppercase;
+      font-size: 0.95rem;
+      letter-spacing: 1px;
+    }
+
+    tr:hover {
+      background-color: rgba(0, 255, 255, 0.05);
+    }
+
+    button {
+      padding: 8px 14px;
+      margin: 5px 5px 5px 0;
+      border: none;
+      border-radius: 8px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .view-btn {
+      background: #00c9ff;
+      color: #000;
+    }
+
+    .view-btn:hover {
+      background: #00f7ff;
+    }
+
+    .download-btn {
+      background: #4eff4e;
+      color: #000;
+    }
+
+    .download-btn:hover {
+      background: #9eff9e;
+    }
+
+    .print-btn {
+      background: #ff6b6b;
+      color: #000;
+    }
+
+    .print-btn:hover {
+      background: #ff9e9e;
+    }
+
+    .excel-btn {
+      background: #ffd700;
+      color: #000;
+    }
+
+    .excel-btn:hover {
+      background: #fff176;
+    }
+
+    @media screen and (max-width: 600px) {
+      table, thead, tbody, th, td, tr {
+        display: block;
+      }
+
+      th, td {
+        text-align: right;
+        padding-left: 50%;
+        position: relative;
+      }
+
+      th::before, td::before {
+        position: absolute;
+        left: 20px;
+        width: 45%;
+        white-space: nowrap;
+        text-align: left;
+        font-weight: bold;
+        color: #0ff;
+      }
+
+      th:nth-of-type(1)::before { content: "#"; }
+      th:nth-of-type(2)::before { content: "File Name"; }
+      th:nth-of-type(3)::before { content: "Actions"; }
+
+      td:nth-of-type(1)::before { content: "#"; }
+      td:nth-of-type(2)::before { content: "File Name"; }
+      td:nth-of-type(3)::before { content: "Actions"; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="header">
+    <div class="title">BALAJI ACTION BUILDWELL PRIVATE LIMITED</div>
+  </div>
+
+  <h1>Available Downloads</h1>
+
+  <table id="pdfTable">
+    <thead>
+      <tr>
+        <th>#</th>
+        <th>File Name</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+
+  <script>
+    const fileList = [
+      { name: "Advance Salary Form", pdf: "Advance_Salary_Form.pdf", excel: "Advance_Salary_Form.xlsx" },
+      { name: "Gate Pass", pdf: "Gate_Pass.pdf", excel: "Gate_Pass.xlsx" },
+      { name: "Loss Token Card", pdf: "Loss_Token_Card.pdf", excel: "Loss_Token_Card.xlsx" },
+      { name: "Shift Change Form", pdf: "Shift_Chnage_Form.pdf", excel: "Shift_Chnage_Form.xlsx" },
+      { name: "Scrap Loading Form", pdf: "Scrap_Loading_Form.pdf", excel: "Scrap_Loading_Form.xlsx" },
+    ];
+
+    const tbody = document.querySelector("#pdfTable tbody");
+
+    fileList.forEach((file, index) => {
+      const tr = document.createElement("tr");
+
+      const tdIndex = document.createElement("td");
+      tdIndex.textContent = index + 1;
+
+      const tdName = document.createElement("td");
+      tdName.textContent = file.name;
+
+      const tdActions = document.createElement("td");
+
+      const viewBtn = document.createElement("button");
+      viewBtn.className = "view-btn";
+      viewBtn.textContent = "View PDF";
+      viewBtn.onclick = () => {
+        window.open(`Files/${file.pdf}`, "_blank");
+      };
+
+      const downloadBtn = document.createElement("button");
+      downloadBtn.className = "download-btn";
+      downloadBtn.textContent = "Download PDF";
+      downloadBtn.onclick = () => {
+        const a = document.createElement("a");
+        a.href = `Files/${file.pdf}`;
+        a.download = file.pdf;
+        a.click();
+      };
+
+      const printBtn = document.createElement("button");
+      printBtn.className = "print-btn";
+      printBtn.textContent = "Print PDF";
+      printBtn.onclick = () => {
+        const printWin = window.open(`Files/${file.pdf}`, "_blank");
+        printWin.onload = () => printWin.print();
+      };
+
+      const excelBtn = document.createElement("button");
+      excelBtn.className = "excel-btn";
+      excelBtn.textContent = "Download Excel";
+      excelBtn.onclick = () => {
+        const a = document.createElement("a");
+        a.href = `Files/${file.excel}`;
+        a.download = file.excel;
+        a.click();
+      };
+
+      tdActions.appendChild(viewBtn);
+      tdActions.appendChild(downloadBtn);
+      tdActions.appendChild(printBtn);
+      tdActions.appendChild(excelBtn);
+
+      tr.appendChild(tdIndex);
+      tr.appendChild(tdName);
+      tr.appendChild(tdActions);
+
+      tbody.appendChild(tr);
+    });
+  </script>
+
+</body>
+</html>
