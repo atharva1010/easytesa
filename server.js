@@ -43,6 +43,8 @@ app.use("/api/updates", updateRoutes);
 app.use("/api/reports/shift", shiftReportRoutes);
 app.use("/api/long-body", longBodyRoutes);
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+app.use(express.static(path.join(__dirname, 'public'))); // for frontend HTML
+app.use('/Files', express.static(path.join(__dirname, 'Files'))); // for serving files like PDFs
 
 // Multer Setup
 const userStorage = multer.diskStorage({
