@@ -1177,21 +1177,29 @@
   });
 
   document.getElementById("excelForm").addEventListener("submit", async function (e) {
-    e.preventDefault();
-    try {
-      const formData = new FormData(this);
-      const res = await fetch("/api/upload-excel", {
-        method: "POST",
-        body: formData
-      });
-      const result = await res.json();
-      document.getElementById("excelMsg").innerText = result.message;
-      if (result.success) this.reset();
-    } catch (err) {
-      console.error("Upload excel error:", err);
-      alert("Failed to upload Excel");
-    }
-  });
+  e.preventDefault();
+  try {
+    const formData = new FormData(this);
+
+    const token = localStorage.getItem("token"); // ✅ get token
+
+    const res = await fetch("/api/upload-excel", {
+      method: "POST",
+      body: formData,
+      headers: {
+        Authorization: `Bearer ${token}` // ✅ add token to headers
+      }
+    });
+
+    const result = await res.json();
+    document.getElementById("excelMsg").innerText = result.message;
+    if (result.success) this.reset();
+  } catch (err) {
+    console.error("Upload excel error:", err);
+    alert("Failed to upload Excel");
+  }
+});
+
 
   async function loadProfile() {
     const token = localStorage.getItem("token");

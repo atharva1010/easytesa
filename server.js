@@ -11,6 +11,7 @@ const http = require("http");
 const { Server } = require("socket.io");
 const twilio = require("twilio");
 const multer = require("multer");
+const { uploadUser } = require('./cloudinary');
 
 const app = express();
 const server = http.createServer(app);
@@ -32,22 +33,22 @@ const ShiftReport = require('./models/ShiftReport');
 // Routes
 const shiftReportRoutes = require("./routes/shiftReportRoutes");
 const updateRoutes = require("./routes/updateRoutes");
-const shiftRoutes = require('./routes/shiftRoutes');
+const shiftRoutes = require("./routes/shiftRoutes");
 const longBodyRoutes = require('./routes/longBody');
 
 // Mount Routes
-app.use('/api/shift-report', shiftRoutes);
+app.use("/api/shift-report", shiftRoutes);
 app.use('/api/update', updateRoutes);
 app.use("/api/updates", updateRoutes);
 app.use("/api/reports/shift", shiftReportRoutes);
 app.use("/api/long-body", longBodyRoutes);
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Multer Setup
 const userStorage = multer.diskStorage({
   destination: (req, file, cb) => cb(null, "uploads/"),
   filename: (req, file, cb) => cb(null, Date.now() + path.extname(file.originalname))
 });
-const uploadUser = multer({ storage: userStorage });
 
 const bgStorage = multer.diskStorage({
   destination: (req, file, cb) => cb(null, "bg/"),
@@ -64,8 +65,7 @@ const uploadExcel = multer({ storage: excelStorage });
 // Middleware
 app.use(cors());
 app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-app.use("/uploads", express.static("uploads"));
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 app.use("/bg", express.static("bg"));
 app.use("/assets", express.static("assets"));
 app.use(express.static("public"));
@@ -118,7 +118,7 @@ io.on("connection", (socket) => {
 const twilioClient = twilio(process.env.TWILIO_SID, process.env.TWILIO_AUTH_TOKEN);
 const otpStore = new Map();
 
-// Auth middleware
+// ✅ Auth Middleware (Token Verification)
 const authMiddleware = (req, res, next) => {
   const token = req.headers.authorization?.split(" ")[1];
   if (!token) return res.status(401).json({ success: false, message: "No token provided" });
@@ -127,8 +127,8 @@ const authMiddleware = (req, res, next) => {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     req.userId = decoded.id;
     next();
-  } catch {
-    res.status(403).json({ success: false, message: "Invalid token" });
+  } catch (err) {
+    return res.status(403).json({ success: false, message: "Invalid token" });
   }
 };
 
@@ -150,7 +150,7 @@ app.post("/api/create-user", uploadUser.single("profilePic"), async (req, res) =
       password
     } = req.body;
 
-    const profilePic = req.file ? `/uploads/${req.file.filename}` : null;
+    const profilePic = req.file ? req.file.path : null; // Cloudinary URL
 
     if (userIdUpdate) {
       const user = await User.findById(userIdUpdate);
@@ -164,18 +164,17 @@ app.post("/api/create-user", uploadUser.single("profilePic"), async (req, res) =
       user.role = role;
 
       if (profilePic) user.profilePic = profilePic;
-      if (password) user.password = await bcrypt.hash(password, SALT_ROUNDS);
+      if (password) user.password = await bcrypt.hash(password, 10);
 
       await user.save();
       return res.json({ success: true, message: "User updated successfully" });
     } else {
-      if (!userId) return res.json({ success: false, message: "User ID is required" });
-
       const existing = await User.findOne({ userId });
       if (existing) return res.json({ success: false, message: "User ID already exists" });
 
-      const hashedPassword = await bcrypt.hash(password, SALT_ROUNDS);
-      const user = new User({
+      const hashedPassword = await bcrypt.hash(password, 10);
+
+      const newUser = new User({
         username,
         userId,
         department,
@@ -187,24 +186,26 @@ app.post("/api/create-user", uploadUser.single("profilePic"), async (req, res) =
         profilePic: profilePic || ""
       });
 
-      await user.save();
-      return res.json({ success: true, message: "User created successfully" });
+      await newUser.save();
+      res.json({ success: true, message: "User created successfully" });
     }
   } catch (err) {
     console.error("Create/Update User Error:", err);
     res.status(500).json({ success: false, message: "Server error" });
   }
 });
-
+// Separate Update API (if used)
 app.put("/api/update-user/:id", uploadUser.single("profilePic"), async (req, res) => {
   try {
     const { username, department, designation, mobile, email, role, password } = req.body;
+
     const updates = { username, department, designation, mobile, email, role };
     if (password) updates.password = await bcrypt.hash(password, SALT_ROUNDS);
     if (req.file) updates.profilePic = `/uploads/${req.file.filename}`;
 
-    const updated = await User.findByIdAndUpdate(req.params.id, updates);
+    const updated = await User.findByIdAndUpdate(req.params.id, updates, { new: true });
     if (!updated) return res.json({ success: false, message: "User not found" });
+
     res.json({ success: true, message: "User updated" });
   } catch (err) {
     console.error("Update User Error:", err);
@@ -212,6 +213,7 @@ app.put("/api/update-user/:id", uploadUser.single("profilePic"), async (req, res
   }
 });
 
+// Delete User
 app.delete("/api/delete-user/:id", async (req, res) => {
   try {
     const deleted = await User.findByIdAndDelete(req.params.id);
@@ -220,6 +222,17 @@ app.delete("/api/delete-user/:id", async (req, res) => {
   } catch (err) {
     console.error("Delete User Error:", err);
     res.json({ success: false, message: "Failed to delete user" });
+  }
+});
+
+// Get All Users (excluding password)
+app.get("/api/users", async (req, res) => {
+  try {
+    const users = await User.find().select("-password");
+    res.json(users);
+  } catch (err) {
+    console.error("Get Users Error:", err);
+    res.status(500).json({ success: false, message: "Failed to fetch users" });
   }
 });
 
@@ -267,6 +280,7 @@ app.post("/api/upload-background", uploadBackground.single("background"), (req, 
   res.json({ success: true, message: "Background uploaded" });
 });
 
+// ✅ Excel Upload Endpoint (Protected)
 app.post("/api/upload-excel", authMiddleware, uploadExcel.single("excelFile"), async (req, res) => {
   try {
     const { category } = req.body;
@@ -278,11 +292,16 @@ app.post("/api/upload-excel", authMiddleware, uploadExcel.single("excelFile"), a
     const data = [];
 
     sheet.eachRow((row) => {
-      const rowData = row.values.slice(1);
+      const rowData = row.values.slice(1); // remove empty first cell
       data.push(rowData);
     });
 
-    const excelData = new ExcelData({ category, data, uploadedBy: req.userId });
+    const excelData = new ExcelData({
+      category,
+      data,
+      uploadedBy: req.userId
+    });
+
     await excelData.save();
 
     res.json({ success: true, message: "Excel uploaded and saved" });
@@ -292,6 +311,7 @@ app.post("/api/upload-excel", authMiddleware, uploadExcel.single("excelFile"), a
   }
 });
 
+// ✅ Fetch Excel Data by Category
 app.get("/api/excel-data/:category", async (req, res) => {
   try {
     const { category } = req.params;
@@ -304,46 +324,57 @@ app.get("/api/excel-data/:category", async (req, res) => {
   }
 });
 
-// OTP Endpoints
+// ✅ Send OTP route
 app.post("/api/send-otp", async (req, res) => {
   const { userId } = req.body;
-  const user = await User.findOne({ userId });
-  if (!user) return res.json({ success: false, message: "User ID not found" });
-
-  const otp = Math.floor(100000 + Math.random() * 900000);
-  otpStore.set(userId, { otp, expires: Date.now() + 5 * 60 * 1000 });
-
   try {
+    const user = await User.findOne({ userId });
+    if (!user) return res.json({ success: false, message: "User ID not found" });
+
+    const otp = Math.floor(100000 + Math.random() * 900000);
+    otpStore.set(userId, { otp, expires: Date.now() + 5 * 60 * 1000 }); // 5 minutes
+
     await twilioClient.messages.create({
-      body: `Your OTP is: ${otp}`,
+      body: `Hi ${user.username}, Your OTP for reset password is ${otp}\nSend By easyTesa`,
       from: process.env.TWILIO_PHONE,
       to: `+91${user.mobile}`
     });
+
     res.json({ success: true, message: "OTP sent to registered mobile" });
+
   } catch (err) {
     console.error("Twilio Error:", err);
     res.json({ success: false, message: "Failed to send OTP" });
   }
 });
 
+// ✅ Reset Password route
 app.post("/api/reset-password", async (req, res) => {
   const { userId, otp, newPassword } = req.body;
+
   const stored = otpStore.get(userId);
   if (!stored || stored.otp != otp || stored.expires < Date.now()) {
     return res.json({ success: false, message: "Invalid or expired OTP" });
   }
 
-  const user = await User.findOne({ userId });
-  if (!user) return res.json({ success: false, message: "User not found" });
+  try {
+    const user = await User.findOne({ userId });
+    if (!user) return res.json({ success: false, message: "User not found" });
 
-  user.password = await bcrypt.hash(newPassword, SALT_ROUNDS);
-  await user.save();
-  otpStore.delete(userId);
-  res.json({ success: true, message: "Password reset successful" });
+    user.password = await bcrypt.hash(newPassword, SALT_ROUNDS);
+    await user.save();
+    otpStore.delete(userId);
+
+    res.json({ success: true, message: "Password reset successful" });
+  } catch (err) {
+    console.error("Password Reset Error:", err);
+    res.json({ success: false, message: "Password reset failed" });
+  }
 });
 
-// Report Endpoints
 app.post('/api/shift-report/previous-pending', async (req, res) => {
+  console.log("✅ Incoming Previous Pending Body:", req.body);  // Debug log
+
   try {
     const { plant, shift, date } = req.body;
 
@@ -378,11 +409,11 @@ app.post('/api/shift-report/previous-pending', async (req, res) => {
     });
 
   } catch (err) {
-    console.error("Error loading previous shift pending:", err);
+    console.error("❌ Error loading previous shift pending:", err);
     res.status(500).json({ success: false, message: "Server error" });
   }
 });
-
+   
 // Material Reports
 app.post("/api/wood-bill", async (req, res) => {
   try {
