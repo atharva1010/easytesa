@@ -6,109 +6,176 @@
   <title>Login - BALAJI ACTION</title>
   <link rel="stylesheet" href="style.css">
   <style>
-    body {
-      margin: 0;
-      font-family: Arial, sans-serif;
-      background-image: url("bg/background.jpg");
-      background-size: cover;
-      background-repeat: no-repeat;
-      background-position: center;
-      height: 100vh;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-    }
+  @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@600&display=swap');
 
-    header {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      background: #004466;
-      color: white;
-      padding: 10px 20px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
+  body {
+    margin: 0;
+    font-family: 'Orbitron', sans-serif;
+    background-image: url("bg/background.jpg");
+    background-size: cover;
+    background-repeat: no-repeat;
+    background-position: center;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    color: #00ffff;
+    overflow: hidden;
+  }
 
-    .logo {
-      height: 40px;
-      margin-right: 10px;
-    }
+  header {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    background: rgba(0, 20, 30, 0.8);
+    padding: 10px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 0 20px #00ffff88;
+    z-index: 100;
+  }
 
-    .left {
-      display: flex;
-      align-items: center;
-    }
+  .logo {
+    height: 40px;
+    margin-right: 10px;
+    filter: drop-shadow(0 0 5px #00ffff);
+  }
 
-    h2 {
-      margin-bottom: 20px;
-      color: white;
-    }
+  .left {
+    display: flex;
+    align-items: center;
+    color: #00ffff;
+    font-weight: bold;
+    text-shadow: 0 0 5px #00ffff, 0 0 10px #00ffff88;
+  }
 
-    form {
-      background: rgba(255, 255, 255, 0.95);
-      padding: 30px;
-      border-radius: 10px;
-      box-shadow: 0 0 10px #0003;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-    }
+  h2 {
+    margin-bottom: 20px;
+    color: #00ffff;
+    text-shadow: 0 0 10px #00ffff;
+  }
 
-    input {
-      margin: 10px 0;
-      padding: 10px;
-      width: 250px;
-      border: 1px solid #ccc;
-      border-radius: 5px;
-    }
+  form {
+    background: rgba(0, 0, 0, 0.6);
+    padding: 30px;
+    border-radius: 15px;
+    box-shadow: 0 0 20px #00ffff55;
+    backdrop-filter: blur(8px);
+    border: 1px solid #00ffff44;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    animation: glowBox 2s infinite alternate;
+  }
 
-    button {
-      padding: 10px 20px;
-      background: #004466;
-      color: white;
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
+  @keyframes glowBox {
+    0% {
+      box-shadow: 0 0 10px #00ffff33;
     }
+    100% {
+      box-shadow: 0 0 20px #00ffff99;
+    }
+  }
 
-    #msg {
-      color: red;
-      margin-top: 10px;
-    }
+  input {
+    margin: 10px 0;
+    padding: 12px;
+    width: 250px;
+    border: 1px solid #00ffff44;
+    border-radius: 5px;
+    background: rgba(255, 255, 255, 0.1);
+    color: #00ffff;
+    outline: none;
+    box-shadow: 0 0 10px #00ffff33;
+    transition: all 0.3s ease-in-out;
+  }
 
-    .link {
-      margin-top: 10px;
-    }
+  input::placeholder {
+    color: #00ffff88;
+  }
 
-    /* Forgot Password Modal */
-    #forgotPasswordModal {
-      display: none;
-      position: fixed;
-      top: 10%;
-      left: 50%;
-      transform: translateX(-50%);
-      background: white;
-      border: 2px solid black;
-      padding: 20px;
-      z-index: 1000;
-      border-radius: 8px;
-      width: 300px;
-    }
+  input:focus {
+    box-shadow: 0 0 15px #00ffffaa;
+    border-color: #00ffffaa;
+  }
 
-    #forgotPasswordModal input {
-      width: 100%;
-      margin-bottom: 10px;
-    }
+  button {
+    padding: 12px 24px;
+    background: #00ffff;
+    color: #001f2f;
+    font-weight: bold;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    box-shadow: 0 0 15px #00ffffaa;
+    transition: all 0.3s ease-in-out;
+  }
 
-    #forgotPasswordModal button {
-      width: 100%;
-      margin-bottom: 10px;
-    }
-  </style>
+  button:hover {
+    background: #00e6e6;
+    box-shadow: 0 0 25px #00ffffcc;
+  }
+
+  #msg {
+    color: #ff4444;
+    margin-top: 10px;
+    text-shadow: 0 0 5px red;
+  }
+
+  .link {
+    margin-top: 10px;
+  }
+
+  .link a {
+    color: #00ffff;
+    text-decoration: underline;
+    cursor: pointer;
+    text-shadow: 0 0 5px #00ffff88;
+  }
+
+  #forgotPasswordModal {
+    display: none;
+    position: fixed;
+    top: 10%;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0, 0, 0, 0.8);
+    border: 2px solid #00ffff55;
+    padding: 20px;
+    z-index: 1000;
+    border-radius: 10px;
+    width: 320px;
+    box-shadow: 0 0 20px #00ffff88;
+    backdrop-filter: blur(10px);
+    color: #00ffff;
+  }
+
+  #forgotPasswordModal input,
+  #forgotPasswordModal button {
+    width: 100%;
+    margin-bottom: 10px;
+  }
+
+  #forgotPasswordModal button {
+    background-color: #00ffff;
+    color: #001f2f;
+  }
+
+  #forgotPasswordModal button:hover {
+    background-color: #00e6e6;
+  }
+
+  #forgotPasswordModal h3 {
+    text-align: center;
+    text-shadow: 0 0 10px #00ffff;
+  }
+</style>
+  
+
+    
 </head>
 <body>
 
