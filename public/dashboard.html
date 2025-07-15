@@ -548,51 +548,47 @@ footer p {
     window.location.href = 'index.html';
   }
 
-  function loadUserProfile() {
-    const token = localStorage.getItem('token');
-    if (!token) return logout();
-
-    async function fetchCurrentUser() {
+ function loadUserProfile() {
   const token = localStorage.getItem('token');
   if (!token) return logout();
 
-  try {
-    const res = await fetch('/api/me', {
-      headers: { Authorization: `Bearer ${token}` }
+  fetch('/api/me', {
+    headers: { Authorization: `Bearer ${token}` }
+  })
+    .then(res => res.json())
+    .then(data => {
+      if (!data.success || !data.user) return logout();
+
+      currentUser = data.user;
+      const profileImage = document.getElementById('profileImage');
+      const profileCard = document.getElementById('profileCard');
+
+      // ✅ Profile Image
+      profileImage.src = currentUser.profilePic && currentUser.profilePic.startsWith('http')
+        ? currentUser.profilePic
+        : 'assets/profile.png';
+
+      // ✅ Profile Info
+      profileCard.innerHTML = `
+        <h4>${currentUser.username}</h4>
+        <p><strong>User ID:</strong> ${currentUser.userId}</p>
+        <p><strong>Email:</strong> ${currentUser.email}</p>
+        <p><strong>Mobile:</strong> ${currentUser.mobile}</p>
+        <p><strong>Department:</strong> ${currentUser.department}</p>
+        <p><strong>Designation:</strong> ${currentUser.designation}</p>
+        <p><strong>Role:</strong> ${currentUser.role}</p>
+      `;
+    })
+    .catch(error => {
+      console.error("Failed to fetch user:", error);
+      logout();
     });
-
-    const data = await res.json();
-
-    if (!data.success || !data.user) return logout();
-
-    const user = data.user;
-    const profileImage = document.getElementById('profileImage');
-    const profileCard = document.getElementById('profileCard');
-
-    // ✅ Set profile image with fallback
-    profileImage.src = user.profilePic && user.profilePic.startsWith('http')
-      ? user.profilePic
-      : 'assets/profile.png';
-
-    // ✅ Display user info in profile card
-    profileCard.innerHTML = `
-      <h4>${user.username}</h4>
-      <p><strong>User ID:</strong> ${user.userId}</p>
-      <p><strong>Email:</strong> ${user.email}</p>
-      <p><strong>Mobile:</strong> ${user.mobile}</p>
-      <p><strong>Department:</strong> ${user.department}</p>
-      <p><strong>Designation:</strong> ${user.designation}</p>
-      <p><strong>Role:</strong> ${user.role}</p>
-    `;
-  } catch (error) {
-    console.error("Failed to fetch current user:", error);
-    logout();
-  }
 }
+
 
   function toggleProfileCard() {
     const card = document.getElementById('profileCard');
-    card.style.display = card.style.display === 'block' ? 'none' : 'block';
+    card.style.display = (card.style.display === 'block') ? 'none' : 'block';
   }
 
   window.addEventListener('click', function (e) {
