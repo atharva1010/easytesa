@@ -1085,34 +1085,41 @@
   }
 
   async function fetchUsers() {
-    try {
-      const res = await fetch("/api/users");
-      const users = await res.json();
-      const tbody = document.querySelector("#usersTable tbody");
-      tbody.innerHTML = "";
+  try {
+    const res = await fetch("/api/users");
+    const users = await res.json();
+    const tbody = document.querySelector("#usersTable tbody");
+    tbody.innerHTML = "";
 
-      users.forEach(u => {
-        const row = document.createElement("tr");
-        row.innerHTML = `
-          <td>${u.username}</td>
-          <td>${u.userId}</td>
-          <td>${u.department}</td>
-          <td>${u.designation}</td>
-          <td>${u.mobile}</td>
-          <td>${u.email}</td>
-          <td>${u.role}</td>
-          <td><img src="${u.profilePic}" width="40" height="40" style="border-radius:50%; object-fit:cover;"></td>
-          <td>
-            <button onclick='editUser(${JSON.stringify(u)})'>Edit</button>
-            <button onclick="deleteUser('${u._id}')">Delete</button>
-          </td>`;
-        tbody.appendChild(row);
-      });
-    } catch (err) {
-      console.error("Fetch users error:", err);
-      alert("Failed to load users");
-    }
+    users.forEach(u => {
+      const profilePicUrl = u.profilePic && u.profilePic.startsWith("http")
+        ? u.profilePic
+        : "assets/profile.png";
+
+      const row = document.createElement("tr");
+      row.innerHTML = `
+        <td>${u.username}</td>
+        <td>${u.userId}</td>
+        <td>${u.department}</td>
+        <td>${u.designation}</td>
+        <td>${u.mobile}</td>
+        <td>${u.email}</td>
+        <td>${u.role}</td>
+        <td>
+          <img src="${profilePicUrl}" width="40" height="40" 
+               style="border-radius:50%; object-fit:cover;">
+        </td>
+        <td>
+          <button onclick='editUser(${JSON.stringify(u)})'>Edit</button>
+          <button onclick="deleteUser('${u._id}')">Delete</button>
+        </td>`;
+      tbody.appendChild(row);
+    });
+  } catch (err) {
+    console.error("Fetch users error:", err);
+    alert("Failed to load users");
   }
+}
 
   async function deleteUser(userId) {
     if (!confirm("Are you sure you want to delete this user?")) return;
