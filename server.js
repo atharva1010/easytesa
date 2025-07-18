@@ -333,30 +333,45 @@ app.post("/api/send-otp", async (req, res) => {
     const user = await User.findOne({ userId });
     if (!user) return res.json({ success: false, message: "User ID not found" });
 
-    const otp = Math.floor(100000 + Math.random() * 900000);
-    otpStore.set(userId, { otp, expires: Date.now() + 5 * 60 * 1000 }); // 5 minutes
+    if (!process.env.TWILIO_PHONE || !process.env.TWILIO_SID || !process.env.TWILIO_AUTH) {
+      return res.json({ success: false, message: "Twilio not configured" });
+    }
 
+    const otp = Math.floor(100000 + Math.random() * 900000);
+    otpStore.set(userId, { otp, expires: Date.now() + 5 * 60 * 1000 }); // valid for 5 min
+
+    const fullMobile = `+91${user.mobile}`;
     await twilioClient.messages.create({
-      body: `Hi ${user.username}, Your OTP for reset password is ${otp}\nSend By easyTesa`,
+      body: `Hi ${user.username}, Your OTP for password reset is ${otp} - easyTesa`,
       from: process.env.TWILIO_PHONE,
-      to: `+91${user.mobile}`
+      to: fullMobile
     });
 
     res.json({ success: true, message: "OTP sent to registered mobile" });
-
   } catch (err) {
-    console.error("Twilio Error:", err);
-    res.json({ success: false, message: "Failed to send OTP" });
+    console.error("Twilio Error:", err.message);
+    let message = "Failed to send OTP";
+    if (err.code === 21606) {
+      message = "Twilio Trial account can only send to verified numbers. Go to https://twilio.com/console to verify.";
+    }
+    res.json({ success: false, message });
   }
 });
 
 // ✅ Reset Password route
 app.post("/api/reset-password", async (req, res) => {
   const { userId, otp, newPassword } = req.body;
-
   const stored = otpStore.get(userId);
-  if (!stored || stored.otp != otp || stored.expires < Date.now()) {
-    return res.json({ success: false, message: "Invalid or expired OTP" });
+
+  if (!stored) {
+    return res.json({ success: false, message: "No OTP sent. Please request again." });
+  }
+  if (stored.expires < Date.now()) {
+    otpStore.delete(userId);
+    return res.json({ success: false, message: "OTP expired. Please request again." });
+  }
+  if (stored.otp != otp) {
+    return res.json({ success: false, message: "Invalid OTP. Please try again." });
   }
 
   try {
@@ -365,14 +380,15 @@ app.post("/api/reset-password", async (req, res) => {
 
     user.password = await bcrypt.hash(newPassword, SALT_ROUNDS);
     await user.save();
-    otpStore.delete(userId);
 
-    res.json({ success: true, message: "Password reset successful" });
+    otpStore.delete(userId);
+    res.json({ success: true, message: "Password reset successfully" });
   } catch (err) {
-    console.error("Password Reset Error:", err);
-    res.json({ success: false, message: "Password reset failed" });
+    console.error("Reset Password Error:", err);
+    res.json({ success: false, message: "Something went wrong. Try again." });
   }
 });
+
 
 app.post('/api/shift-report/previous-pending', async (req, res) => {
   console.log("✅ Incoming Previous Pending Body:", req.body);  // Debug log
