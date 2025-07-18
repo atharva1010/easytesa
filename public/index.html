@@ -198,30 +198,21 @@
   </form>
 
   <!-- Forgot Password Modal -->
-  <div id="forgotPasswordModal">
-    <h3>Forgot Password</h3>
-
-    <div id="step1">
-      <label>User ID:</label>
-      <input type="text" id="fpUserId">
-      <button onclick="sendOTP()">Send OTP</button>
-    </div>
-
-    <div id="step2" style="display:none;">
-      <label>Enter OTP:</label>
-      <input type="text" id="fpOTP">
-      <button onclick="verifyOTP()">Verify OTP</button>
-    </div>
-
-    <div id="step3" style="display:none;">
-      <label>New Password:</label>
-      <input type="password" id="fpNewPassword">
-      <button onclick="updatePassword()">Update Password</button>
-    </div>
-
-    <button onclick="closeForgotModal()" style="background:red;">Close</button>
+ <!-- Modal Steps -->
+<div id="forgotPasswordModal" style="display: none;">
+  <div id="step1">
+    <input id="fpUserId" placeholder="Enter User ID" />
+    <button onclick="sendOTP()">Send OTP</button>
   </div>
-
+  <div id="step2" style="display: none;">
+    <input id="fpOTP" placeholder="Enter OTP" />
+    <button onclick="verifyOTP()">Verify OTP</button>
+  </div>
+  <div id="step3" style="display: none;">
+    <input id="fpNewPassword" type="password" placeholder="New Password" />
+    <button onclick="updatePassword()">Update Password</button>
+  </div>
+</div>
   <script>
     // Handle both form submission and Enter key press
     document.getElementById("loginForm").addEventListener("submit", handleLogin);
