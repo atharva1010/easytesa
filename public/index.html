@@ -272,72 +272,82 @@
     }
 
     // Forgot Password Logic
-    function showForgotModal() {
-      document.getElementById("forgotPasswordModal").style.display = "block";
-      document.getElementById("step1").style.display = "block";
-      document.getElementById("step2").style.display = "none";
-      document.getElementById("step3").style.display = "none";
-    }
+  function showForgotModal() {
+    document.getElementById("forgotPasswordModal").style.display = "block";
+    document.getElementById("step1").style.display = "block";
+    document.getElementById("step2").style.display = "none";
+    document.getElementById("step3").style.display = "none";
+  }
 
-    function closeForgotModal() {
-      document.getElementById("forgotPasswordModal").style.display = "none";
-    }
+  function closeForgotModal() {
+    document.getElementById("forgotPasswordModal").style.display = "none";
+  }
 
-    function sendOTP() {
-      const userId = document.getElementById("fpUserId").value;
-      if (!userId) return alert("Enter User ID");
+  function sendOTP() {
+    const userId = document.getElementById("fpUserId").value;
+    if (!userId) return alert("Enter User ID");
 
-      fetch('/api/send-otp', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId })
-      }).then(res => res.json()).then(data => {
-        if (data.success) {
-          alert("OTP sent to registered mobile number");
-          document.getElementById("step1").style.display = "none";
-          document.getElementById("step2").style.display = "block";
-        } else {
-          alert(data.message);
-        }
-      });
-    }
+    fetch('/api/send-otp', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ userId })
+    })
+    .then(res => res.json())
+    .then(data => {
+      if (data.success) {
+        alert("OTP sent to registered mobile number");
+        document.getElementById("step1").style.display = "none";
+        document.getElementById("step2").style.display = "block";
+      } else {
+        alert(data.message);
+      }
+    });
+  }
 
-    function verifyOTP() {
-      const userId = document.getElementById("fpUserId").value;
-      const otp = document.getElementById("fpOTP").value;
+  function verifyOTP() {
+    const userId = document.getElementById("fpUserId").value;
+    const otp = document.getElementById("fpOTP").value;
 
-      fetch('/api/verify-otp', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId, otp })
-      }).then(res => res.json()).then(data => {
-        if (data.success) {
-          alert("OTP Verified");
-          document.getElementById("step2").style.display = "none";
-          document.getElementById("step3").style.display = "block";
-        } else {
-          alert("Incorrect OTP");
-        }
-      });
-    }
+    if (!otp) return alert("Enter OTP");
 
-    function updatePassword() {
-      const userId = document.getElementById("fpUserId").value;
-      const newPassword = document.getElementById("fpNewPassword").value;
+    fetch('/api/verify-otp', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ userId, otp })
+    })
+    .then(res => res.json())
+    .then(data => {
+      if (data.success) {
+        document.getElementById("step2").style.display = "none";
+        document.getElementById("step3").style.display = "block";
+      } else {
+        alert("Invalid OTP");
+      }
+    });
+  }
 
-      fetch('/api/update-password', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId, newPassword })
-      }).then(res => res.json()).then(data => {
-        if (data.success) {
-          alert("Password updated successfully");
-          closeForgotModal();
-        } else {
-          alert(data.message);
-        }
-      });
-    }
+  function updatePassword() {
+    const userId = document.getElementById("fpUserId").value;
+    const newPassword = document.getElementById("fpNewPassword").value;
+
+    if (!newPassword) return alert("Enter new password");
+
+    fetch('/api/update-password', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ userId, newPassword })
+    })
+    .then(res => res.json())
+    .then(data => {
+      if (data.success) {
+        alert("Password updated successfully");
+        closeForgotModal();
+      } else {
+        alert(data.message);
+      }
+    });
+  }
+</script>
   </script>
 </body>
 </html>
