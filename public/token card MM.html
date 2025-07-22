@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Token Card Management</title>
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/5.3.0/css/bootstrap.min.css" />
+  <style>
+    body {
+      padding: 20px;
+      background-color: #f2f2f2;
+    }
+    .status-active {
+      color: green;
+      font-weight: bold;
+    }
+    .status-lost {
+      color: red;
+      font-weight: bold;
+    }
+    .status-error {
+      color: orange;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <h3 class="mb-3">Token Card Manager</h3>
+
+  <div class="mb-3">
+    <label for="plantSelect" class="form-label">Select Plant:</label>
+    <select id="plantSelect" class="form-select w-auto" onchange="onPlantChange()">
+      <option value="">-- Choose Plant --</option>
+      <option value="C34A">C34A</option>
+      <option value="C2">C2</option>
+      <option value="C3">C3</option>
+    </select>
+  </div>
+
+  <div class="mb-4">
+    <h5>Add Token</h5>
+    <input type="text" id="singleTokenInput" placeholder="Single Token Number" class="form-control w-auto d-inline" />
+    <button class="btn btn-success" onclick="addSingleToken()">Add Single</button>
+  </div>
+
+  <div class="mb-4">
+    <h5>Add Range</h5>
+    <input type="text" id="serialStart" placeholder="Start (e.g. 2300001)" class="form-control w-auto d-inline" />
+    <input type="text" id="serialEnd" placeholder="End (e.g. 2300500)" class="form-control w-auto d-inline" />
+    <button class="btn btn-primary" onclick="addBulkTokenCards()">Add Range</button>
+  </div>
+
+  <div class="mb-3">
+    <button class="btn btn-warning" onclick="loadTokens()">🔍 View All Tokens</button>
+  </div>
+
+  <div id="tokenTableContainer" class="mt-4"></div>
+
+  <script>
+    let selectedPlant = localStorage.getItem("selectedPlant") || "";
+
+    window.onload = () => {
+      document.getElementById("plantSelect").value = selectedPlant;
+      if (selectedPlant) loadTokens();
+    };
+
+    function onPlantChange() {
+      const plant = document.getElementById("plantSelect").value;
+      localStorage.setItem("selectedPlant", plant);
+      location.reload(); // auto-refresh with new plant
+    }
+
+    function addSingleToken() {
+      const cardNumber = document.getElementById("singleTokenInput").value.trim();
+      if (!selectedPlant || !cardNumber) return alert("❌ Select plant and enter token number.");
+      
+      fetch("/api/tokencards", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ cardNumber, plant: selectedPlant, status: "Active" })
+      })
+      .then(res => res.json())
+      .then(data => {
+        alert("✅ Token Added");
+        loadTokens();
+      })
+      .catch(err => alert("❌ Error: " + err));
+    }
+
+    function addBulkTokenCards() {
+      const start = parseInt(document.getElementById("serialStart").value.trim());
+      const end = parseInt(document.getElementById("serialEnd").value.trim());
+
+      if (!selectedPlant || isNaN(start) || isNaN(end) || start > end) {
+        return alert("❌ Invalid plant or range.");
+      }
+
+      const tokens = [];
+      for (let i = start; i <= end; i++) {
+        tokens.push({ cardNumber: i.toString(), plant: selectedPlant, status: "Active" });
+      }
+
+      fetch("/api/tokencards/bulk", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ tokens })
+      })
+      .then(res => res.json())
+      .then(data => {
+        alert("✅ Bulk tokens added.");
+        loadTokens();
+      })
+      .catch(err => alert("❌ Error: " + err));
+    }
+
+    function loadTokens() {
+      if (!selectedPlant) return alert("❌ Select a plant first.");
+
+      fetch(`/api/tokencards?plant=${selectedPlant}`)
+        .then(res => res.json())
+        .then(tokens => {
+          const container = document.getElementById("tokenTableContainer");
+          if (!Array.isArray(tokens)) {
+            container.innerHTML = "<p>No tokens found.</p>";
+            return;
+          }
+
+          let html = `
+            <table class="table table-bordered table-striped">
+              <thead><tr>
+                <th>#</th>
+                <th>Card Number</th>
+                <th>Status</th>
+                <th>Action</th>
+              </tr></thead>
+              <tbody>
+          `;
+
+          tokens.forEach((token, i) => {
+            html += `
+              <tr>
+                <td>${i + 1}</td>
+                <td>${token.cardNumber}</td>
+                <td class="status-${token.status.toLowerCase()}">${token.status}</td>
+                <td><button class="btn btn-danger btn-sm" onclick="deleteToken('${token._id}')">🗑️ Delete</button></td>
+              </tr>
+            `;
+          });
+
+          html += "</tbody></table>";
+          container.innerHTML = html;
+        })
+        .catch(err => {
+          alert("Error fetching tokens: " + err.message);
+        });
+    }
+
+    function deleteToken(id) {
+      if (!confirm("Are you sure to delete this token?")) return;
+
+      fetch(`/api/tokencards/${id}`, { method: "DELETE" })
+        .then(res => res.json())
+        .then(data => {
+          alert("🗑️ Token deleted");
+          loadTokens();
+        })
+        .catch(err => alert("❌ Error deleting token: " + err));
+    }
+  </script>
+</body>
+</html>
