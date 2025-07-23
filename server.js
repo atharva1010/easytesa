@@ -381,7 +381,21 @@ app.post("/api/reset-password", async (req, res) => {
   otpStore.delete(userId);
   res.json({ success: true, message: "Password reset successful" });
 });
+// Example backend code for verifying OTP
+app.post("/api/verify-otp", async (req, res) => {
+  const { userId, otp } = req.body;
 
+  const user = await User.findOne({ userId });
+  if (!user) {
+    return res.json({ success: false, message: "User not found" });
+  }
+
+  if (user.otp !== otp) {
+    return res.json({ success: false, message: "Invalid OTP" });
+  }
+
+  return res.json({ success: true });
+});
 app.post('/api/shift-report/previous-pending', async (req, res) => {
   console.log("✅ Incoming Previous Pending Body:", req.body);  // Debug log
 
