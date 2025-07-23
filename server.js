@@ -21,6 +21,8 @@ const io = new Server(server, {
 });
 const PORT = process.env.PORT || 3000;
 
+
+
 // Models
 const User = require("./models/User");
 const ExcelData = require("./models/ExcelData");
@@ -330,32 +332,36 @@ app.get("/api/excel-data/:category", async (req, res) => {
 // ✅ Send OTP route
 app.post("/api/send-otp", async (req, res) => {
   const { userId } = req.body;
+
   try {
     const user = await User.findOne({ userId });
     if (!user) return res.json({ success: false, message: "User ID not found" });
 
-    if (!process.env.TWILIO_PHONE || !process.env.TWILIO_SID || !process.env.TWILIO_AUTH) {
-      return res.json({ success: false, message: "Twilio not configured" });
+    const otp = Math.floor(100000 + Math.random() * 900000);
+    otpStore.set(userId, { otp, expires: Date.now() + 5 * 60 * 1000 });
+
+    // Make sure from and to numbers are valid
+    if (!process.env.TWILIO_PHONE) {
+      return res.json({ success: false, message: "Twilio sender number missing in .env" });
     }
 
-    const otp = Math.floor(100000 + Math.random() * 900000);
-    otpStore.set(userId, { otp, expires: Date.now() + 5 * 60 * 1000 }); // valid for 5 min
+    if (!user.mobile) {
+      return res.json({ success: false, message: "User mobile number not available" });
+    }
 
     const fullMobile = `+91${user.mobile}`;
     await twilioClient.messages.create({
-      body: `Hi ${user.username}, Your OTP for password reset is ${otp} - easyTesa`,
+      body: `Hi ${user.username}, Your OTP for password reset is ${otp} - Don't share this Otp to anyone. Send by easyTesa`,
       from: process.env.TWILIO_PHONE,
       to: fullMobile
     });
 
     res.json({ success: true, message: "OTP sent to registered mobile" });
+
   } catch (err) {
-    console.error("Twilio Error:", err.message);
-    let message = "Failed to send OTP";
-    if (err.code === 21606) {
-      message = "Twilio Trial account can only send to verified numbers. Go to https://twilio.com/console to verify.";
-    }
-    res.json({ success: false, message });
+    console.error("Twilio Error:", err);
+    const msg = err?.message || "Failed to send OTP";
+    res.json({ success: false, message: msg });
   }
 });
 
@@ -363,33 +369,18 @@ app.post("/api/send-otp", async (req, res) => {
 app.post("/api/reset-password", async (req, res) => {
   const { userId, otp, newPassword } = req.body;
   const stored = otpStore.get(userId);
-
-  if (!stored) {
-    return res.json({ success: false, message: "No OTP sent. Please request again." });
-  }
-  if (stored.expires < Date.now()) {
-    otpStore.delete(userId);
-    return res.json({ success: false, message: "OTP expired. Please request again." });
-  }
-  if (stored.otp != otp) {
-    return res.json({ success: false, message: "Invalid OTP. Please try again." });
+  if (!stored || stored.otp != otp || stored.expires < Date.now()) {
+    return res.json({ success: false, message: "Invalid or expired OTP" });
   }
 
-  try {
-    const user = await User.findOne({ userId });
-    if (!user) return res.json({ success: false, message: "User not found" });
+  const user = await User.findOne({ userId });
+  if (!user) return res.json({ success: false, message: "User not found" });
 
-    user.password = await bcrypt.hash(newPassword, SALT_ROUNDS);
-    await user.save();
-
-    otpStore.delete(userId);
-    res.json({ success: true, message: "Password reset successfully" });
-  } catch (err) {
-    console.error("Reset Password Error:", err);
-    res.json({ success: false, message: "Something went wrong. Try again." });
-  }
+  user.password = await bcrypt.hash(newPassword, 10);
+  await user.save();
+  otpStore.delete(userId);
+  res.json({ success: true, message: "Password reset successful" });
 });
-
 
 app.post('/api/shift-report/previous-pending', async (req, res) => {
   console.log("✅ Incoming Previous Pending Body:", req.body);  // Debug log
