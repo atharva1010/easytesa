@@ -21,8 +21,6 @@ const io = new Server(server, {
 });
 const PORT = process.env.PORT || 3000;
 
-
-
 // Models
 const User = require("./models/User");
 const ExcelData = require("./models/ExcelData");
@@ -329,24 +327,39 @@ app.get("/api/excel-data/:category", async (req, res) => {
   }
 });
 
-// ✅ Send OTP routeapp.post("/api/send-otp", async (req, res) => {
+// OTP Endpoints
+app.post("/api/send-otp", async (req, res) => {
   const { userId } = req.body;
-  const user = await User.findOne({ userId });
-  if (!user) return res.json({ success: false, message: "User ID not found" });
-
-  const otp = Math.floor(100000 + Math.random() * 900000);
-  otpStore.set(userId, { otp, expires: Date.now() + 5 * 60 * 1000 });
 
   try {
+    const user = await User.findOne({ userId });
+    if (!user) return res.json({ success: false, message: "User ID not found" });
+
+    const otp = Math.floor(100000 + Math.random() * 900000);
+    otpStore.set(userId, { otp, expires: Date.now() + 5 * 60 * 1000 });
+
+    // Make sure from and to numbers are valid
+    if (!process.env.TWILIO_PHONE) {
+      return res.json({ success: false, message: "Twilio sender number missing in .env" });
+    }
+
+    if (!user.mobile) {
+      return res.json({ success: false, message: "User mobile number not available" });
+    }
+
+    const fullMobile = `+91${user.mobile}`;
     await twilioClient.messages.create({
-      body: `Your OTP is: ${otp}`,
+      body: `Hi ${user.username}, Your OTP for password reset is ${otp} - Don't share this Otp to anyone. Send by easyTesa`,
       from: process.env.TWILIO_PHONE,
-      to: `+91${user.mobile}`
+      to: fullMobile
     });
+
     res.json({ success: true, message: "OTP sent to registered mobile" });
+
   } catch (err) {
     console.error("Twilio Error:", err);
-    res.json({ success: false, message: "Failed to send OTP" });
+    const msg = err?.message || "Failed to send OTP";
+    res.json({ success: false, message: msg });
   }
 });
 
@@ -365,6 +378,8 @@ app.post("/api/reset-password", async (req, res) => {
   otpStore.delete(userId);
   res.json({ success: true, message: "Password reset successful" });
 });
+
+
 app.post('/api/shift-report/previous-pending', async (req, res) => {
   console.log("✅ Incoming Previous Pending Body:", req.body);  // Debug log
 
