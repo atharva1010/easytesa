@@ -120,6 +120,12 @@
     box-shadow: 0 0 25px #00ffffcc;
   }
 
+  button:disabled {
+    background: #cccccc;
+    box-shadow: none;
+    cursor: not-allowed;
+  }
+
   #msg {
     color: #ff4444;
     margin-top: 10px;
@@ -159,6 +165,24 @@
   #forgotPasswordModal button {
     width: 100%;
     margin-bottom: 10px;
+  }
+
+  .close-modal {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    background: none;
+    border: none;
+    color: #00ffff;
+    font-size: 20px;
+    cursor: pointer;
+  }
+
+  .error-message {
+    color: #ff4444;
+    margin-top: 5px;
+    font-size: 14px;
+    text-shadow: 0 0 5px #ff000088;
   }
 
   /* ---------------- Responsive Media Queries ------------------ */
@@ -209,8 +233,6 @@
     }
   }
 </style>
-
-
 </head>
 
 <body>
@@ -234,18 +256,22 @@
 
   <!-- Forgot Password Modal -->
   <div id="forgotPasswordModal">
+    <button class="close-modal" onclick="closeForgotModal()">×</button>
     <h3>Forgot Password</h3>
     <div id="step1">
       <input id="fpUserId" placeholder="Enter User ID" />
       <button onclick="sendOTP()">Send OTP</button>
+      <p class="error-message" id="step1Error"></p>
     </div>
     <div id="step2" style="display: none;">
       <input id="fpOTP" placeholder="Enter OTP" />
       <button onclick="verifyOTP()">Verify OTP</button>
+      <p class="error-message" id="step2Error"></p>
     </div>
     <div id="step3" style="display: none;">
       <input id="fpNewPassword" type="password" placeholder="New Password" />
       <button onclick="updatePassword()">Update Password</button>
+      <p class="error-message" id="step3Error"></p>
     </div>
   </div>
 
@@ -294,85 +320,149 @@
         }
       } catch (error) {
         document.getElementById("msg").innerText = "Login failed. Please try again.";
+        console.error("Login error:", error);
       }
     }
 
-    // Forgot Password
+    // Forgot Password Functions
     function showForgotModal() {
       document.getElementById("forgotPasswordModal").style.display = "block";
       document.getElementById("step1").style.display = "block";
       document.getElementById("step2").style.display = "none";
       document.getElementById("step3").style.display = "none";
+      document.getElementById("fpUserId").value = "";
+      document.getElementById("fpOTP").value = "";
+      document.getElementById("fpNewPassword").value = "";
+      clearErrorMessages();
     }
 
     function closeForgotModal() {
       document.getElementById("forgotPasswordModal").style.display = "none";
     }
 
-    function sendOTP() {
-      const userId = document.getElementById("fpUserId").value;
-      if (!userId) return alert("Enter User ID");
-
-      fetch('/api/send-otp', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId })
-      })
-      .then(res => res.json())
-      .then(data => {
-        if (data.success) {
-          alert("OTP sent to registered mobile number");
-          document.getElementById("step1").style.display = "none";
-          document.getElementById("step2").style.display = "block";
-        } else {
-          alert(data.message);
-        }
-      });
+    function clearErrorMessages() {
+      document.getElementById("step1Error").textContent = "";
+      document.getElementById("step2Error").textContent = "";
+      document.getElementById("step3Error").textContent = "";
     }
 
-    function verifyOTP() {
-      const userId = document.getElementById("fpUserId").value;
-      const otp = document.getElementById("fpOTP").value;
+    async function sendOTP() {
+      const userId = document.getElementById("fpUserId").value.trim();
+      if (!userId) {
+        document.getElementById("step1Error").textContent = "Please enter your User ID";
+        return;
+      }
 
-      if (!otp) return alert("Enter OTP");
+      const btn = document.querySelector("#step1 button");
+      btn.disabled = true;
+      btn.textContent = "Sending...";
 
-      fetch('/api/verify-otp', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId, otp })
-      })
-      .then(res => res.json())
-      .then(data => {
+      try {
+        const res = await fetch('/api/send-otp', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ userId })
+        });
+        
+        const data = await res.json();
+        
+        if (data.success) {
+          document.getElementById("step1").style.display = "none";
+          document.getElementById("step2").style.display = "block";
+          document.getElementById("step1Error").textContent = "";
+        } else {
+          document.getElementById("step1Error").textContent = data.message || "Failed to send OTP";
+        }
+      } catch (error) {
+        document.getElementById("step1Error").textContent = "Network error. Please try again.";
+        console.error("Send OTP error:", error);
+      } finally {
+        btn.disabled = false;
+        btn.textContent = "Send OTP";
+      }
+    }
+
+    async function verifyOTP() {
+      const userId = document.getElementById("fpUserId").value.trim();
+      const otp = document.getElementById("fpOTP").value.trim();
+
+      if (!otp) {
+        document.getElementById("step2Error").textContent = "Please enter the OTP you received";
+        return;
+      }
+
+      const btn = document.querySelector("#step2 button");
+      btn.disabled = true;
+      btn.textContent = "Verifying...";
+
+      try {
+        const res = await fetch('/api/verify-otp', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ userId, otp })
+        });
+        
+        const data = await res.json();
+        
         if (data.success) {
           document.getElementById("step2").style.display = "none";
           document.getElementById("step3").style.display = "block";
+          document.getElementById("step2Error").textContent = "";
         } else {
-          alert("Invalid OTP");
+          document.getElementById("step2Error").textContent = data.message || "Invalid OTP. Please try again.";
         }
-      });
+      } catch (error) {
+        document.getElementById("step2Error").textContent = "Verification failed. Please try again.";
+        console.error("Verify OTP error:", error);
+      } finally {
+        btn.disabled = false;
+        btn.textContent = "Verify OTP";
+      }
     }
 
-    function updatePassword() {
-      const userId = document.getElementById("fpUserId").value;
-      const newPassword = document.getElementById("fpNewPassword").value;
+    async function updatePassword() {
+      const userId = document.getElementById("fpUserId").value.trim();
+      const newPassword = document.getElementById("fpNewPassword").value.trim();
 
-      if (!newPassword) return alert("Enter new password");
+      if (!newPassword) {
+        document.getElementById("step3Error").textContent = "Please enter a new password";
+        return;
+      }
 
-      fetch('/api/update-password', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId, newPassword })
-      })
-      .then(res => res.json())
-      .then(data => {
+      const btn = document.querySelector("#step3 button");
+      btn.disabled = true;
+      btn.textContent = "Updating...";
+
+      try {
+        const res = await fetch('/api/update-password', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ userId, newPassword })
+        });
+        
+        const data = await res.json();
+        
         if (data.success) {
-          alert("Password updated successfully");
+          alert("Password updated successfully!");
           closeForgotModal();
         } else {
-          alert(data.message);
+          document.getElementById("step3Error").textContent = data.message || "Failed to update password";
         }
-      });
+      } catch (error) {
+        document.getElementById("step3Error").textContent = "Update failed. Please try again.";
+        console.error("Update password error:", error);
+      } finally {
+        btn.disabled = false;
+        btn.textContent = "Update Password";
+      }
     }
+
+    // Close modal when clicking outside
+    window.addEventListener('click', function(event) {
+      if (event.target === document.getElementById('forgotPasswordModal')) {
+        closeForgotModal();
+      }
+    });
   </script>
 </body>
 </html>
