@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Sticker Printer</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      margin: 0;
+      padding: 20px;
+      background: #f0f0f0;
+    }
+
+    h1 {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    .controls {
+      text-align: center;
+      margin-bottom: 20px;
+      background: #eee;
+      padding: 15px;
+      border: 1px solid #ccc;
+    }
+
+    input, select, button, label {
+      font-size: 16px;
+      padding: 10px;
+      margin: 5px;
+    }
+
+    .sticker-sheet {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      justify-content: center;
+      background: white;
+      padding: 20px;
+    }
+
+    .sticker {
+      position: relative;
+      display: inline-block;
+      padding: 10px 20px;
+      margin: 5px;
+      border: 4px solid black;
+      border-radius: 0;
+      background: #fff;
+      white-space: nowrap;
+      line-height: 1;
+      vertical-align: middle;
+      box-sizing: border-box;
+    }
+
+    .delete-btn {
+      position: absolute;
+      top: -10px;
+      right: -10px;
+      background: red;
+      color: white;
+      border: none;
+      border-radius: 50%;
+      width: 20px;
+      height: 20px;
+      font-size: 12px;
+      cursor: pointer;
+    }
+
+    .border1 { border-style: solid; }
+    .border2 { border-style: dashed; }
+    .border3 { border-style: dotted; }
+    .border4 { border-style: double; }
+    .border5 { border: 4px groove #000; }
+    .border6 { border: 4px ridge #000; }
+    .border7 { border: 4px inset #000; }
+    .border8 { border: 4px outset #000; }
+    .border9 { border: 4px solid red; }
+    .border10 { border: 4px dashed blue; }
+
+    @media print {
+      body * {
+        visibility: hidden;
+      }
+      .sticker-sheet, .sticker-sheet * {
+        visibility: visible;
+      }
+      .sticker-sheet {
+        position: absolute;
+        left: 0;
+        top: 0;
+        padding: 0;
+      }
+      * {
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+      }
+      .delete-btn {
+        display: none;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Sticker Printer</h1>
+
+  <div class="controls">
+    <input type="text" id="stickerText" placeholder="Sticker text..." oninput="syncDropdown()" />
+
+    <select id="stickerDropdown" onchange="setTextFromDropdown()">
+      <option value="">-- Select Sticker --</option>
+      <option>Mouse</option>
+      <option>Keyboard</option>
+      <option>Monitor</option>
+      <option>Printer</option>
+      <option>Card Reader</option>
+      <option>Stamp</option>
+      <option>Out Stamp</option>
+      <option>Intercom</option>
+      <option>Calender</option>
+      <option>Wood Incoming Register</option>
+      <option>Inside Wood Bills</option>
+      <option>Pending Store Bills</option>
+      <option>Completed Store Bills</option>
+      <option>Files/Folder</option>
+      <option>All Register</option>
+      <option>Drawer</option>
+      <option>Holding Area</option>
+      <option>Paper A4/A5</option>
+      <option>Paper Rolls</option>
+      <option>Bag Area</option>
+      <option>Helmet Area</option>
+      <option>Old Register</option>
+      <option>Shift Report Register</option>
+      <option>Wood Bill Submit Register</option>
+      <option>Complete Wood Bills</option>
+      <option>Electric Socket</option>
+    </select>
+
+    <select id="fontSize">
+      <option value="24">Font 24px</option>
+      <option value="36">Font 36px</option>
+      <option value="48">Font 48px</option>
+      <option value="60" selected>Font 60px</option>
+      <option value="72">Font 72px</option>
+    </select>
+
+    <select id="borderStyle">
+      <option value="border1">Solid</option>
+      <option value="border2">Dashed</option>
+      <option value="border3">Dotted</option>
+      <option value="border4">Double</option>
+      <option value="border5">Groove</option>
+      <option value="border6">Ridge</option>
+      <option value="border7">Inset</option>
+      <option value="border8">Outset</option>
+      <option value="border9">Red</option>
+      <option value="border10">Blue Dashed</option>
+    </select>
+
+    <input type="number" id="quantity" value="1" min="1" />
+
+    <label><input type="checkbox" id="boldStyle" checked> Bold</label>
+    <label><input type="checkbox" id="italicStyle"> Italic</label>
+
+    <label>
+      BG Color:
+      <input type="color" id="bgColor" value="#ffffff">
+    </label>
+
+    <label>
+      Text Color:
+      <input type="color" id="textColor" value="#000000">
+    </label>
+
+    <button onclick="addStickers()">Add Sticker</button>
+    <button onclick="window.print()">🖨️ Print</button>
+  </div>
+
+  <div class="sticker-sheet" id="stickerSheet"></div>
+
+  <script>
+    function setTextFromDropdown() {
+      const dropdown = document.getElementById("stickerDropdown");
+      const selected = dropdown.value;
+      document.getElementById("stickerText").value = selected;
+    }
+
+    function syncDropdown() {
+      const input = document.getElementById("stickerText").value.trim();
+      const dropdown = document.getElementById("stickerDropdown");
+      dropdown.value = "";
+    }
+
+    function addStickers() {
+      const textInput = document.getElementById('stickerText');
+      const text = textInput.value.trim();
+      const fontSize = document.getElementById('fontSize').value;
+      const borderClass = document.getElementById('borderStyle').value;
+      const quantity = parseInt(document.getElementById('quantity').value) || 1;
+      const isBold = document.getElementById('boldStyle').checked;
+      const isItalic = document.getElementById('italicStyle').checked;
+      const bgColor = document.getElementById('bgColor').value;
+      const textColor = document.getElementById('textColor').value;
+
+      if (!text || quantity < 1) return;
+
+      const sheet = document.getElementById('stickerSheet');
+
+      for (let i = 0; i < quantity; i++) {
+        const sticker = document.createElement('div');
+        sticker.className = `sticker ${borderClass}`;
+        sticker.textContent = text;
+        sticker.style.fontSize = fontSize + 'px';
+        sticker.style.fontWeight = isBold ? 'bold' : 'normal';
+        sticker.style.fontStyle = isItalic ? 'italic' : 'normal';
+        sticker.style.backgroundColor = bgColor;
+        sticker.style.color = textColor;
+
+        const deleteBtn = document.createElement('button');
+        deleteBtn.className = 'delete-btn';
+        deleteBtn.textContent = '×';
+        deleteBtn.onclick = () => sticker.remove();
+
+        sticker.appendChild(deleteBtn);
+        sheet.appendChild(sticker);
+      }
+
+      addToDropdown(text);
+      textInput.value = '';
+      document.getElementById('quantity').value = 1;
+    }
+
+    function addToDropdown(text) {
+      const dropdown = document.getElementById('stickerDropdown');
+      let exists = false;
+      for (let i = 0; i < dropdown.options.length; i++) {
+        if (dropdown.options[i].value.toLowerCase() === text.toLowerCase()) {
+          exists = true;
+          break;
+        }
+      }
+
+      if (!exists) {
+        const option = document.createElement('option');
+        option.text = text;
+        option.value = text;
+        dropdown.appendChild(option);
+      }
+    }
+
+    document.getElementById("stickerText").addEventListener("keydown", function (e) {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        addStickers();
+      }
+    });
+  </script>
+
+</body>
+</html>
