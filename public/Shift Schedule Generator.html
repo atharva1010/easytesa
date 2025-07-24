@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Monthly Shift Scheduler</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f9f9f9;
+      padding: 20px;
+    }
+    h2 {
+      text-align: center;
+    }
+    .controls {
+      margin-bottom: 20px;
+      text-align: center;
+    }
+    table {
+      border-collapse: collapse;
+      width: 100%;
+      font-size: 12px;
+    }
+    th, td {
+      border: 1px solid #888;
+      padding: 5px;
+      text-align: center;
+    }
+    th {
+      background: yellow;
+    }
+    .shift-R { background-color: #90ee90; font-weight: bold; }
+    .shift-L { background-color: #f88; font-weight: bold; }
+    .shift-G { background-color: #ff0; font-weight: bold; }
+    .shift-H { background-color: #add8e6; font-weight: bold; }
+    .shift-A, .shift-B, .shift-C {
+      background-color: #e0e0e0;
+      font-weight: bold;
+    }
+    .editable { cursor: pointer; }
+    #printTitle {
+      text-align: center;
+      font-size: 16px;
+      margin: 10px 0;
+      font-weight: bold;
+    }
+    .buttons {
+      text-align: center;
+      margin-bottom: 10px;
+    }
+    .buttons button {
+      margin: 0 10px;
+      padding: 5px 10px;
+    }
+  </style>
+</head>
+<body>
+
+<h2>Gate Entry Team Shift Schedule</h2>
+<div class="controls">
+  <label for="month">Select Month:</label>
+  <select id="month"></select>
+  <select id="year"></select>
+  <button onclick="generateTable()">Generate</button>
+</div>
+
+<div class="buttons">
+  <button onclick="window.print()">Print</button>
+  <button onclick="exportTableToExcel()">Export to Excel</button>
+</div>
+
+<div id="printTitle"></div>
+<table id="shiftTable">
+  <thead id="thead"></thead>
+  <tbody id="scheduleBody"></tbody>
+</table>
+
+<script>
+const employees = [
+  { sno: 1, code: 2496, name: "Mr.Pawan Kumar", rest: "Sunday", duty: "ALL Place" },
+  { sno: 2, code: 4115, name: "Mr.Nikhil Sah", rest: "Sunday", duty: "ALL Place" },
+  { sno: 3, code: 4229, name: "Mr.Sanjay Singh", rest: "Monday", duty: "C-3" },
+  { sno: 4, code: 5838, name: "Mr.Nek Chandra", rest: "Monday", duty: "C-34A" },
+  { sno: 5, code: 3962, name: "Mr.Naresh Yadav", rest: "Tuesday", duty: "C-3" },
+  { sno: 6, code: 5942, name: "Mr.Manish Prakash", rest: "Tuesday", duty: "C-3" },
+  { sno: 7, code: 4127, name: "Mr.Rajendra Bathyal", rest: "Wednesday", duty: "C-3A" },
+  { sno: 8, code: 5261, name: "Mr.Pankaj", rest: "Wednesday", duty: "C-34A" },
+  { sno: 9, code: 6564, name: "Mr.Suraj Janoti", rest: "Wednesday", duty: "C-3" },
+  { sno:10, code: 6408, name: "Mr.Krishna Singh", rest: "Thursday", duty: "C-34A" },
+  { sno:11, code: 6831, name: "Mr.Anil Bisht", rest: "Thursday", duty: "C-3A" },
+  { sno:12, code: 6431, name: "Mr.Shubham Mittal", rest: "Friday", duty: "C-34A" },
+  { sno:13, code: 7002, name: "Mr.Akash Katiyar", rest: "Friday", duty: "C-3" },
+  { sno:14, code: 3451, name: "Mr.Prakash Fulera", rest: "Friday", duty: "C-34A" },
+  { sno:15, code: 7388, name: "Mr.Anuj Kushwah", rest: "Saturday", duty: "C-3" },
+  { sno:16, code: 3998, name: "Mr.Rohit Kokila", rest: "Saturday", duty: "C-3" }
+];
+
+const daysOfWeek = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+const monthNames = [
+  "January", "February", "March", "April", "May", "June",
+  "July", "August", "September", "October", "November", "December"
+];
+
+const monthSelect = document.getElementById("month");
+const yearSelect = document.getElementById("year");
+const printTitle = document.getElementById("printTitle");
+
+for (let m = 0; m < 12; m++) {
+  const opt = document.createElement("option");
+  opt.value = m;
+  opt.textContent = monthNames[m];
+  if (m === new Date().getMonth()) opt.selected = true;
+  monthSelect.appendChild(opt);
+}
+
+for (let y = new Date().getFullYear() - 1; y <= new Date().getFullYear() + 1; y++) {
+  const opt = document.createElement("option");
+  opt.value = y;
+  opt.textContent = y;
+  if (y === new Date().getFullYear()) opt.selected = true;
+  yearSelect.appendChild(opt);
+}
+
+function generateTable() {
+  const month = parseInt(monthSelect.value);
+  const year = parseInt(yearSelect.value);
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+  document.getElementById("thead").innerHTML = "";
+  document.getElementById("scheduleBody").innerHTML = "";
+
+  if (month !== 0) {
+    employees.forEach(emp => {
+      if (emp.duty === "C-3") emp.duty = "C-34A";
+      else if (emp.duty === "C-34A") emp.duty = "C-3";
+    });
+  }
+
+  printTitle.textContent = `Shift Schedule for ${monthNames[month]} ${year}`;
+
+  const row1 = document.createElement("tr");
+  row1.innerHTML = `
+    <th rowspan="2">S.No</th>
+    <th rowspan="2">E.Code</th>
+    <th rowspan="2">Emp. Name</th>
+    <th rowspan="2">Rest Day</th>
+    <th rowspan="2">Duty Place</th>`;
+  for (let d = 1; d <= daysInMonth; d++) {
+    row1.innerHTML += `<th>${d}</th>`;
+  }
+
+  const row2 = document.createElement("tr");
+  for (let d = 1; d <= daysInMonth; d++) {
+    const day = new Date(year, month, d).getDay();
+    row2.innerHTML += `<th>${daysOfWeek[day].slice(0, 3)}</th>`;
+  }
+
+  document.getElementById("thead").appendChild(row1);
+  document.getElementById("thead").appendChild(row2);
+
+  employees.forEach(emp => {
+    const row = document.createElement("tr");
+    row.innerHTML = `
+      <td>${emp.sno}</td>
+      <td>${emp.code}</td>
+      <td>${emp.name}</td>
+      <td>${emp.rest}</td>
+      <td>${emp.duty}</td>
+    `;
+
+    for (let d = 1; d <= daysInMonth; d++) {
+      const cell = document.createElement("td");
+      const dayName = daysOfWeek[new Date(year, month, d).getDay()];
+      if (dayName === emp.rest) {
+        cell.textContent = "R";
+        cell.className = "shift-R";
+      } else if (emp.sno === 1 || emp.sno === 2) {
+        cell.textContent = "G";
+        cell.className = "shift-G";
+      } else {
+        cell.contentEditable = true;
+        cell.className = "editable";
+        cell.addEventListener("input", () => {
+          let val = cell.textContent.trim().toUpperCase();
+          if (val.length > 1) val = val.charAt(0);
+          if (!["A", "B", "C", "G", "L", "H"].includes(val)) val = "";
+          cell.textContent = val;
+          cell.className = "editable";
+          ["shift-A", "shift-B", "shift-C", "shift-G", "shift-L", "shift-H"].forEach(cls => cell.classList.remove(cls));
+          if (val) cell.classList.add("shift-" + val);
+          updateShiftCounts();
+        });
+      }
+      row.appendChild(cell);
+    }
+    document.getElementById("scheduleBody").appendChild(row);
+  });
+
+  ["A", "B", "C", "G", "L", "H"].forEach(shift => {
+    const row = document.createElement("tr");
+    row.innerHTML = `<td colspan="5"><strong>Shift ${shift}</strong></td>`;
+    for (let d = 1; d <= daysInMonth; d++) {
+      row.innerHTML += `<td data-shift-count="${shift}" data-day="${d}">0</td>`;
+    }
+    document.getElementById("scheduleBody").appendChild(row);
+  });
+
+  updateShiftCounts();
+}
+
+function updateShiftCounts() {
+  const summary = {};
+  document.querySelectorAll('td[data-shift-count]').forEach(cell => {
+    const shift = cell.getAttribute("data-shift-count");
+    const day = parseInt(cell.getAttribute("data-day"));
+    summary[`${shift}_${day}`] = 0;
+  });
+
+  document.querySelectorAll("#scheduleBody tr").forEach(row => {
+    const cells = row.querySelectorAll("td");
+    cells.forEach((cell, idx) => {
+      if (idx > 4 && !cell.classList.contains("shift-R")) {
+        const shift = cell.textContent.trim();
+        const day = idx - 4;
+        const key = `${shift}_${day}`;
+        if (summary.hasOwnProperty(key)) {
+          summary[key]++;
+        }
+      }
+    });
+  });
+
+  document.querySelectorAll('td[data-shift-count]').forEach(cell => {
+    const shift = cell.getAttribute("data-shift-count");
+    const day = parseInt(cell.getAttribute("data-day"));
+    const key = `${shift}_${day}`;
+    const count = summary[key] || 0;
+    cell.textContent = count;
+
+    if (["A", "B", "C", "G"].includes(shift)) {
+      let min = shift === "A" ? 4 : 3;
+      cell.style.backgroundColor = count < min ? "#f88" : "#8f8";
+    }
+  });
+}
+
+function exportTableToExcel() {
+  let table = document.getElementById("shiftTable").outerHTML;
+  const blob = new Blob(["\ufeff", table], { type: "application/vnd.ms-excel" });
+  const link = document.createElement("a");
+  link.href = URL.createObjectURL(blob);
+  link.download = "Shift_Schedule.xls";
+  link.click();
+}
+
+generateTable();
+</script>
+</body>
+</html>
