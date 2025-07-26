@@ -411,25 +411,20 @@ app.post("/api/update-password", async (req, res) => {
   try {
     const { userId, newPassword } = req.body;
 
-    if (!userId || !newPassword) {
-      return res.status(400).json({ success: false, message: "Missing userId or newPassword" });
-    }
-
     const user = await User.findOne({ userId });
+    if (!user) return res.json({ success: false, message: "User not found" });
 
-    if (!user) {
-      return res.status(404).json({ success: false, message: "User not found" });
-    }
-
-    user.password = newPassword;
+    const hashedPassword = await bcrypt.hash(newPassword, 10); // 🔒 Hash the new password
+    user.password = hashedPassword;
     await user.save();
 
-    return res.json({ success: true, message: "Password updated successfully" });
-  } catch (error) {
-    console.error("Error updating password:", error);
-    return res.status(500).json({ success: false, message: "Server error" });
+    res.json({ success: true, message: "Password updated successfully" });
+  } catch (err) {
+    console.error("Update password error:", err);
+    res.status(500).json({ success: false, message: "Internal server error" });
   }
 });
+
 
 app.post('/api/shift-report/previous-pending', async (req, res) => {
   console.log("✅ Incoming Previous Pending Body:", req.body);  // Debug log
