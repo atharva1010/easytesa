@@ -46,6 +46,12 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 app.use(express.static(path.join(__dirname, 'public'))); // for frontend HTML
 app.use('/Files', express.static(path.join(__dirname, 'Files'))); // for serving files like PDFs
 
+const uploadDir = path.join(__dirname, 'uploads');
+if (!fs.existsSync(uploadDir)) {
+  fs.mkdirSync(uploadDir);
+}
+
+
 // Multer Setup
 const userStorage = multer.diskStorage({
   destination: (req, file, cb) => cb(null, "uploads/"),
