@@ -472,7 +472,29 @@ app.post('/api/shift-report/previous-pending', async (req, res) => {
     res.status(500).json({ success: false, message: "Server error" });
   }
 });
-   
+
+app.post("/api/updates", upload.single("image"), async (req, res) => {
+  try {
+    const { title, message } = req.body;
+    const image = req.file ? req.file.filename : null;
+
+    const newUpdate = new UpdateModel({
+      title,
+      message,
+      image,
+      createdAt: new Date()
+    });
+
+    await newUpdate.save();
+
+    res.json({ success: true, message: "Update posted successfully." });
+  } catch (err) {
+    console.error("Error saving update:", err);
+    res.status(500).json({ success: false, message: "Server error while saving update." });
+  }
+});
+
+
 // Material Reports
 app.post("/api/wood-bill", async (req, res) => {
   try {
