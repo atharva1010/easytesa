@@ -4,216 +4,114 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Login - BALAJI ACTION</title>
+  <link rel="stylesheet" href="style.css">
   <style>
-  @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@600&display=swap');
-
-  * {
-    box-sizing: border-box;
-  }
-
-  body {
-    margin: 0;
-    font-family: 'Orbitron', sans-serif;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    background-image: url("bg/background.jpg");
-    background-size: cover;
-    background-position: center;
-    min-height: 100vh;
-    overflow-x: hidden;
-    color: #00ffff;
-  }
-
-  header {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    background: rgba(0, 20, 30, 0.8);
-    padding: 10px 20px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    box-shadow: 0 0 20px #00ffff88;
-    z-index: 100;
-  }
-
-  .logo {
-    height: 40px;
-    margin-right: 10px;
-    filter: drop-shadow(0 0 5px #00ffff);
-  }
-
-  .left {
-    display: flex;
-    align-items: center;
-    color: #00ffff;
-    font-weight: bold;
-    text-shadow: 0 0 5px #00ffff, 0 0 10px #00ffff88;
-    flex-wrap: wrap;
-  }
-
-  h2 {
-    margin-bottom: 20px;
-    color: #00ffff;
-    text-shadow: 0 0 10px #00ffff;
-    text-align: center;
-  }
-
-  form {
-    background: rgba(0, 0, 0, 0.6);
-    padding: 30px;
-    border-radius: 15px;
-    box-shadow: 0 0 20px #00ffff55;
-    backdrop-filter: blur(8px);
-    border: 1px solid #00ffff44;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    width: 90%;
-    max-width: 400px;
-    margin-top: 100px;
-    animation: glowBox 2s infinite alternate;
-  }
-
-  @keyframes glowBox {
-    0% { box-shadow: 0 0 10px #00ffff33; }
-    100% { box-shadow: 0 0 20px #00ffff99; }
-  }
-
-  input {
-    margin: 10px 0;
-    padding: 12px;
-    width: 100%;
-    border: 1px solid #00ffff44;
-    border-radius: 5px;
-    background: rgba(255, 255, 255, 0.1);
-    color: #00ffff;
-    outline: none;
-    box-shadow: 0 0 10px #00ffff33;
-  }
-
-  input::placeholder {
-    color: #00ffff88;
-  }
-
-  input:focus {
-    box-shadow: 0 0 15px #00ffffaa;
-    border-color: #00ffffaa;
-  }
-
-  button {
-    padding: 12px;
-    background: #00ffff;
-    color: #001f2f;
-    font-weight: bold;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    box-shadow: 0 0 15px #00ffffaa;
-    transition: all 0.3s ease;
-  }
-
-  button:hover {
-    background: #00e6e6;
-    box-shadow: 0 0 25px #00ffffcc;
-  }
-
-  #msg {
-    color: #ff4444;
-    margin-top: 10px;
-    text-shadow: 0 0 5px red;
-  }
-
-  .link {
-    margin-top: 10px;
-  }
-
-  .link a {
-    color: #00ffff;
-    text-decoration: underline;
-    cursor: pointer;
-    text-shadow: 0 0 5px #00ffff88;
-  }
-
-  #forgotPasswordModal {
-    display: none;
-    position: fixed;
-    top: 10%;
-    left: 50%;
-    transform: translateX(-50%);
-    background: rgba(0, 0, 0, 0.8);
-    border: 2px solid #00ffff55;
-    padding: 20px;
-    z-index: 1000;
-    border-radius: 10px;
-    width: 90%;
-    max-width: 320px;
-    box-shadow: 0 0 20px #00ffff88;
-    backdrop-filter: blur(10px);
-    color: #00ffff;
-  }
-
-  #forgotPasswordModal input,
-  #forgotPasswordModal button {
-    width: 100%;
-    margin-bottom: 10px;
-  }
-
-  /* ---------------- Responsive Media Queries ------------------ */
-
-  @media screen and (max-width: 1023px) {
-    header {
-      display: none; /* 🔥 Header hidden on mobile & tablet */
-    }
-  }
-
-  @media screen and (max-width: 768px) {
-    .left span {
-      font-size: 14px;
-    }
-
-    h2 {
-      font-size: 20px;
-    }
-
-    form {
-      margin-top: 120px;
-      padding: 20px;
-    }
-  }
-
-  @media screen and (max-width: 480px) {
-    .left {
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background-image: url("bg/background.jpg");
+      background-size: cover;
+      background-repeat: no-repeat;
+      background-position: center;
+      height: 100vh;
+      display: flex;
       flex-direction: column;
-      align-items: flex-start;
+      justify-content: center;
+      align-items: center;
     }
 
-    .left span {
-      font-size: 12px;
-      text-align: center;
+    header {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      background: #004466;
+      color: white;
+      padding: 10px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
     }
 
     .logo {
-      height: 30px;
-      margin-bottom: 5px;
+      height: 40px;
+      margin-right: 10px;
+    }
+
+    .left {
+      display: flex;
+      align-items: center;
     }
 
     h2 {
-      font-size: 18px;
+      margin-bottom: 20px;
+      color: white;
     }
 
-    input, button {
-      font-size: 14px;
+    form {
+      background: rgba(255, 255, 255, 0.95);
+      padding: 30px;
+      border-radius: 10px;
+      box-shadow: 0 0 10px #0003;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
     }
-  }
-</style>
 
+    input {
+      margin: 10px 0;
+      padding: 10px;
+      width: 250px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+    }
 
+    button {
+      padding: 10px 20px;
+      background: #004466;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    #msg {
+      color: red;
+      margin-top: 10px;
+    }
+
+    .link {
+      margin-top: 10px;
+    }
+
+    /* Forgot Password Modal */
+    #forgotPasswordModal {
+      display: none;
+      position: fixed;
+      top: 10%;
+      left: 50%;
+      transform: translateX(-50%);
+      background: white;
+      border: 2px solid black;
+      padding: 20px;
+      z-index: 1000;
+      border-radius: 8px;
+      width: 300px;
+    }
+
+    #forgotPasswordModal input {
+      width: 100%;
+      margin-bottom: 10px;
+    }
+
+    #forgotPasswordModal button {
+      width: 100%;
+      margin-bottom: 10px;
+    }
+  </style>
 </head>
-
 <body>
+
   <header>
     <div class="left">
       <img src="assets/logo.png" alt="Logo" class="logo">
@@ -228,29 +126,37 @@
     <button type="submit">Login</button>
     <p id="msg"></p>
     <div class="link">
-      <a onclick="showForgotModal()">Forgot Password?</a>
+      <a href="#" onclick="showForgotModal()">Forgot Password?</a>
     </div>
   </form>
 
   <!-- Forgot Password Modal -->
   <div id="forgotPasswordModal">
     <h3>Forgot Password</h3>
+
     <div id="step1">
-      <input id="fpUserId" placeholder="Enter User ID" />
+      <label>User ID:</label>
+      <input type="text" id="fpUserId">
       <button onclick="sendOTP()">Send OTP</button>
     </div>
-    <div id="step2" style="display: none;">
-      <input id="fpOTP" placeholder="Enter OTP" />
+
+    <div id="step2" style="display:none;">
+      <label>Enter OTP:</label>
+      <input type="text" id="fpOTP">
       <button onclick="verifyOTP()">Verify OTP</button>
     </div>
-    <div id="step3" style="display: none;">
-      <input id="fpNewPassword" type="password" placeholder="New Password" />
+
+    <div id="step3" style="display:none;">
+      <label>New Password:</label>
+      <input type="password" id="fpNewPassword">
       <button onclick="updatePassword()">Update Password</button>
     </div>
+
+    <button onclick="closeForgotModal()" style="background:red;">Close</button>
   </div>
 
   <script>
-    // Login
+    // Handle both form submission and Enter key press
     document.getElementById("loginForm").addEventListener("submit", handleLogin);
     document.getElementById("password").addEventListener("keypress", function(event) {
       if (event.key === "Enter") {
@@ -294,10 +200,11 @@
         }
       } catch (error) {
         document.getElementById("msg").innerText = "Login failed. Please try again.";
+        console.error("Login error:", error);
       }
     }
 
-    // Forgot Password
+    // Forgot Password Logic
     function showForgotModal() {
       document.getElementById("forgotPasswordModal").style.display = "block";
       document.getElementById("step1").style.display = "block";
@@ -317,9 +224,7 @@
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ userId })
-      })
-      .then(res => res.json())
-      .then(data => {
+      }).then(res => res.json()).then(data => {
         if (data.success) {
           alert("OTP sent to registered mobile number");
           document.getElementById("step1").style.display = "none";
@@ -334,20 +239,17 @@
       const userId = document.getElementById("fpUserId").value;
       const otp = document.getElementById("fpOTP").value;
 
-      if (!otp) return alert("Enter OTP");
-
       fetch('/api/verify-otp', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ userId, otp })
-      })
-      .then(res => res.json())
-      .then(data => {
+      }).then(res => res.json()).then(data => {
         if (data.success) {
+          alert("OTP Verified");
           document.getElementById("step2").style.display = "none";
           document.getElementById("step3").style.display = "block";
         } else {
-          alert("Invalid OTP");
+          alert("Incorrect OTP");
         }
       });
     }
@@ -356,15 +258,11 @@
       const userId = document.getElementById("fpUserId").value;
       const newPassword = document.getElementById("fpNewPassword").value;
 
-      if (!newPassword) return alert("Enter new password");
-
       fetch('/api/update-password', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ userId, newPassword })
-      })
-      .then(res => res.json())
-      .then(data => {
+      }).then(res => res.json()).then(data => {
         if (data.success) {
           alert("Password updated successfully");
           closeForgotModal();
