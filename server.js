@@ -479,19 +479,14 @@ app.post("/api/updates", upload.single("image"), async (req, res) => {
     const { title, message } = req.body;
     const image = req.file ? req.file.filename : null;
 
-    const newUpdate = new UpdateModel({
-      title,
-      message,
-      image,
-      createdAt: new Date()
-    });
-
+    // Save to MongoDB (optional)
+    const newUpdate = new Update({ title, message, image });
     await newUpdate.save();
 
-    res.json({ success: true, message: "Update posted successfully." });
+    res.json({ success: true, message: "Update posted successfully" });
   } catch (err) {
-    console.error("Error saving update:", err);
-    res.status(500).json({ success: false, message: "Server error while saving update." });
+    console.error("Error in /api/updates:", err);
+    res.status(500).json({ success: false, message: "Failed to post update" });
   }
 });
 
