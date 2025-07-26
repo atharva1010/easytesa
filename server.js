@@ -471,17 +471,25 @@ app.post('/api/shift-report/previous-pending', async (req, res) => {
 
 app.post("/api/updates", upload.single("image"), async (req, res) => {
   try {
-    const { title, message } = req.body;
-    const image = req.file ? req.file.filename : null;
+    const { category, filename } = req.body;
+    const file = req.file;
 
-    // Save to MongoDB (optional)
-    const newUpdate = new Update({ title, message, image });
-    await newUpdate.save();
+    if (!file) {
+      return res.status(400).json({ success: false, message: "No file uploaded" });
+    }
 
-    res.json({ success: true, message: "Update posted successfully" });
-  } catch (err) {
-    console.error("Error in /api/updates:", err);
-    res.status(500).json({ success: false, message: "Failed to post update" });
+    const newFile = new Upload({
+      filename: file.filename,
+      originalname: file.originalname,
+      category,
+      type: file.mimetype.startsWith("image/") ? "image" : "excel"
+    });
+
+    await newFile.save();
+    res.json({ success: true, message: "File uploaded successfully" });
+  } catch (error) {
+    console.error("Upload error:", error);
+    res.status(500).json({ success: false, message: "Server error" });
   }
 });
 
