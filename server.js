@@ -26,7 +26,6 @@ const PORT = process.env.PORT || 3000;
 const User = require("./models/User");
 const ExcelData = require("./models/ExcelData");
 const Message = require("./models/Message");
-const Update = require("./models/Update");
 const WoodBill = require('./models/WoodBill');
 const Methanol = require("./models/Methanol");
 const LongBodyReport = require('./models/LongBodyReport');
