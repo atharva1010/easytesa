@@ -20,7 +20,7 @@ const io = new Server(server, {
   cors: { origin: "*", methods: ["GET", "POST"] }
 });
 const PORT = process.env.PORT || 3000;
-
+const upload = multer({ storage: userStorage });
 // Models
 const User = require("./models/User");
 const Update = require("./models/Update");
@@ -46,16 +46,12 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 app.use(express.static(path.join(__dirname, 'public'))); // for frontend HTML
 app.use('/Files', express.static(path.join(__dirname, 'Files'))); // for serving files like PDFs
 
-const uploadDir = path.join(__dirname, 'uploads');
-if (!fs.existsSync(uploadDir)) {
-  fs.mkdirSync(uploadDir);
-}
-
 
 // Multer Setup
 const userStorage = multer.diskStorage({
   destination: (req, file, cb) => cb(null, "uploads/"),
-  filename: (req, file, cb) => cb(null, Date.now() + path.extname(file.originalname))
+  filename: (req, file, cb) =>
+    cb(null, Date.now() + path.extname(file.originalname))
 });
 
 const bgStorage = multer.diskStorage({
@@ -488,6 +484,11 @@ app.post("/api/updates", upload.single("image"), async (req, res) => {
     res.status(500).json({ success: false, message: "Failed to post update" });
   }
 });
+
+const uploadDir = path.join(__dirname, "uploads");
+if (!fs.existsSync(uploadDir)) {
+  fs.mkdirSync(uploadDir);
+}
 
 
 // Material Reports
