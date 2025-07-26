@@ -390,6 +390,20 @@ res.json({ success: true, message: "Password reset successful" });
 
 });
 
+app.post("/api/verify-otp", (req, res) => {
+  const { userId, otp } = req.body;
+  const stored = otpStore.get(userId);
+
+  if (!stored) {
+    return res.json({ success: false, message: "OTP not found" });
+  }
+
+  if (stored.otp != otp || stored.expires < Date.now()) {
+    return res.json({ success: false, message: "Invalid or expired OTP" });
+  }
+
+  return res.json({ success: true, message: "OTP verified successfully" });
+});
 
 app.post('/api/shift-report/previous-pending', async (req, res) => {
   console.log("✅ Incoming Previous Pending Body:", req.body);  // Debug log
