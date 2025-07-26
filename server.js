@@ -39,7 +39,6 @@ const longBodyRoutes = require('./routes/longBody');
 
 // Mount Routes
 app.use("/api/shift-report", shiftRoutes);
-app.use('/api/update', updateRoutes);
 app.use("/api/updates", updateRoutes);
 app.use("/api/reports/shift", shiftReportRoutes);
 app.use("/api/long-body", longBodyRoutes);
