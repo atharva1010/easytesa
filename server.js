@@ -12,6 +12,7 @@ const http = require("http");
 const { Server } = require("socket.io");
 const twilio = require("twilio");
 const multer = require("multer");
+const Update = mongoose.model("Update", updateSchema);
 const { uploadUser } = require('./cloudinary');
 
 const app = express();
