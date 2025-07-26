@@ -405,7 +405,7 @@ app.post("/api/verify-otp", (req, res) => {
   return res.json({ success: true, message: "OTP verified successfully" });
 });
 
-const User = require('./models/user'); // Make sure this is your correct User model path
+
 
 app.post("/api/update-password", async (req, res) => {
   try {
