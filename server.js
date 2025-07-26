@@ -12,7 +12,6 @@ const http = require("http");
 const { Server } = require("socket.io");
 const twilio = require("twilio");
 const multer = require("multer");
-const Update = mongoose.model("Update", updateSchema);
 const { uploadUser } = require('./cloudinary');
 
 const app = express();
@@ -24,6 +23,7 @@ const PORT = process.env.PORT || 3000;
 
 // Models
 const User = require("./models/User");
+const Update = require("./models/Update");
 const ExcelData = require("./models/ExcelData");
 const Message = require("./models/Message");
 const WoodBill = require('./models/WoodBill');
