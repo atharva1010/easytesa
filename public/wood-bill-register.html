@@ -100,13 +100,14 @@
       .mobile-form input, 
       .mobile-form select {
         width: 100%;
-        padding: 12px;
+        padding: 12px; /* Increased padding for better touch */
         font-size: 16px;
-        -webkit-appearance: none;
+        -webkit-appearance: none; /* Fix for iOS */
       }
       
+      /* Specific fix for number input */
       .mobile-form input[type="number"] {
-        -moz-appearance: textfield;
+        -moz-appearance: textfield; /* Firefox */
       }
       
       .mobile-form .form-actions {
@@ -213,7 +214,8 @@
       </div>
       <div class="form-group">
         <label for="mobileQuantity">QUANTITY</label>
-        <input type="number" id="mobileQuantity" min="1" required>
+        <input type="number" id="mobileQuantity" min="1" required 
+               oninput="this.value = this.value.replace(/[^0-9]/g, '')">
       </div>
       <div class="form-group">
         <label for="mobileSubmitTime">SUBMIT TIME</label>
@@ -221,7 +223,8 @@
       </div>
       <div class="form-group">
         <label for="mobileReceiverName">RECEIVER NAME</label>
-        <input type="text" id="mobileReceiverName" required>
+        <input type="text" id="mobileReceiverName" required
+               oninput="this.value = this.value.toUpperCase()">
       </div>
       <div class="form-group">
         <label for="mobileSubmittedBy">SUBMITTED BY</label>
@@ -287,23 +290,32 @@
   let unsavedRowExists = false;
   let isMobile = window.innerWidth <= 768;
   let editingId = null;
-  let woodBillData = [];
 
-  // Initialize the page
-  function initPage() {
-    currentUser = (localStorage.getItem("username") || "unknown").toUpperCase();
+  // Detect screen size changes
+  window.addEventListener('resize', function() {
     isMobile = window.innerWidth <= 768;
+    if (isMobile) {
+      // Refresh the view when switching to mobile
+      if (document.getElementById("fillTableSection").style.display !== "none") {
+        showFill();
+      } else if (document.getElementById("viewSection").style.display !== "none") {
+        showView();
+      }
+    } else {
+      // Refresh the view when switching to desktop
+      if (document.getElementById("mobileFillForm").style.display !== "none") {
+        showFill();
+      } else if (document.getElementById("mobileViewSection").style.display !== "none") {
+        showView();
+      }
+    }
+  });
+
+  document.addEventListener("DOMContentLoaded", initPage);
+
+  function initPage() {
     showFill();
     loadSavedData();
-    
-    // Setup input event listeners for mobile form
-    document.getElementById("mobileQuantity").addEventListener("input", function() {
-      this.value = this.value.replace(/[^0-9]/g, '');
-    });
-    
-    document.getElementById("mobileReceiverName").addEventListener("input", function() {
-      this.value = this.value.toUpperCase();
-    });
     
     // Desktop event listeners
     document.getElementById("searchBox").addEventListener("input", filterView);
@@ -320,14 +332,14 @@
     document.getElementById("mobileSubmittedByFilter").addEventListener("change", filterMobileView);
   }
 
-  // Show fill section
   function showFill() {
     if (isMobile) {
+      // Mobile view
       document.getElementById("mobileFillForm").style.display = "none";
       document.getElementById("mobileViewSection").style.display = "none";
       document.getElementById("addRowBtn").style.display = "inline-block";
       
-      // Clear form
+      // Clear any existing form
       document.getElementById("mobileSapDate").value = "";
       document.getElementById("mobileBillDate").value = "";
       document.getElementById("mobileQuantity").value = "";
@@ -337,6 +349,7 @@
       document.getElementById("mobileSubmittedBy").value = currentUser;
       editingId = null;
     } else {
+      // Desktop view
       document.getElementById("fillTableSection").style.display = "block";
       document.getElementById("viewSection").style.display = "none";
       document.getElementById("filters").style.display = "none";
@@ -344,14 +357,15 @@
     }
   }
 
-  // Show view section
   function showView() {
     if (isMobile) {
+      // Mobile view
       document.getElementById("mobileFillForm").style.display = "none";
       document.getElementById("mobileViewSection").style.display = "block";
       document.getElementById("addRowBtn").style.display = "none";
       loadMobileViewData();
     } else {
+      // Desktop view
       document.getElementById("fillTableSection").style.display = "none";
       document.getElementById("viewSection").style.display = "block";
       document.getElementById("filters").style.display = "block";
@@ -360,13 +374,15 @@
     }
   }
 
-  // Add new row (mobile or desktop)
   function addRow() {
     if (isMobile) {
+      // Show mobile form
       document.getElementById("mobileFillForm").style.display = "block";
       unsavedRowExists = true;
+      // Scroll to form for better UX
       document.getElementById("mobileFillForm").scrollIntoView({ behavior: 'smooth' });
     } else {
+      // Desktop add row
       if (unsavedRowExists) {
         alert("Please save the current row before adding a new one.");
         return;
@@ -397,15 +413,14 @@
     }
   }
   
-  // Cancel mobile form
   function cancelMobileForm() {
     document.getElementById("mobileFillForm").style.display = "none";
     unsavedRowExists = false;
     editingId = null;
   }
   
-  // Save mobile form data
   async function saveMobileForm(event) {
+    // Prevent default form submission
     if (event) event.preventDefault();
     
     const form = document.getElementById("mobileDataForm");
@@ -419,33 +434,37 @@
       plant: form.mobilePlant.value.toUpperCase()
     };
 
-    // Validate form
+    // Validate form (though HTML5 validation should handle this)
     if (!data.sapDate || !data.billDate || !data.quantity || !data.submitTime || !data.receiverName || !data.plant) {
       alert("Please fill all fields.");
       return;
     }
 
-    // For demo purposes - in a real app you would send this to a server
-    if (editingId) {
-      // Update existing record
-      const index = woodBillData.findIndex(item => item.id === editingId);
-      if (index !== -1) {
-        woodBillData[index] = { ...data, id: editingId };
-      }
-    } else {
-      // Add new record
-      const newId = Date.now().toString();
-      woodBillData.unshift({ ...data, id: newId });
-    }
+    const endpoint = editingId ? `/api/wood-bill/${editingId}` : "/api/wood-bill";
+    const method = editingId ? "PUT" : "POST";
 
-    alert("Data saved successfully!");
-    document.getElementById("mobileFillForm").style.display = "none";
-    unsavedRowExists = false;
-    editingId = null;
-    loadSavedData();
+    try {
+      const res = await fetch(endpoint, {
+        method: method,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data)
+      });
+
+      const result = await res.json();
+      if (result.success) {
+        alert("Data saved successfully!");
+        document.getElementById("mobileFillForm").style.display = "none";
+        unsavedRowExists = false;
+        editingId = null;
+        loadSavedData();
+      } else {
+        alert("Save failed: " + (result.message || ""));
+      }
+    } catch (error) {
+      alert("Error saving data: " + error.message);
+    }
   }
 
-  // Save desktop row data
   async function saveRow(btn) {
     const row = btn.closest("tr");
     const inputs = row.querySelectorAll("input, select");
@@ -465,151 +484,179 @@
       return;
     }
 
-    // For demo purposes - in a real app you would send this to a server
-    const newId = Date.now().toString();
-    woodBillData.unshift({ ...data, id: newId });
+    const res = await fetch("/api/wood-bill", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data)
+    });
 
-    row.innerHTML = `
-      <td class="status">✅</td>
-      <td>${data.sapDate}</td>
-      <td>${data.billDate}</td>
-      <td>${data.quantity}</td>
-      <td>${data.submitTime}</td>
-      <td>${data.receiverName}</td>
-      <td>${data.submittedBy}</td>
-      <td>${data.plant}</td>
-      <td><button onclick="editRow(this)" data-id="${newId}">Edit</button></td>
-    `;
-    unsavedRowExists = false;
-  }
-
-  // Load saved data
-  function loadSavedData() {
-    if (isMobile) {
-      // For mobile, we don't show the table in fill mode
-      return;
+    const result = await res.json();
+    if (result.success) {
+      row.innerHTML = `
+        <td class="status">✅</td>
+        <td>${data.sapDate}</td>
+        <td>${data.billDate}</td>
+        <td>${data.quantity}</td>
+        <td>${data.submitTime}</td>
+        <td>${data.receiverName}</td>
+        <td>${data.submittedBy}</td>
+        <td>${data.plant}</td>
+        <td><button onclick="editRow(this)" data-id="${result.id}">Edit</button></td>
+      `;
+      unsavedRowExists = false;
+    } else {
+      alert("Save failed.");
     }
-    
-    // Desktop table
-    const tbody = document.querySelector("#fillTable tbody");
-    tbody.innerHTML = "";
+  }
 
-    woodBillData.forEach((d) => {
-      tbody.innerHTML += `
-        <tr>
-          <td class="status">✅</td>
-          <td>${d.sapDate}</td>
-          <td>${d.billDate}</td>
-          <td>${d.quantity}</td>
-          <td>${d.submitTime}</td>
-          <td>${d.receiverName}</td>
-          <td>${d.submittedBy}</td>
-          <td>${d.plant}</td>
-          <td>
-            ${d.submittedBy === currentUser
-              ? `<button onclick="editRow(this)" data-id="${d.id}">Edit</button>`
-              : `<span style="color:gray;">Locked</span>`}
-          </td>
-        </tr>
-      `;
-    });
-  }
-  
-  // Load mobile view data
-  function loadMobileViewData() {
-    const receivers = new Set();
-    const submitters = new Set();
-    const viewItems = document.getElementById("mobileViewItems");
-    viewItems.innerHTML = "";
-    
-    // Populate filters
-    const receiverFilter = document.getElementById("mobileReceiverFilter");
-    const submittedByFilter = document.getElementById("mobileSubmittedByFilter");
-    
-    receiverFilter.innerHTML = `<option value="">Receiver</option>`;
-    submittedByFilter.innerHTML = `<option value="">Submitted By</option>`;
-    
-    woodBillData.forEach((d, i) => {
-      if (d.receiverName) receivers.add(d.receiverName);
-      if (d.submittedBy) submitters.add(d.submittedBy);
+  async function loadSavedData() {
+    try {
+      const res = await fetch("/api/wood-bill");
+      const rows = await res.json();
       
-      viewItems.innerHTML += `
-        <div class="mobile-view-item">
-          <div class="mobile-view-row">
-            <span class="mobile-view-label">S.NO:</span>
-            <span>${i + 1}</span>
-          </div>
-          <div class="mobile-view-row">
-            <span class="mobile-view-label">SAP DATE:</span>
-            <span>${d.sapDate}</span>
-          </div>
-          <div class="mobile-view-row">
-            <span class="mobile-view-label">BILL DATE:</span>
-            <span>${d.billDate}</span>
-          </div>
-          <div class="mobile-view-row">
-            <span class="mobile-view-label">QUANTITY:</span>
-            <span>${d.quantity}</span>
-          </div>
-          <div class="mobile-view-row">
-            <span class="mobile-view-label">SUBMIT TIME:</span>
-            <span>${d.submitTime}</span>
-          </div>
-          <div class="mobile-view-row">
-            <span class="mobile-view-label">RECEIVER:</span>
-            <span>${d.receiverName}</span>
-          </div>
-          <div class="mobile-view-row">
-            <span class="mobile-view-label">SUBMITTED BY:</span>
-            <span>${d.submittedBy}</span>
-          </div>
-          <div class="mobile-view-row">
-            <span class="mobile-view-label">PLANT:</span>
-            <span>${d.plant}</span>
-          </div>
-          ${d.submittedBy === currentUser ? `
-          <div style="margin-top: 10px; text-align: right;">
-            <button onclick="editMobileItem('${d.id}')" style="padding: 5px 10px; font-size: 12px;">Edit</button>
-          </div>
-          ` : ''}
-        </div>
-      `;
-    });
-    
-    // Add options to filters
-    receivers.forEach(r => {
-      receiverFilter.innerHTML += `<option value="${r}">${r}</option>`;
-    });
-    
-    submitters.forEach(s => {
-      submittedByFilter.innerHTML += `<option value="${s}">${s}</option>`;
-    });
+      if (isMobile) {
+        // For mobile, we don't show the table in fill mode
+        return;
+      }
+      
+      // Desktop table
+      const tbody = document.querySelector("#fillTable tbody");
+      tbody.innerHTML = "";
+
+      rows.forEach((d) => {
+        tbody.innerHTML += `
+          <tr>
+            <td class="status">✅</td>
+            <td>${d.sapDate}</td>
+            <td>${d.billDate}</td>
+            <td>${d.quantity}</td>
+            <td>${d.submitTime}</td>
+            <td>${d.receiverName}</td>
+            <td>${d.submittedBy}</td>
+            <td>${d.plant}</td>
+            <td>
+              ${d.submittedBy === currentUser
+                ? `<button onclick="editRow(this)" data-id="${d._id}">Edit</button>`
+                : `<span style="color:gray;">Locked</span>`}
+            </td>
+          </tr>
+        `;
+      });
+    } catch (error) {
+      console.error("Error loading data:", error);
+    }
   }
   
-  // Edit mobile item
+  async function loadMobileViewData() {
+    try {
+      const res = await fetch("/api/wood-bill");
+      const rows = await res.json();
+      
+      const receivers = new Set();
+      const submitters = new Set();
+      const viewItems = document.getElementById("mobileViewItems");
+      viewItems.innerHTML = "";
+      
+      // Populate filters
+      const receiverFilter = document.getElementById("mobileReceiverFilter");
+      const submittedByFilter = document.getElementById("mobileSubmittedByFilter");
+      
+      receiverFilter.innerHTML = `<option value="">Receiver</option>`;
+      submittedByFilter.innerHTML = `<option value="">Submitted By</option>`;
+      
+      rows.forEach((d, i) => {
+        if (d.receiverName) receivers.add(d.receiverName);
+        if (d.submittedBy) submitters.add(d.submittedBy);
+        
+        viewItems.innerHTML += `
+          <div class="mobile-view-item">
+            <div class="mobile-view-row">
+              <span class="mobile-view-label">S.NO:</span>
+              <span>${i + 1}</span>
+            </div>
+            <div class="mobile-view-row">
+              <span class="mobile-view-label">SAP DATE:</span>
+              <span>${d.sapDate}</span>
+            </div>
+            <div class="mobile-view-row">
+              <span class="mobile-view-label">BILL DATE:</span>
+              <span>${d.billDate}</span>
+            </div>
+            <div class="mobile-view-row">
+              <span class="mobile-view-label">QUANTITY:</span>
+              <span>${d.quantity}</span>
+            </div>
+            <div class="mobile-view-row">
+              <span class="mobile-view-label">SUBMIT TIME:</span>
+              <span>${d.submitTime}</span>
+            </div>
+            <div class="mobile-view-row">
+              <span class="mobile-view-label">RECEIVER:</span>
+              <span>${d.receiverName}</span>
+            </div>
+            <div class="mobile-view-row">
+              <span class="mobile-view-label">SUBMITTED BY:</span>
+              <span>${d.submittedBy}</span>
+            </div>
+            <div class="mobile-view-row">
+              <span class="mobile-view-label">PLANT:</span>
+              <span>${d.plant}</span>
+            </div>
+            ${d.submittedBy === currentUser ? `
+            <div style="margin-top: 10px; text-align: right;">
+              <button onclick="editMobileItem('${d._id}')" style="padding: 5px 10px; font-size: 12px;">Edit</button>
+            </div>
+            ` : ''}
+          </div>
+        `;
+      });
+      
+      // Add options to filters
+      receivers.forEach(r => {
+        receiverFilter.innerHTML += `<option value="${r}">${r}</option>`;
+      });
+      
+      submitters.forEach(s => {
+        submittedByFilter.innerHTML += `<option value="${s}">${s}</option>`;
+      });
+      
+    } catch (error) {
+      console.error("Error loading mobile view data:", error);
+    }
+  }
+  
   function editMobileItem(id) {
-    const data = woodBillData.find(item => item.id === id);
-    if (data) {
-      // Populate the mobile form
-      document.getElementById("mobileSapDate").value = data.sapDate || "";
-      document.getElementById("mobileBillDate").value = data.billDate || "";
-      document.getElementById("mobileQuantity").value = data.quantity || "";
-      document.getElementById("mobileSubmitTime").value = data.submitTime || "";
-      document.getElementById("mobileReceiverName").value = data.receiverName || "";
-      document.getElementById("mobilePlant").value = data.plant || "";
-      document.getElementById("mobileSubmittedBy").value = data.submittedBy || currentUser;
-      
-      // Set editing mode
-      editingId = id;
-      unsavedRowExists = true;
-      
-      // Show the form
-      document.getElementById("mobileFillForm").style.display = "block";
-      document.getElementById("mobileFillForm").scrollIntoView({ behavior: 'smooth' });
-    }
+    // Find the item in the data
+    fetch(`/api/wood-bill/${id}`)
+      .then(res => res.json())
+      .then(data => {
+        if (data) {
+          // Populate the mobile form
+          document.getElementById("mobileSapDate").value = data.sapDate || "";
+          document.getElementById("mobileBillDate").value = data.billDate || "";
+          document.getElementById("mobileQuantity").value = data.quantity || "";
+          document.getElementById("mobileSubmitTime").value = data.submitTime || "";
+          document.getElementById("mobileReceiverName").value = data.receiverName || "";
+          document.getElementById("mobilePlant").value = data.plant || "";
+          document.getElementById("mobileSubmittedBy").value = data.submittedBy || currentUser;
+          
+          // Set editing mode
+          editingId = id;
+          unsavedRowExists = true;
+          
+          // Show the form
+          document.getElementById("mobileFillForm").style.display = "block";
+          
+          // Scroll to form
+          document.getElementById("mobileFillForm").scrollIntoView({ behavior: 'smooth' });
+        }
+      })
+      .catch(error => {
+        console.error("Error fetching item for edit:", error);
+        alert("Error loading data for editing");
+      });
   }
 
-  // Edit desktop row
   function editRow(btn) {
     if (isMobile) {
       editMobileItem(btn.dataset.id);
@@ -625,8 +672,14 @@
       return;
     }
 
-    const data = woodBillData.find(item => item.id === id);
-    if (!data) return;
+    const data = {
+      sapDate: row.children[1].textContent,
+      billDate: row.children[2].textContent,
+      quantity: row.children[3].textContent,
+      submitTime: row.children[4].textContent,
+      receiverName: row.children[5].textContent,
+      plant: row.children[7].textContent,
+    };
 
     row.innerHTML = `
       <td class="status">📝</td>
@@ -647,8 +700,7 @@
     `;
   }
 
-  // Update desktop row
-  function updateRow(btn, id) {
+  async function updateRow(btn, id) {
     const row = btn.closest("tr");
     const inputs = row.querySelectorAll("input, select");
 
@@ -662,24 +714,30 @@
       plant: inputs[6].value.toUpperCase()
     };
 
-    // Update the data
-    const index = woodBillData.findIndex(item => item.id === id);
-    if (index !== -1) {
-      woodBillData[index] = { ...data, id: id };
-    }
+    const res = await fetch(`/api/wood-bill/${id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data)
+    });
 
-    loadSavedData();
+    const result = await res.json();
+    if (result.success) {
+      loadSavedData();
+    } else {
+      alert("Update failed");
+    }
   }
 
-  // Load view data for desktop
-  function loadViewData() {
+  async function loadViewData() {
+    const res = await fetch("/api/wood-bill");
+    const rows = await res.json();
     const tbody = document.querySelector("#viewTable tbody");
     tbody.innerHTML = "";
 
     const receivers = new Set();
     const submitters = new Set();
 
-    woodBillData.forEach((d, i) => {
+    rows.forEach((d, i) => {
       tbody.innerHTML += `
         <tr>
           <td>${i + 1}</td>
@@ -705,74 +763,78 @@
       [...submitters].map(s => `<option value="${s}">${s}</option>`).join("");
   }
   
-  // Filter mobile view
-  function filterMobileView() {
+  async function filterMobileView() {
     const startDate = document.getElementById("mobileStartDate").value;
     const endDate = document.getElementById("mobileEndDate").value;
     const receiver = document.getElementById("mobileReceiverFilter").value.toLowerCase();
     const submittedBy = document.getElementById("mobileSubmittedByFilter").value.toLowerCase();
     const searchText = document.getElementById("mobileSearchBox").value.toLowerCase();
 
-    const filtered = woodBillData.filter(d => {
-      const inDateRange =
-        (!startDate || new Date(d.sapDate) >= new Date(startDate)) &&
-        (!endDate || new Date(d.sapDate) <= new Date(endDate));
-      const matchesReceiver = !receiver || d.receiverName?.toLowerCase().includes(receiver);
-      const matchesSubmitter = !submittedBy || d.submittedBy?.toLowerCase().includes(submittedBy);
-      const matchesSearch = !searchText || 
-        Object.values(d).some(val => String(val).toLowerCase().includes(searchText));
-      return inDateRange && matchesReceiver && matchesSubmitter && matchesSearch;
-    });
+    try {
+      const res = await fetch("/api/wood-bill");
+      const data = await res.json();
+      
+      const filtered = data.filter(d => {
+        const inDateRange =
+          (!startDate || new Date(d.sapDate) >= new Date(startDate)) &&
+          (!endDate || new Date(d.sapDate) <= new Date(endDate));
+        const matchesReceiver = !receiver || d.receiverName?.toLowerCase().includes(receiver);
+        const matchesSubmitter = !submittedBy || d.submittedBy?.toLowerCase().includes(submittedBy);
+        const matchesSearch = !searchText || Object.values(d).some(val => String(val).toLowerCase().includes(searchText));
+        return inDateRange && matchesReceiver && matchesSubmitter && matchesSearch;
+      });
 
-    const viewItems = document.getElementById("mobileViewItems");
-    viewItems.innerHTML = "";
-    
-    filtered.forEach((d, i) => {
-      viewItems.innerHTML += `
-        <div class="mobile-view-item">
-          <div class="mobile-view-row">
-            <span class="mobile-view-label">S.NO:</span>
-            <span>${i + 1}</span>
+      const viewItems = document.getElementById("mobileViewItems");
+      viewItems.innerHTML = "";
+      
+      filtered.forEach((d, i) => {
+        viewItems.innerHTML += `
+          <div class="mobile-view-item">
+            <div class="mobile-view-row">
+              <span class="mobile-view-label">S.NO:</span>
+              <span>${i + 1}</span>
+            </div>
+            <div class="mobile-view-row">
+              <span class="mobile-view-label">SAP DATE:</span>
+              <span>${d.sapDate}</span>
+            </div>
+            <div class="mobile-view-row">
+              <span class="mobile-view-label">BILL DATE:</span>
+              <span>${d.billDate}</span>
+            </div>
+            <div class="mobile-view-row">
+              <span class="mobile-view-label">QUANTITY:</span>
+              <span>${d.quantity}</span>
+            </div>
+            <div class="mobile-view-row">
+              <span class="mobile-view-label">SUBMIT TIME:</span>
+              <span>${d.submitTime}</span>
+            </div>
+            <div class="mobile-view-row">
+              <span class="mobile-view-label">RECEIVER:</span>
+              <span>${d.receiverName}</span>
+            </div>
+            <div class="mobile-view-row">
+              <span class="mobile-view-label">SUBMITTED BY:</span>
+              <span>${d.submittedBy}</span>
+            </div>
+            <div class="mobile-view-row">
+              <span class="mobile-view-label">PLANT:</span>
+              <span>${d.plant}</span>
+            </div>
+            ${d.submittedBy === currentUser ? `
+            <div style="margin-top: 10px; text-align: right;">
+              <button onclick="editMobileItem('${d._id}')" style="padding: 5px 10px; font-size: 12px;">Edit</button>
+            </div>
+            ` : ''}
           </div>
-          <div class="mobile-view-row">
-            <span class="mobile-view-label">SAP DATE:</span>
-            <span>${d.sapDate}</span>
-          </div>
-          <div class="mobile-view-row">
-            <span class="mobile-view-label">BILL DATE:</span>
-            <span>${d.billDate}</span>
-          </div>
-          <div class="mobile-view-row">
-            <span class="mobile-view-label">QUANTITY:</span>
-            <span>${d.quantity}</span>
-          </div>
-          <div class="mobile-view-row">
-            <span class="mobile-view-label">SUBMIT TIME:</span>
-            <span>${d.submitTime}</span>
-          </div>
-          <div class="mobile-view-row">
-            <span class="mobile-view-label">RECEIVER:</span>
-            <span>${d.receiverName}</span>
-          </div>
-          <div class="mobile-view-row">
-            <span class="mobile-view-label">SUBMITTED BY:</span>
-            <span>${d.submittedBy}</span>
-          </div>
-          <div class="mobile-view-row">
-            <span class="mobile-view-label">PLANT:</span>
-            <span>${d.plant}</span>
-          </div>
-          ${d.submittedBy === currentUser ? `
-          <div style="margin-top: 10px; text-align: right;">
-            <button onclick="editMobileItem('${d.id}')" style="padding: 5px 10px; font-size: 12px;">Edit</button>
-          </div>
-          ` : ''}
-        </div>
-      `;
-    });
+        `;
+      });
+    } catch (error) {
+      console.error("Error filtering mobile view:", error);
+    }
   }
 
-  // Filter desktop view
   function filterView() {
     const startDate = document.getElementById("startDate").value;
     const endDate = document.getElementById("endDate").value;
@@ -780,52 +842,37 @@
     const submittedBy = document.getElementById("submittedByFilter").value.toLowerCase();
     const searchText = document.getElementById("searchBox").value.toLowerCase();
 
-    const filtered = woodBillData.filter(d => {
-      const inDateRange =
-        (!startDate || new Date(d.sapDate) >= new Date(startDate)) &&
-        (!endDate || new Date(d.sapDate) <= new Date(endDate));
-      const matchesReceiver = !receiver || d.receiverName?.toLowerCase().includes(receiver);
-      const matchesSubmitter = !submittedBy || d.submittedBy?.toLowerCase().includes(submittedBy);
-      const matchesSearch = !searchText || 
-        Object.values(d).some(val => String(val).toLowerCase().includes(searchText));
-      return inDateRange && matchesReceiver && matchesSubmitter && matchesSearch;
-    });
+    fetch("/api/wood-bill")
+      .then(res => res.json())
+      .then(data => {
+        const filtered = data.filter(d => {
+          const inDateRange =
+            (!startDate || new Date(d.sapDate) >= new Date(startDate)) &&
+            (!endDate || new Date(d.sapDate) <= new Date(endDate));
+          const matchesReceiver = !receiver || d.receiverName?.toLowerCase().includes(receiver);
+          const matchesSubmitter = !submittedBy || d.submittedBy?.toLowerCase().includes(submittedBy);
+          const matchesSearch = !searchText || Object.values(d).some(val => String(val).toLowerCase().includes(searchText));
+          return inDateRange && matchesReceiver && matchesSubmitter && matchesSearch;
+        });
 
-    const tbody = document.querySelector("#viewTable tbody");
-    tbody.innerHTML = "";
-    filtered.forEach((d, i) => {
-      tbody.innerHTML += `
-        <tr>
-          <td>${i + 1}</td>
-          <td>${d.sapDate}</td>
-          <td>${d.billDate}</td>
-          <td>${d.quantity}</td>
-          <td>${d.submitTime}</td>
-          <td>${d.receiverName}</td>
-          <td>${d.submittedBy}</td>
-          <td>${d.plant}</td>
-        </tr>
-      `;
-    });
+        const tbody = document.querySelector("#viewTable tbody");
+        tbody.innerHTML = "";
+        filtered.forEach((d, i) => {
+          tbody.innerHTML += `
+            <tr>
+              <td>${i + 1}</td>
+              <td>${d.sapDate}</td>
+              <td>${d.billDate}</td>
+              <td>${d.quantity}</td>
+              <td>${d.submitTime}</td>
+              <td>${d.receiverName}</td>
+              <td>${d.submittedBy}</td>
+              <td>${d.plant}</td>
+            </tr>
+          `;
+        });
+      });
   }
-
-  // Handle window resize
-  window.addEventListener('resize', function() {
-    isMobile = window.innerWidth <= 768;
-    if (isMobile) {
-      if (document.getElementById("fillTableSection").style.display !== "none") {
-        showFill();
-      } else if (document.getElementById("viewSection").style.display !== "none") {
-        showView();
-      }
-    } else {
-      if (document.getElementById("mobileFillForm").style.display !== "none") {
-        showFill();
-      } else if (document.getElementById("mobileViewSection").style.display !== "none") {
-        showView();
-      }
-    }
-  });
 </script>
 </body>
 </html>
