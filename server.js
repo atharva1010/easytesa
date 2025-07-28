@@ -15,6 +15,8 @@ const twilio = require("twilio");
 const multer = require("multer");
 const streamifier = require("streamifier"); // make sure this is imported at the top
 const { uploadUser, uploadUpdate } = require('./cloudinary');
+const cloudinary = require("cloudinary").v2;
+const { CloudinaryStorage } = require("multer-storage-cloudinary");
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server, {
@@ -50,14 +52,15 @@ app.use('/Files', express.static(path.join(__dirname, 'Files'))); // for serving
 
 
 // Multer Setup
-const userStorage = multer.diskStorage({
-  destination: (req, file, cb) => cb(null, "uploads/"),
-  filename: (req, file, cb) =>
-    cb(null, Date.now() + path.extname(file.originalname))
+const storage = new CloudinaryStorage({
+  cloudinary: cloudinary,
+  params: {
+    folder: "updates",
+    allowed_formats: ["jpg", "jpeg", "png"]
+  }
 });
- 
 
-const storage = multer.memoryStorage();
+const upload = multer({ storage });
 
 
 const bgStorage = multer.diskStorage({
@@ -75,6 +78,8 @@ const uploadExcel = multer({ storage: excelStorage });
 // Middleware
 app.use(cors());
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 app.use("/bg", express.static("bg"));
 app.use("/assets", express.static("assets"));
@@ -478,26 +483,17 @@ app.post('/api/shift-report/previous-pending', async (req, res) => {
 app.post("/api/updates", upload.single("image"), async (req, res) => {
   try {
     const { title, message } = req.body;
-    const imageUrl = req.file ? req.file.path : ""; // Cloudinary image URL
+    const imageUrl = req.file ? req.file.path : null;
 
-    const update = new Update({ title, message, image: imageUrl });
-    await update.save();
+    const newUpdate = new Update({ title, message, imageUrl });
+    await newUpdate.save();
 
-    res.json({ success: true, message: "Update posted successfully", update });
+    res.json({ success: true, message: "Update posted successfully." });
   } catch (err) {
-    console.error("Update save error:", err);
-    res.status(500).json({ success: false, message: "Failed to post update" });
+    console.error("Update Error:", err);
+    res.status(500).json({ success: false, message: "Server error." });
   }
 });
-app.post("/api/updates", uploadUpdate.single("image"), async (req, res) => {
-  try {
-    const { title, message } = req.body;
-    const fileBuffer = req.file?.buffer;
-    const originalName = req.file?.originalname;
-
-    if (!fileBuffer || !originalName) {
-      return res.status(400).json({ success: false, message: "Image not provided or upload failed" });
-    }
 
     // Upload to Cloudinary using stream
     const result = await new Promise((resolve, reject) => {
