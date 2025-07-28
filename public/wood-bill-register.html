@@ -100,8 +100,14 @@
       .mobile-form input, 
       .mobile-form select {
         width: 100%;
-        padding: 10px;
+        padding: 12px; /* Increased padding for better touch */
         font-size: 16px;
+        -webkit-appearance: none; /* Fix for iOS */
+      }
+      
+      /* Specific fix for number input */
+      .mobile-form input[type="number"] {
+        -moz-appearance: textfield; /* Firefox */
       }
       
       .mobile-form .form-actions {
@@ -113,7 +119,8 @@
       .mobile-form .form-actions button {
         flex: 1;
         margin: 0 5px;
-        padding: 10px;
+        padding: 12px;
+        font-size: 16px;
       }
       
       /* Mobile View Styles */
@@ -196,26 +203,28 @@
   
   <!-- Mobile Form (Hidden on desktop) -->
   <div id="mobileFillForm" class="mobile-only" style="display: none;">
-    <div class="mobile-form">
+    <form id="mobileDataForm" class="mobile-form" onsubmit="saveMobileForm(event)">
       <div class="form-group">
         <label for="mobileSapDate">SAP DATE</label>
-        <input type="date" id="mobileSapDate">
+        <input type="date" id="mobileSapDate" required>
       </div>
       <div class="form-group">
         <label for="mobileBillDate">BILL SUBMIT DATE</label>
-        <input type="date" id="mobileBillDate">
+        <input type="date" id="mobileBillDate" required>
       </div>
       <div class="form-group">
         <label for="mobileQuantity">QUANTITY</label>
-        <input type="number" id="mobileQuantity" min="1">
+        <input type="number" id="mobileQuantity" min="1" required 
+               oninput="this.value = this.value.replace(/[^0-9]/g, '')">
       </div>
       <div class="form-group">
         <label for="mobileSubmitTime">SUBMIT TIME</label>
-        <input type="time" id="mobileSubmitTime">
+        <input type="time" id="mobileSubmitTime" required>
       </div>
       <div class="form-group">
         <label for="mobileReceiverName">RECEIVER NAME</label>
-        <input type="text" id="mobileReceiverName">
+        <input type="text" id="mobileReceiverName" required
+               oninput="this.value = this.value.toUpperCase()">
       </div>
       <div class="form-group">
         <label for="mobileSubmittedBy">SUBMITTED BY</label>
@@ -223,7 +232,7 @@
       </div>
       <div class="form-group">
         <label for="mobilePlant">PLANT</label>
-        <select id="mobilePlant">
+        <select id="mobilePlant" required>
           <option value="">Select</option>
           <option value="C34A">C34A</option>
           <option value="C2">C2</option>
@@ -231,10 +240,10 @@
         </select>
       </div>
       <div class="form-actions">
-        <button onclick="cancelMobileForm()">Cancel</button>
-        <button onclick="saveMobileForm()">Save</button>
+        <button type="button" onclick="cancelMobileForm()">Cancel</button>
+        <button type="submit">Save</button>
       </div>
-    </div>
+    </form>
   </div>
   
   <!-- Mobile View (Hidden on desktop) -->
@@ -370,6 +379,8 @@
       // Show mobile form
       document.getElementById("mobileFillForm").style.display = "block";
       unsavedRowExists = true;
+      // Scroll to form for better UX
+      document.getElementById("mobileFillForm").scrollIntoView({ behavior: 'smooth' });
     } else {
       // Desktop add row
       if (unsavedRowExists) {
@@ -408,17 +419,22 @@
     editingId = null;
   }
   
-  async function saveMobileForm() {
+  async function saveMobileForm(event) {
+    // Prevent default form submission
+    if (event) event.preventDefault();
+    
+    const form = document.getElementById("mobileDataForm");
     const data = {
-      sapDate: document.getElementById("mobileSapDate").value,
-      billDate: document.getElementById("mobileBillDate").value,
-      quantity: document.getElementById("mobileQuantity").value,
-      submitTime: document.getElementById("mobileSubmitTime").value,
-      receiverName: document.getElementById("mobileReceiverName").value.toUpperCase(),
+      sapDate: form.mobileSapDate.value,
+      billDate: form.mobileBillDate.value,
+      quantity: form.mobileQuantity.value,
+      submitTime: form.mobileSubmitTime.value,
+      receiverName: form.mobileReceiverName.value.toUpperCase(),
       submittedBy: currentUser,
-      plant: document.getElementById("mobilePlant").value.toUpperCase()
+      plant: form.mobilePlant.value.toUpperCase()
     };
 
+    // Validate form (though HTML5 validation should handle this)
     if (!data.sapDate || !data.billDate || !data.quantity || !data.submitTime || !data.receiverName || !data.plant) {
       alert("Please fill all fields.");
       return;
