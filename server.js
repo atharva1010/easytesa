@@ -20,7 +20,7 @@ const io = new Server(server, {
   cors: { origin: "*", methods: ["GET", "POST"] }
 });
 const PORT = process.env.PORT || 3000;
-const upload = multer({ storage: userStorage });
+
 // Models
 const User = require("./models/User");
 const Update = require("./models/Update");
@@ -53,6 +53,7 @@ const userStorage = multer.diskStorage({
   filename: (req, file, cb) =>
     cb(null, Date.now() + path.extname(file.originalname))
 });
+const upload = multer({ storage: userStorage });
 
 const bgStorage = multer.diskStorage({
   destination: (req, file, cb) => cb(null, "bg/"),
