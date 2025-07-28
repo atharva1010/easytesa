@@ -473,32 +473,46 @@ app.post('/api/shift-report/previous-pending', async (req, res) => {
 
 app.post("/api/updates", upload.single("image"), async (req, res) => {
   try {
-    if (!req.file) return res.status(400).json({ error: "No file uploaded" });
+    const { username, category } = req.body;
+
+    // Check if file already exists in DB with same name & category
+    const existing = await Upload.findOne({
+      filename: req.file.originalname,
+      category,
+      username
+    });
+
+    if (existing) {
+      return res.status(400).json({ success: false, message: "Duplicate image. Already uploaded." });
+    }
 
     // Upload to Cloudinary
     const result = await cloudinary.uploader.upload_stream(
-      { resource_type: "image", folder: "uploads" },
+      { folder: "uploads", resource_type: "image" },
       async (error, result) => {
-        if (error) return res.status(500).json({ error: "Cloudinary Error" });
+        if (error) {
+          return res.status(500).json({ success: false, message: "Cloudinary upload failed." });
+        }
 
-        const update = new Update({
-          title: req.body.title,
-          description: req.body.description,
-          imageUrl: result.secure_url
+        const newUpload = new Upload({
+          filename: req.file.originalname,
+          url: result.secure_url,
+          category,
+          username
         });
 
-        await update.save();
-        res.json({ success: true, update });
+        await newUpload.save();
+
+        res.json({ success: true, message: "Image uploaded successfully", data: newUpload });
       }
     );
 
-      require("streamifier").createReadStream(req.file.buffer).pipe(result);
+    result.end(req.file.buffer);
   } catch (err) {
     console.error("Upload error:", err);
-    res.status(500).json({ error: "Server Error" });
+    res.status(500).json({ success: false, message: "Server error" });
   }
-});
-
+})
 // Material Reports
 app.post("/api/wood-bill", async (req, res) => {
   try {
