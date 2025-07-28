@@ -481,7 +481,6 @@ app.post('/api/shift-report/previous-pending', async (req, res) => {
 });
 app.post("/api/updates", upload.single("image"), async (req, res) => {
   try {
-        const result = await new Promise((resolve, reject) => {
     const { title, message } = req.body;
     const imageUrl = req.file ? req.file.path : null;
 
