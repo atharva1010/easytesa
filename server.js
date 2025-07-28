@@ -479,18 +479,20 @@ app.post('/api/shift-report/previous-pending', async (req, res) => {
     res.status(500).json({ success: false, message: "Server error" });
   }
 });
+
 app.post("/api/updates", upload.single("image"), async (req, res) => {
   try {
     const { title, message } = req.body;
     let imageUrl = null;
 
     if (req.file) {
-      const uploadResult = await cloudinary.uploader.upload(req.file.path, {
-        folder: "updates", // optional: store in 'updates' folder
+      // Upload to Cloudinary
+      const result = await cloudinary.uploader.upload(req.file.path, {
+        folder: "updates", // optional folder in cloudinary
       });
-      imageUrl = uploadResult.secure_url;
+      imageUrl = result.secure_url;
 
-      // Delete the uploaded file from local disk after uploading to Cloudinary
+      // Remove local file after upload
       fs.unlinkSync(req.file.path);
     }
 
@@ -505,9 +507,7 @@ app.post("/api/updates", upload.single("image"), async (req, res) => {
 });
 
 
-    // Upload to Cloudinary using stream
-
-      const stream = cloudinary.uploader.upload_stream(
+        const stream = cloudinary.uploader.upload_stream(
         { folder: "updates", resource_type: "image" },
         (error, result) => {
           if (error) reject(error);
