@@ -12,6 +12,7 @@ const http = require("http");
 const { Server } = require("socket.io");
 const twilio = require("twilio");
 const multer = require("multer");
+const upload = multer({ storage: multer.memoryStorage() });
 const { uploadUser } = require('./cloudinary');
 
 const app = express();
@@ -474,45 +475,54 @@ app.post('/api/shift-report/previous-pending', async (req, res) => {
 app.post("/api/updates", upload.single("image"), async (req, res) => {
   try {
     const { username, category } = req.body;
+    const fileBuffer = req.file?.buffer;
+    const originalName = req.file?.originalname;
 
-    // Check if file already exists in DB with same name & category
-    const existing = await Upload.findOne({
-      filename: req.file.originalname,
-      category,
-      username
-    });
+    if (!fileBuffer || !originalName) {
+      return res.status(400).json({ success: false, message: "Image not provided" });
+    }
 
+    // Duplicate check in DB
+    const existing = await Upload.findOne({ filename: originalName, category, username });
     if (existing) {
       return res.status(400).json({ success: false, message: "Duplicate image. Already uploaded." });
     }
 
-    // Upload to Cloudinary
-    const result = await cloudinary.uploader.upload_stream(
-      { folder: "uploads", resource_type: "image" },
-      async (error, result) => {
-        if (error) {
-          return res.status(500).json({ success: false, message: "Cloudinary upload failed." });
-        }
+    // Upload to Cloudinary using stream
+    const streamifier = require("streamifier");
 
-        const newUpload = new Upload({
-          filename: req.file.originalname,
-          url: result.secure_url,
-          category,
-          username
-        });
+    const cloudinaryUpload = () =>
+      new Promise((resolve, reject) => {
+        const stream = cloudinary.uploader.upload_stream(
+          { folder: "uploads", resource_type: "image" },
+          (error, result) => {
+            if (error) reject(error);
+            else resolve(result);
+          }
+        );
+        streamifier.createReadStream(fileBuffer).pipe(stream);
+      });
 
-        await newUpload.save();
+    const result = await cloudinaryUpload();
 
-        res.json({ success: true, message: "Image uploaded successfully", data: newUpload });
-      }
-    );
+    // Save to DB
+    const newUpload = new Upload({
+      filename: originalName,
+      url: result.secure_url,
+      category,
+      username,
+    });
 
-    result.end(req.file.buffer);
+    await newUpload.save();
+
+    res.json({ success: true, message: "Image uploaded to Cloudinary & saved", data: newUpload });
+
   } catch (err) {
-    console.error("Upload error:", err);
-    res.status(500).json({ success: false, message: "Server error" });
+    console.error("Upload Error:", err);
+    res.status(500).json({ success: false, message: "Upload failed" });
   }
-})
+});
+
 // Material Reports
 app.post("/api/wood-bill", async (req, res) => {
   try {
