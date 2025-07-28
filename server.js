@@ -51,17 +51,15 @@ app.use('/Files', express.static(path.join(__dirname, 'Files'))); // for serving
 
 
 // Multer Setup
-const userStorage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, "uploads/"); // or your folder
-  },
-  filename: (req, file, cb) => {
-    cb(null, Date.now() + "-" + file.originalname);
+const storage = new CloudinaryStorage({
+  cloudinary: cloudinary,
+  params: {
+    folder: "updates",
+    allowed_formats: ["jpg", "jpeg", "png"],
   },
 });
 
-// Step 2: THEN use it
-const upload = multer({ storage: userStorage });
+const upload = multer({ storage: storage });
 
 
 const bgStorage = multer.diskStorage({
@@ -482,21 +480,11 @@ app.post('/api/shift-report/previous-pending', async (req, res) => {
   }
 });
 
+// 4. API Route - Post update
 app.post("/api/updates", upload.single("image"), async (req, res) => {
   try {
     const { title, message } = req.body;
-    let imageUrl = null;
-
-    if (req.file) {
-      // Upload to Cloudinary
-      const result = await cloudinary.uploader.upload(req.file.path, {
-        folder: "updates", // optional folder in cloudinary
-      });
-      imageUrl = result.secure_url;
-
-      // Remove local file after upload
-      fs.unlinkSync(req.file.path);
-    }
+    const imageUrl = req.file ? req.file.path : null;
 
     const newUpdate = new Update({ title, message, imageUrl });
     await newUpdate.save();
@@ -508,35 +496,15 @@ app.post("/api/updates", upload.single("image"), async (req, res) => {
   }
 });
 
-
-        const stream = cloudinary.uploader.upload_stream(
-        { folder: "updates", resource_type: "image" },
-        (error, result) => {
-          if (error) reject(error);
-          else resolve(result);
-        }
-      );
-      streamifier.createReadStream(fileBuffer).pipe(stream);
-    });
-
-    // Save to DB
-    const update = new Update({
-      title,
-      message,
-      image: result.secure_url,
-      createdAt: new Date()
-    });
-
-    await update.save();
-    res.status(201).json({ success: true, message: "Update posted successfully", update });
-
+// 5. API Route - Get all updates
+app.get("/api/updates", async (req, res) => {
+  try {
+    const updates = await Update.find().sort({ createdAt: -1 });
+    res.json({ success: true, updates });
   } catch (err) {
-    console.error("Update post error:", err);
-    res.status(500).json({ success: false, message: "Failed to post update" });
+    res.status(500).json({ success: false, message: "Server error." });
   }
-});
-
-// Material Reports
+});// Material Reports
 app.post("/api/wood-bill", async (req, res) => {
   try {
     const newBill = new WoodBill(req.body);
