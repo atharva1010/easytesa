@@ -12,8 +12,7 @@ const http = require("http");
 const { Server } = require("socket.io");
 const twilio = require("twilio");
 const multer = require("multer");
-const upload = multer({ storage: multer.memoryStorage() });
-
+const { uploadUser } = require('./cloudinary');
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server, {
