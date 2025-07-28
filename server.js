@@ -475,7 +475,7 @@ app.post('/api/shift-report/previous-pending', async (req, res) => {
     res.status(500).json({ success: false, message: "Server error" });
   }
 });
-router.post("/api/updates", upload.single("image"), async (req, res) => {
+app.post("/api/updates", upload.single("image"), async (req, res) => {
   try {
     const { title, message } = req.body;
     const imageUrl = req.file ? req.file.path : ""; // Cloudinary image URL
