@@ -31,7 +31,7 @@ const WoodBill = require('./models/WoodBill');
 const Methanol = require("./models/Methanol");
 const LongBodyReport = require('./models/LongBodyReport');
 const ShiftReport = require('./models/ShiftReport');
-const Upload = require("./models/Upload");
+const { upload } = require("./utils/cloudinary"); 
 
 // Routes
 const shiftReportRoutes = require("./routes/shiftReportRoutes");
@@ -55,7 +55,9 @@ const userStorage = multer.diskStorage({
   filename: (req, file, cb) =>
     cb(null, Date.now() + path.extname(file.originalname))
 });
-const upload = multer(); // No disk storage, use memory
+const upload = multer(); 
+
+No disk storage, use memory
 
 const bgStorage = multer.diskStorage({
   destination: (req, file, cb) => cb(null, "bg/"),
@@ -472,7 +474,20 @@ app.post('/api/shift-report/previous-pending', async (req, res) => {
     res.status(500).json({ success: false, message: "Server error" });
   }
 });
+router.post("/api/updates", upload.single("image"), async (req, res) => {
+  try {
+    const { title, message } = req.body;
+    const imageUrl = req.file ? req.file.path : ""; // Cloudinary image URL
 
+    const update = new Update({ title, message, image: imageUrl });
+    await update.save();
+
+    res.json({ success: true, message: "Update posted successfully", update });
+  } catch (err) {
+    console.error("Update save error:", err);
+    res.status(500).json({ success: false, message: "Failed to post update" });
+  }
+});
 app.post("/api/updates", uploadUpdate.single("image"), async (req, res) => {
   try {
     const { title, message } = req.body;
