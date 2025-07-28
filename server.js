@@ -12,6 +12,7 @@ const http = require("http");
 const { Server } = require("socket.io");
 const twilio = require("twilio");
 const multer = require("multer");
+const streamifier = require("streamifier"); // make sure this is imported at the top
 const { uploadUser, uploadUpdate } = require('./cloudinary');
 const app = express();
 const server = http.createServer(app);
@@ -471,42 +472,45 @@ app.post('/api/shift-report/previous-pending', async (req, res) => {
   }
 });
 
-router.post("/api/updates", uploadUpdate.single("image"), async (req, res) => {
+app.post("/api/updates", uploadUpdate.single("image"), async (req, res) => {
   try {
     const { title, message } = req.body;
+    const fileBuffer = req.file?.buffer;
+    const originalName = req.file?.originalname;
 
-    // Check if file exists
-    if (!req.file || !req.file.path) {
+    if (!fileBuffer || !originalName) {
       return res.status(400).json({ success: false, message: "Image not provided or upload failed" });
     }
 
-    const imageUrl = req.file.path; // This is the Cloudinary URL returned by multer-storage-cloudinary
+    // Upload to Cloudinary using stream
+    const result = await new Promise((resolve, reject) => {
+      const stream = cloudinary.uploader.upload_stream(
+        { folder: "updates", resource_type: "image" },
+        (error, result) => {
+          if (error) reject(error);
+          else resolve(result);
+        }
+      );
+      streamifier.createReadStream(fileBuffer).pipe(stream);
+    });
 
+    // Save to DB
     const update = new Update({
       title,
       message,
-      image: imageUrl,
+      image: result.secure_url,
       createdAt: new Date()
     });
 
     await update.save();
-
     res.status(201).json({ success: true, message: "Update posted successfully", update });
+
   } catch (err) {
     console.error("Update post error:", err);
     res.status(500).json({ success: false, message: "Failed to post update" });
   }
 });
-// Fetch uploaded images by user
-app.get("/api/uploads", async (req, res) => {
-  try {
-    const uploads = await Upload.find().sort({ createdAt: -1 });
-    res.json({ success: true, uploads });
-  } catch (err) {
-    console.error("Fetch Uploads Error:", err);
-    res.status(500).json({ success: false, message: "Failed to fetch uploads" });
-  }
-});
+
 // Material Reports
 app.post("/api/wood-bill", async (req, res) => {
   try {
