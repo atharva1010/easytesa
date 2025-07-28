@@ -471,14 +471,16 @@ app.post('/api/shift-report/previous-pending', async (req, res) => {
   }
 });
 
-app.post("/api/updates", uploadUpdate.single("image"), async (req, res) => {
+router.post("/api/updates", uploadUpdate.single("image"), async (req, res) => {
   try {
     const { title, message } = req.body;
+
+    // Check if file exists
     if (!req.file || !req.file.path) {
       return res.status(400).json({ success: false, message: "Image not provided or upload failed" });
     }
 
-    const imageUrl = req.file.path; // Cloudinary URL provided by multer-storage-cloudinary
+    const imageUrl = req.file.path; // This is the Cloudinary URL returned by multer-storage-cloudinary
 
     const update = new Update({
       title,
@@ -486,6 +488,7 @@ app.post("/api/updates", uploadUpdate.single("image"), async (req, res) => {
       image: imageUrl,
       createdAt: new Date()
     });
+
     await update.save();
 
     res.status(201).json({ success: true, message: "Update posted successfully", update });
@@ -494,41 +497,6 @@ app.post("/api/updates", uploadUpdate.single("image"), async (req, res) => {
     res.status(500).json({ success: false, message: "Failed to post update" });
   }
 });
-    // Check for duplicate
-    const existing = await Upload.findOne({ filename: originalName, category, username });
-    if (existing) {
-      return res.status(400).json({ success: false, message: "Duplicate image. Already uploaded." });
-    }
-
-    // Upload to Cloudinary
-    const result = await new Promise((resolve, reject) => {
-      const stream = cloudinary.uploader.upload_stream(
-        { folder: "updates", resource_type: "image" },
-        (error, result) => {
-          if (error) reject(error);
-          else resolve(result);
-        }
-      );
-      streamifier.createReadStream(fileBuffer).pipe(stream);
-    });
-
-    // Save metadata to DB
-    const newUpload = new Upload({
-      filename: originalName,
-      url: result.secure_url,
-      category,
-      username,
-    });
-
-    await newUpload.save();
-    res.json({ success: true, message: "Image uploaded to Cloudinary & saved", data: newUpload });
-
-  } catch (err) {
-    console.error("Upload Error:", err);
-    res.status(500).json({ success: false, message: "Upload failed" });
-  }
-});
-
 // Fetch uploaded images by user
 app.get("/api/uploads", async (req, res) => {
   try {
