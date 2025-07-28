@@ -57,7 +57,8 @@ const userStorage = multer.diskStorage({
 });
  
 
-No disk storage, use memory
+const storage = multer.memoryStorage();
+const upload = multer({ storage });
 
 const bgStorage = multer.diskStorage({
   destination: (req, file, cb) => cb(null, "bg/"),
