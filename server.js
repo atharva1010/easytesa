@@ -29,6 +29,7 @@ const WoodBill = require('./models/WoodBill');
 const Methanol = require("./models/Methanol");
 const LongBodyReport = require('./models/LongBodyReport');
 const ShiftReport = require('./models/ShiftReport');
+const Upload = require("./models/Upload");
 
 // Routes
 const shiftReportRoutes = require("./routes/shiftReportRoutes");
@@ -52,7 +53,7 @@ const userStorage = multer.diskStorage({
   filename: (req, file, cb) =>
     cb(null, Date.now() + path.extname(file.originalname))
 });
-const upload = multer({ storage: userStorage });
+const upload = multer(); // No disk storage, use memory
 
 const bgStorage = multer.diskStorage({
   destination: (req, file, cb) => cb(null, "bg/"),
