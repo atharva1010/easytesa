@@ -33,7 +33,6 @@ const WoodBill = require('./models/WoodBill');
 const Methanol = require("./models/Methanol");
 const LongBodyReport = require('./models/LongBodyReport');
 const ShiftReport = require('./models/ShiftReport');
-const { upload } = require("./utils/cloudinary"); 
 
 // Routes
 const shiftReportRoutes = require("./routes/shiftReportRoutes");
