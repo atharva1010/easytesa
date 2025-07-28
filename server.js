@@ -482,22 +482,27 @@ app.post('/api/shift-report/previous-pending', async (req, res) => {
 });
 
 // 4. API Route - Post update
-app.post("/api/updates", upload.single("image"), async (req, res) => {
+app.post('/api/updates', upload.single('image'), async (req, res) => {
   try {
-    const { title, message } = req.body;
-    const imageUrl = req.file ? req.file.path : null;
+    console.log("Uploaded file info:", req.file); // ✅ सही जगह
 
-    const newUpdate = new Update({ title, message, imageUrl });
-    await newUpdate.save();
+    const result = await cloudinary.uploader.upload(req.file.path, {
+      folder: "updates"
+    });
 
-    res.json({ success: true, message: "Update posted successfully." });
-  } catch (err) {
-    console.error("Update Error:", err);
-    res.status(500).json({ success: false, message: "Server error." });
+    const update = new Update({
+      title: req.body.title,
+      message: req.body.message,
+      image: result.secure_url // ✅ Cloudinary image URL
+    });
+
+    await update.save();
+    res.status(201).json({ success: true, message: 'Update created successfully', update });
+  } catch (error) {
+    console.error("Error uploading update:", error);
+    res.status(500).json({ success: false, message: 'Internal server error' });
   }
 });
-
-console.log("Uploaded file info:", req.file);
 
 // 5. API Route - Get all updates
 app.get("/api/updates", async (req, res) => {
