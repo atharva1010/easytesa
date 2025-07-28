@@ -1,4 +1,5 @@
 
+
 require("dotenv").config();
 const express = require("express");
 const mongoose = require("mongoose");
@@ -12,8 +13,8 @@ const http = require("http");
 const { Server } = require("socket.io");
 const twilio = require("twilio");
 const multer = require("multer");
-const { uploadUser } = require('./cloudinary');
-
+const streamifier = require("streamifier"); // make sure this is imported at the top
+const { uploadUser, uploadUpdate } = require('./cloudinary');
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server, {
@@ -23,13 +24,14 @@ const PORT = process.env.PORT || 3000;
 
 // Models
 const User = require("./models/User");
+const Update = require("./models/Update");
 const ExcelData = require("./models/ExcelData");
 const Message = require("./models/Message");
-const Update = require("./models/Update");
 const WoodBill = require('./models/WoodBill');
 const Methanol = require("./models/Methanol");
 const LongBodyReport = require('./models/LongBodyReport');
 const ShiftReport = require('./models/ShiftReport');
+const Upload = require("./models/Upload");
 
 // Routes
 const shiftReportRoutes = require("./routes/shiftReportRoutes");
@@ -39,7 +41,6 @@ const longBodyRoutes = require('./routes/longBody');
 
 // Mount Routes
 app.use("/api/shift-report", shiftRoutes);
-app.use('/api/update', updateRoutes);
 app.use("/api/updates", updateRoutes);
 app.use("/api/reports/shift", shiftReportRoutes);
 app.use("/api/long-body", longBodyRoutes);
@@ -47,11 +48,14 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 app.use(express.static(path.join(__dirname, 'public'))); // for frontend HTML
 app.use('/Files', express.static(path.join(__dirname, 'Files'))); // for serving files like PDFs
 
+
 // Multer Setup
 const userStorage = multer.diskStorage({
   destination: (req, file, cb) => cb(null, "uploads/"),
-  filename: (req, file, cb) => cb(null, Date.now() + path.extname(file.originalname))
+  filename: (req, file, cb) =>
+    cb(null, Date.now() + path.extname(file.originalname))
 });
+const upload = multer(); // No disk storage, use memory
 
 const bgStorage = multer.diskStorage({
   destination: (req, file, cb) => cb(null, "bg/"),
@@ -72,6 +76,7 @@ app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 app.use("/bg", express.static("bg"));
 app.use("/assets", express.static("assets"));
 app.use(express.static("public"));
+app.use(express.static(path.join(__dirname, "public")));
 
 // DB Connection
 mongoose.connect(process.env.MONGODB_URI || "mongodb://127.0.0.1:27017/bab_system", {
@@ -326,67 +331,102 @@ app.get("/api/excel-data/:category", async (req, res) => {
     res.json({ success: false, message: "Failed to fetch data" });
   }
 });
+// OTP Endpoints
 
-// ✅ Send OTP route
 app.post("/api/send-otp", async (req, res) => {
-  const { userId } = req.body;
-  try {
-    const user = await User.findOne({ userId });
-    if (!user) return res.json({ success: false, message: "User ID not found" });
 
-    if (!process.env.TWILIO_PHONE || !process.env.TWILIO_SID || !process.env.TWILIO_AUTH) {
-      return res.json({ success: false, message: "Twilio not configured" });
-    }
+const { userId } = req.body;
 
-    const otp = Math.floor(100000 + Math.random() * 900000);
-    otpStore.set(userId, { otp, expires: Date.now() + 5 * 60 * 1000 }); // valid for 5 min
+const user = await User.findOne({ userId });
 
-    const fullMobile = `+91${user.mobile}`;
-    await twilioClient.messages.create({
-      body: `Hi ${user.username}, Your OTP for password reset is ${otp} - easyTesa`,
-      from: process.env.TWILIO_PHONE,
-      to: fullMobile
-    });
+if (!user) return res.json({ success: false, message: "User ID not found" });
 
-    res.json({ success: true, message: "OTP sent to registered mobile" });
-  } catch (err) {
-    console.error("Twilio Error:", err.message);
-    let message = "Failed to send OTP";
-    if (err.code === 21606) {
-      message = "Twilio Trial account can only send to verified numbers. Go to https://twilio.com/console to verify.";
-    }
-    res.json({ success: false, message });
-  }
+const otp = Math.floor(100000 + Math.random() * 900000);
+
+otpStore.set(userId, { otp, expires: Date.now() + 5 * 60 * 1000 });
+
+try {
+
+await twilioClient.messages.create({
+
+  body: `Your OTP is: ${otp}`,
+
+  from: process.env.TWILIO_PHONE,
+
+  to: `+91${user.mobile}`
+
 });
 
-// ✅ Reset Password route
+res.json({ success: true, message: "OTP sent to registered mobile" });
+
+} catch (err) {
+
+console.error("Twilio Error:", err);
+
+res.json({ success: false, message: "Failed to send OTP" });
+
+}
+
+});
+
 app.post("/api/reset-password", async (req, res) => {
-  const { userId, otp, newPassword } = req.body;
+
+const { userId, otp, newPassword } = req.body;
+
+const stored = otpStore.get(userId);
+
+if (!stored || stored.otp != otp || stored.expires < Date.now()) {
+
+return res.json({ success: false, message: "Invalid or expired OTP" });
+
+}
+
+const user = await User.findOne({ userId });
+
+if (!user) return res.json({ success: false, message: "User not found" });
+
+user.password = await bcrypt.hash(newPassword, 10);
+
+await user.save();
+
+otpStore.delete(userId);
+
+res.json({ success: true, message: "Password reset successful" });
+
+});
+
+app.post("/api/verify-otp", (req, res) => {
+  const { userId, otp } = req.body;
   const stored = otpStore.get(userId);
 
   if (!stored) {
-    return res.json({ success: false, message: "No OTP sent. Please request again." });
-  }
-  if (stored.expires < Date.now()) {
-    otpStore.delete(userId);
-    return res.json({ success: false, message: "OTP expired. Please request again." });
-  }
-  if (stored.otp != otp) {
-    return res.json({ success: false, message: "Invalid OTP. Please try again." });
+    return res.json({ success: false, message: "OTP not found" });
   }
 
+  if (stored.otp != otp || stored.expires < Date.now()) {
+    return res.json({ success: false, message: "Invalid or expired OTP" });
+  }
+
+  return res.json({ success: true, message: "OTP verified successfully" });
+});
+
+
+
+app.post("/api/update-password", async (req, res) => {
   try {
+    const { userId, newPassword } = req.body;
+
     const user = await User.findOne({ userId });
     if (!user) return res.json({ success: false, message: "User not found" });
 
-    user.password = await bcrypt.hash(newPassword, SALT_ROUNDS);
+    const hashedPassword = await bcrypt.hash(newPassword, 10); // 🔒 Hash the new password
+    user.password = hashedPassword;
     await user.save();
 
-    otpStore.delete(userId);
-    res.json({ success: true, message: "Password reset successfully" });
+    res.json({ success: true, message: "Password updated successfully" });
   } catch (err) {
-    console.error("Reset Password Error:", err);
-    res.json({ success: false, message: "Something went wrong. Try again." });
+    console.error("Update password error:", err);
+    res.status(500).json({ success: false, message: "Internal server error" });
   }
 });
 
@@ -432,7 +472,46 @@ app.post('/api/shift-report/previous-pending', async (req, res) => {
     res.status(500).json({ success: false, message: "Server error" });
   }
 });
-   
+
+app.post("/api/updates", uploadUpdate.single("image"), async (req, res) => {
+  try {
+    const { title, message } = req.body;
+    const fileBuffer = req.file?.buffer;
+    const originalName = req.file?.originalname;
+
+    if (!fileBuffer || !originalName) {
+      return res.status(400).json({ success: false, message: "Image not provided or upload failed" });
+    }
+
+    // Upload to Cloudinary using stream
+    const result = await new Promise((resolve, reject) => {
+      const stream = cloudinary.uploader.upload_stream(
+        { folder: "updates", resource_type: "image" },
+        (error, result) => {
+          if (error) reject(error);
+          else resolve(result);
+        }
+      );
+      streamifier.createReadStream(fileBuffer).pipe(stream);
+    });
+
+    // Save to DB
+    const update = new Update({
+      title,
+      message,
+      image: result.secure_url,
+      createdAt: new Date()
+    });
+
+    await update.save();
+    res.status(201).json({ success: true, message: "Update posted successfully", update });
+
+  } catch (err) {
+    console.error("Update post error:", err);
+    res.status(500).json({ success: false, message: "Failed to post update" });
+  }
+});
+
 // Material Reports
 app.post("/api/wood-bill", async (req, res) => {
   try {

@@ -4,155 +4,213 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Login - BALAJI ACTION</title>
-  <link rel="stylesheet" href="style.css">
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@600&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@600&display=swap');
 
-    body {
-      margin: 0;
-      font-family: 'Orbitron', sans-serif;
-      background-image: url("bg/background.jpg");
-      background-size: cover;
-      background-repeat: no-repeat;
-      background-position: center;
-      height: 100vh;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      color: #00ffff;
-      overflow: hidden;
-    }
+  * {
+    box-sizing: border-box;
+  }
 
+  body {
+    margin: 0;
+    font-family: 'Orbitron', sans-serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background-image: url("bg/background.jpg");
+    background-size: cover;
+    background-position: center;
+    min-height: 100vh;
+    overflow-x: hidden;
+    color: #00ffff;
+  }
+
+  header {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    background: rgba(0, 20, 30, 0.8);
+    padding: 10px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 0 20px #00ffff88;
+    z-index: 100;
+  }
+
+  .logo {
+    height: 40px;
+    margin-right: 10px;
+    filter: drop-shadow(0 0 5px #00ffff);
+  }
+
+  .left {
+    display: flex;
+    align-items: center;
+    color: #00ffff;
+    font-weight: bold;
+    text-shadow: 0 0 5px #00ffff, 0 0 10px #00ffff88;
+    flex-wrap: wrap;
+  }
+
+  h2 {
+    margin-bottom: 20px;
+    color: #00ffff;
+    text-shadow: 0 0 10px #00ffff;
+    text-align: center;
+  }
+
+  form {
+    background: rgba(0, 0, 0, 0.6);
+    padding: 30px;
+    border-radius: 15px;
+    box-shadow: 0 0 20px #00ffff55;
+    backdrop-filter: blur(8px);
+    border: 1px solid #00ffff44;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 90%;
+    max-width: 400px;
+    margin-top: 100px;
+    animation: glowBox 2s infinite alternate;
+  }
+
+  @keyframes glowBox {
+    0% { box-shadow: 0 0 10px #00ffff33; }
+    100% { box-shadow: 0 0 20px #00ffff99; }
+  }
+
+  input {
+    margin: 10px 0;
+    padding: 12px;
+    width: 100%;
+    border: 1px solid #00ffff44;
+    border-radius: 5px;
+    background: rgba(255, 255, 255, 0.1);
+    color: #00ffff;
+    outline: none;
+    box-shadow: 0 0 10px #00ffff33;
+  }
+
+  input::placeholder {
+    color: #00ffff88;
+  }
+
+  input:focus {
+    box-shadow: 0 0 15px #00ffffaa;
+    border-color: #00ffffaa;
+  }
+
+  button {
+    padding: 12px;
+    background: #00ffff;
+    color: #001f2f;
+    font-weight: bold;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    box-shadow: 0 0 15px #00ffffaa;
+    transition: all 0.3s ease;
+  }
+
+  button:hover {
+    background: #00e6e6;
+    box-shadow: 0 0 25px #00ffffcc;
+  }
+
+  #msg {
+    color: #ff4444;
+    margin-top: 10px;
+    text-shadow: 0 0 5px red;
+  }
+
+  .link {
+    margin-top: 10px;
+  }
+
+  .link a {
+    color: #00ffff;
+    text-decoration: underline;
+    cursor: pointer;
+    text-shadow: 0 0 5px #00ffff88;
+  }
+
+  #forgotPasswordModal {
+    display: none;
+    position: fixed;
+    top: 10%;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0, 0, 0, 0.8);
+    border: 2px solid #00ffff55;
+    padding: 20px;
+    z-index: 1000;
+    border-radius: 10px;
+    width: 90%;
+    max-width: 320px;
+    box-shadow: 0 0 20px #00ffff88;
+    backdrop-filter: blur(10px);
+    color: #00ffff;
+  }
+
+  #forgotPasswordModal input,
+  #forgotPasswordModal button {
+    width: 100%;
+    margin-bottom: 10px;
+  }
+
+  /* ---------------- Responsive Media Queries ------------------ */
+
+  @media screen and (max-width: 1023px) {
     header {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      background: rgba(0, 20, 30, 0.8);
-      padding: 10px 20px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      box-shadow: 0 0 20px #00ffff88;
-      z-index: 100;
+      display: none; /* 🔥 Header hidden on mobile & tablet */
     }
+  }
 
-    .logo {
-      height: 40px;
-      margin-right: 10px;
-      filter: drop-shadow(0 0 5px #00ffff);
-    }
-
-    .left {
-      display: flex;
-      align-items: center;
-      color: #00ffff;
-      font-weight: bold;
-      text-shadow: 0 0 5px #00ffff, 0 0 10px #00ffff88;
+  @media screen and (max-width: 768px) {
+    .left span {
+      font-size: 14px;
     }
 
     h2 {
-      margin-bottom: 20px;
-      color: #00ffff;
-      text-shadow: 0 0 10px #00ffff;
+      font-size: 20px;
     }
 
     form {
-      background: rgba(0, 0, 0, 0.6);
-      padding: 30px;
-      border-radius: 15px;
-      box-shadow: 0 0 20px #00ffff55;
-      backdrop-filter: blur(8px);
-      border: 1px solid #00ffff44;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      animation: glowBox 2s infinite alternate;
-    }
-
-    @keyframes glowBox {
-      0% { box-shadow: 0 0 10px #00ffff33; }
-      100% { box-shadow: 0 0 20px #00ffff99; }
-    }
-
-    input {
-      margin: 10px 0;
-      padding: 12px;
-      width: 250px;
-      border: 1px solid #00ffff44;
-      border-radius: 5px;
-      background: rgba(255, 255, 255, 0.1);
-      color: #00ffff;
-      outline: none;
-      box-shadow: 0 0 10px #00ffff33;
-    }
-
-    input::placeholder {
-      color: #00ffff88;
-    }
-
-    input:focus {
-      box-shadow: 0 0 15px #00ffffaa;
-      border-color: #00ffffaa;
-    }
-
-    button {
-      padding: 12px 24px;
-      background: #00ffff;
-      color: #001f2f;
-      font-weight: bold;
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
-      box-shadow: 0 0 15px #00ffffaa;
-    }
-
-    button:hover {
-      background: #00e6e6;
-      box-shadow: 0 0 25px #00ffffcc;
-    }
-
-    #msg {
-      color: #ff4444;
-      margin-top: 10px;
-      text-shadow: 0 0 5px red;
-    }
-
-    .link {
-      margin-top: 10px;
-    }
-
-    .link a {
-      color: #00ffff;
-      text-decoration: underline;
-      cursor: pointer;
-      text-shadow: 0 0 5px #00ffff88;
-    }
-
-    #forgotPasswordModal {
-      display: none;
-      position: fixed;
-      top: 10%;
-      left: 50%;
-      transform: translateX(-50%);
-      background: rgba(0, 0, 0, 0.8);
-      border: 2px solid #00ffff55;
+      margin-top: 120px;
       padding: 20px;
-      z-index: 1000;
-      border-radius: 10px;
-      width: 320px;
-      box-shadow: 0 0 20px #00ffff88;
-      backdrop-filter: blur(10px);
-      color: #00ffff;
+    }
+  }
+
+  @media screen and (max-width: 480px) {
+    .left {
+      flex-direction: column;
+      align-items: flex-start;
     }
 
-    #forgotPasswordModal input,
-    #forgotPasswordModal button {
-      width: 100%;
-      margin-bottom: 10px;
+    .left span {
+      font-size: 12px;
+      text-align: center;
     }
-  </style>
+
+    .logo {
+      height: 30px;
+      margin-bottom: 5px;
+    }
+
+    h2 {
+      font-size: 18px;
+    }
+
+    input, button {
+      font-size: 14px;
+    }
+  }
+</style>
+
+
 </head>
 
 <body>
