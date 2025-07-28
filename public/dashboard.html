@@ -1015,32 +1015,32 @@
     
     <div class="sidebar-section">
       <h4>Register</h4>
-      <button class="sidebar-btn" onclick="openRegister('wood')">
+      <button class="sidebar-btn" onclick="window.open('wood-bill-register.html', '_blank')">
         <i class="fas fa-tree"></i> Wood Bill Submit
       </button>
-      <button class="sidebar-btn" onclick="openRegister('methanol')">
+      <button class="sidebar-btn" onclick="window.open('methanol-register.html', '_blank')">
         <i class="fas fa-flask"></i> Methanol Weight
       </button>
-      <button class="sidebar-btn" onclick="openRegister('longbody')">
+      <button class="sidebar-btn" onclick="window.open('longbody-register.html', '_blank')">
         <i class="fas fa-ruler-combined"></i> Long Body
       </button>
-      <button class="sidebar-btn" onclick="openRegister('shift')">
+      <button class="sidebar-btn" onclick="window.open('shift-register.html', '_blank')">
         <i class="fas fa-calendar-alt"></i> Daily Shift Report
       </button>
     </div>
     
     <div class="sidebar-section">
       <h4>Utility Page</h4>
-      <button class="sidebar-btn" onclick="openRegister('download')">
+      <button class="sidebar-btn" onclick="window.open('Download.html', '_blank')">
         <i class="fas fa-download"></i> Download
       </button>
-      <button class="sidebar-btn" onclick="openRegister('sop')">
+      <button class="sidebar-btn" onclick="window.open('SOP.html', '_blank')">
         <i class="fas fa-file-alt"></i> SOP
       </button>
-      <button class="sidebar-btn" onclick="openRegister('stickerGenrator')">
+      <button class="sidebar-btn" onclick="window.open('StickerGenrator.html', '_blank')">
         <i class="fas fa-tag"></i> Sticker Generator
       </button>
-      <button class="sidebar-btn" onclick="openRegister('about')">
+      <button class="sidebar-btn" onclick="window.open('About.html', '_blank')">
         <i class="fas fa-info-circle"></i> About Company
       </button>
     </div>
@@ -1086,31 +1086,17 @@
       <i class="fas fa-address-book"></i>
       <span>CONTACTS</span>
     </div>
+    <div class="nav-item" onclick="loadTable('ID PASSWORD')">
+      <i class="fas fa-key"></i>
+      <span>ID PASSWORD</span>
+    </div>
     <div class="nav-item" onclick="loadTable('SHIFT SCHEDULE')">
       <i class="fas fa-calendar-alt"></i>
       <span>SHIFTS</span>
     </div>
-    <div class="nav-item" onclick="openChatFromBottomNav()">
-      <i class="fas fa-comments"></i>
-      <span>CHAT</span>
-    </div>
-    <div class="nav-item" id="profileNavItem">
-      <i class="fas fa-user"></i>
-      <span>PROFILE</span>
-      <!-- Profile Dropdown for Mobile -->
-      <div class="profile-dropdown" id="profileDropdown">
-        <div class="profile-info">
-          <img id="mobileProfileImage" src="assets/profile.png" class="profile-img">
-          <div>
-            <h4 id="mobileProfileName">Loading...</h4>
-            <p id="mobileProfileRole">-</p>
-          </div>
-        </div>
-        <div class="dropdown-divider"></div>
-        <button class="dropdown-item" onclick="logout()">
-          <i class="fas fa-sign-out-alt"></i> Logout
-        </button>
-      </div>
+    <div class="nav-item" onclick="loadTable('T-CODE')">
+      <i class="fas fa-code"></i>
+      <span>T-CODE</span>
     </div>
   </div>
 
@@ -1189,9 +1175,11 @@
       
       if (isMobile) {
         document.getElementById('bottomNav').style.display = 'flex';
+        document.getElementById('topButtons').style.display = 'none';
         document.querySelector('footer').style.display = 'none';
       } else {
         document.getElementById('bottomNav').style.display = 'none';
+        document.getElementById('topButtons').style.display = 'grid';
         document.querySelector('footer').style.display = 'block';
       }
     }
@@ -1203,15 +1191,6 @@
 
       // Click outside handlers
       window.addEventListener('click', function(e) {
-        // Profile dropdown
-        const profileDropdown = document.getElementById('profileDropdown');
-        const profileNavItem = document.getElementById('profileNavItem');
-        
-        if (!profileNavItem.contains(e.target)) {
-          profileDropdown.style.display = 'none';
-          profileNavItem.classList.remove('active');
-        }
-
         // Other panels
         if (!document.getElementById('profileImage').contains(e.target) && 
             !document.getElementById('profileCard').contains(e.target)) {
@@ -1232,12 +1211,10 @@
 
       // Active nav item highlighting
       document.querySelectorAll('.nav-item').forEach(item => {
-        if (!item.id.includes('profileNavItem')) {
-          item.addEventListener('click', function() {
-            document.querySelectorAll('.nav-item').forEach(nav => nav.classList.remove('active'));
-            this.classList.add('active');
-          });
-        }
+        item.addEventListener('click', function() {
+          document.querySelectorAll('.nav-item').forEach(nav => nav.classList.remove('active'));
+          this.classList.add('active');
+        });
       });
     }
 
@@ -1310,34 +1287,10 @@
     function toggleProfileCard() {
       const profileCard = document.getElementById('profileCard');
       profileCard.classList.toggle('show');
-      
-      // Update bottom nav highlight
-      if (profileCard.classList.contains('show')) {
-        document.querySelectorAll('.nav-item').forEach(item => {
-          item.classList.remove('active');
-          if (item.id === 'profileNavItem') {
-            item.classList.add('active');
-          }
-        });
-      }
     }
 
     function hideProfileCard() {
       document.getElementById('profileCard').classList.remove('show');
-    }
-
-    // Toggle mobile profile dropdown
-    function toggleMobileProfile() {
-      const dropdown = document.getElementById('profileDropdown');
-      const navItem = document.getElementById('profileNavItem');
-      
-      if (dropdown.style.display === 'block') {
-        dropdown.style.display = 'none';
-        navItem.classList.remove('active');
-      } else {
-        dropdown.style.display = 'block';
-        navItem.classList.add('active');
-      }
     }
 
     // Toggle notifications
@@ -1436,10 +1389,6 @@
           document.getElementById('profile-dept').textContent = currentUser.department;
           document.getElementById('profile-designation').textContent = currentUser.designation;
           document.getElementById('profile-role').textContent = currentUser.role;
-
-          // Update mobile profile dropdown
-          document.getElementById('mobileProfileName').textContent = currentUser.username;
-          document.getElementById('mobileProfileRole').textContent = `${currentUser.designation} (${currentUser.department})`;
 
           // Load initial data
           loadTable('WOOD PO');
@@ -1736,34 +1685,6 @@
       badge.style.display = 'block';
     }
 
-    // Open chat from bottom nav
-    function openChatFromBottomNav() {
-      // Close other panels first
-      hideProfileCard();
-      hideNotifications();
-      
-      // Open chat user list
-      toggleChatUserList();
-      
-      // Highlight the chat button
-      document.querySelectorAll('.nav-item').forEach(item => {
-        item.classList.remove('active');
-        if (item.querySelector('i').classList.contains('fa-comments')) {
-          item.classList.add('active');
-        }
-      });
-    }
-
-    // Open profile from bottom nav
-    function openProfileFromBottomNav() {
-      // Close other panels first
-      hideNotifications();
-      hideChatUserList();
-      
-      // Open profile dropdown
-      toggleMobileProfile();
-    }
-
     // Open chat with a user
     function openChatWith(user) {
       activeChatUser = user;
@@ -1857,12 +1778,7 @@
 
     // Go to home page
     function goHome() {
-      window.location.href = 'index.html';
-    }
-
-    // Handle notification click
-    function handleNotificationClick() {
-      toggleNotifications();
+      window.location.href = 'dashboard.html';
     }
 
     // Initialize the app when DOM is loaded
