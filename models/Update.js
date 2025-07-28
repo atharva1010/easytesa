@@ -1,13 +1,10 @@
-const mongoose = require("mongoose");
-
 const updateSchema = new mongoose.Schema({
   title: String,
   message: String,
-  image: String, // Cloudinary image URL
+  imageUrl: String,
   createdAt: {
     type: Date,
-    default: Date.now,
-  },
+    default: Date.now
+  }
 });
-
-module.exports = mongoose.model("Update", updateSchema);
+const Update = mongoose.model("Update", updateSchema);
