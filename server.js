@@ -55,7 +55,7 @@ const userStorage = multer.diskStorage({
   filename: (req, file, cb) =>
     cb(null, Date.now() + path.extname(file.originalname))
 });
-const upload = multer(); 
+ 
 
 No disk storage, use memory
 
