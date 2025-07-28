@@ -52,14 +52,15 @@ app.use('/Files', express.static(path.join(__dirname, 'Files'))); // for serving
 
 // Multer Setup
 const storage = new CloudinaryStorage({
-  cloudinary: cloudinary,
+  cloudinary,
   params: {
-    folder: "updates",
-    allowed_formats: ["jpg", "jpeg", "png"],
+    folder: 'updates',
+    allowed_formats: ['jpg', 'png', 'jpeg', 'webp'],
+    public_id: (req, file) => Date.now() + '-' + file.originalname,
   },
 });
 
-const upload = multer({ storage: storage });
+const upload = multer({ storage });
 
 
 const bgStorage = multer.diskStorage({
