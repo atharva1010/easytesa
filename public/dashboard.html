@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>User Dashboard</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
@@ -43,19 +43,20 @@
       overflow-x: hidden;
     }
 
+    /* Mobile First Styles */
     /* Header Styles */
     header {
       position: fixed;
       top: 0;
       left: 0;
       width: 100%;
-      height: 70px;
-      background: rgba(15, 23, 42, 0.9);
+      height: 60px;
+      background: rgba(15, 23, 42, 0.95);
       backdrop-filter: blur(10px);
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 0 2rem;
+      padding: 0 1rem;
       box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
       z-index: 1000;
       border-bottom: 1px solid var(--glass-border);
@@ -64,32 +65,33 @@
     .logo-container {
       display: flex;
       align-items: center;
-      gap: 1rem;
+      gap: 0.5rem;
     }
 
     .logo {
-      height: 40px;
+      height: 35px;
       filter: drop-shadow(0 0 8px var(--neon-blue));
     }
 
     .company-name {
-      font-size: 1.2rem;
+      font-size: 1rem;
       font-weight: 600;
       background: linear-gradient(90deg, var(--neon-blue), var(--neon-purple));
       -webkit-background-clip: text;
       background-clip: text;
       color: transparent;
       text-shadow: 0 0 8px rgba(0, 247, 255, 0.3);
+      display: none; /* Hidden on mobile by default */
     }
 
     .header-controls {
       display: flex;
       align-items: center;
-      gap: 1.5rem;
+      gap: 0.8rem;
     }
 
     .header-icon {
-      font-size: 1.4rem;
+      font-size: 1.2rem;
       color: var(--light);
       cursor: pointer;
       transition: var(--transition);
@@ -117,8 +119,8 @@
     }
 
     .profile-img {
-      width: 40px;
-      height: 40px;
+      width: 36px;
+      height: 36px;
       border-radius: 50%;
       object-fit: cover;
       border: 2px solid var(--neon-blue);
@@ -132,29 +134,71 @@
       box-shadow: 0 0 15px var(--neon-blue);
     }
 
+    /* Bottom Navigation (Mobile Only) */
+    .bottom-nav {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      height: 60px;
+      background: rgba(15, 23, 42, 0.95);
+      backdrop-filter: blur(10px);
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      z-index: 1000;
+      border-top: 1px solid var(--glass-border);
+      display: none; /* Hidden by default, shown on mobile */
+    }
+
+    .nav-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: var(--gray);
+      font-size: 0.8rem;
+      cursor: pointer;
+      transition: var(--transition);
+      padding: 0.5rem;
+    }
+
+    .nav-item i {
+      font-size: 1.2rem;
+      margin-bottom: 0.2rem;
+    }
+
+    .nav-item.active {
+      color: var(--neon-blue);
+    }
+
+    .nav-item:hover {
+      color: var(--light);
+    }
+
     /* Profile Card */
     .profile-card {
-      position: absolute;
-      top: 80px;
-      right: 2rem;
+      position: fixed;
+      top: 70px;
+      right: 1rem;
       background: rgba(30, 41, 59, 0.95);
       backdrop-filter: blur(10px);
       border-radius: 12px;
-      padding: 1.5rem;
-      width: 300px;
+      padding: 1rem;
+      width: 280px;
       box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
       border: 1px solid var(--glass-border);
       z-index: 1100;
       display: none;
+      animation: fadeIn 0.3s ease;
     }
 
     .profile-card.show {
       display: block;
-      animation: fadeIn 0.3s ease;
     }
 
     .profile-info {
-      margin-bottom: 1.5rem;
+      margin-bottom: 1rem;
     }
 
     .profile-info p {
@@ -192,13 +236,13 @@
     /* Sidebar */
     .sidebar {
       position: fixed;
-      top: 70px;
+      top: 60px;
       left: 0;
       width: 250px;
-      height: calc(100vh - 70px);
+      height: calc(100vh - 60px);
       background: rgba(15, 23, 42, 0.95);
       backdrop-filter: blur(10px);
-      padding: 1.5rem 1rem;
+      padding: 1rem;
       transform: translateX(-100%);
       transition: transform 0.3s ease;
       z-index: 900;
@@ -211,7 +255,7 @@
     }
 
     .sidebar-section {
-      margin-bottom: 1.5rem;
+      margin-bottom: 1rem;
     }
 
     .sidebar-section h4 {
@@ -224,8 +268,8 @@
 
     .sidebar-btn {
       width: 100%;
-      padding: 0.8rem;
-      margin-bottom: 0.7rem;
+      padding: 0.7rem;
+      margin-bottom: 0.5rem;
       background: linear-gradient(135deg, var(--primary), var(--primary-dark));
       color: white;
       border: none;
@@ -236,6 +280,7 @@
       display: flex;
       align-items: center;
       gap: 0.7rem;
+      font-size: 0.9rem;
       box-shadow: 0 4px 15px rgba(79, 70, 229, 0.3);
     }
 
@@ -246,34 +291,33 @@
 
     /* Main Content */
     .content {
-      margin-top: 70px;
-      padding: 2rem;
+      margin-top: 60px;
+      padding: 1rem;
       min-height: calc(100vh - 120px);
       transition: margin-left 0.3s ease;
+      margin-bottom: 60px; /* Space for bottom nav */
     }
 
     .content.expanded {
-      margin-left: 250px;
+      margin-left: 0; /* No sidebar push on mobile */
     }
 
     /* Filters and Buttons */
     .filters {
       display: flex;
-      flex-wrap: wrap;
-      gap: 1rem;
-      margin-bottom: 1.5rem;
-      align-items: center;
+      flex-direction: column;
+      gap: 0.8rem;
+      margin-bottom: 1rem;
     }
 
     .search-box {
-      flex: 1;
-      min-width: 250px;
-      padding: 0.8rem 1rem;
+      width: 100%;
+      padding: 0.8rem;
       border: none;
       border-radius: 8px;
       background: rgba(255, 255, 255, 0.1);
       color: white;
-      font-size: 0.95rem;
+      font-size: 0.9rem;
       transition: var(--transition);
     }
 
@@ -284,12 +328,13 @@
     }
 
     .filter-select {
+      width: 100%;
       padding: 0.8rem;
       border: none;
       border-radius: 8px;
       background: rgba(255, 255, 255, 0.1);
       color: white;
-      font-size: 0.95rem;
+      font-size: 0.9rem;
       transition: var(--transition);
     }
 
@@ -300,14 +345,14 @@
     }
 
     .data-buttons {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 0.8rem;
-      margin-bottom: 1.5rem;
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+      gap: 0.5rem;
+      margin-bottom: 1rem;
     }
 
     .data-btn {
-      padding: 0.8rem 1.2rem;
+      padding: 0.7rem;
       background: linear-gradient(135deg, var(--neon-purple), var(--neon-pink));
       color: white;
       border: none;
@@ -315,6 +360,8 @@
       font-weight: 500;
       cursor: pointer;
       transition: var(--transition);
+      font-size: 0.8rem;
+      text-align: center;
       box-shadow: 0 4px 15px rgba(123, 47, 247, 0.3);
     }
 
@@ -328,7 +375,7 @@
       width: 100%;
       max-height: calc(100vh - 250px);
       overflow: auto;
-      border-radius: 12px;
+      border-radius: 8px;
       background: rgba(30, 41, 59, 0.7);
       backdrop-filter: blur(5px);
       border: 1px solid var(--glass-border);
@@ -339,10 +386,11 @@
       width: 100%;
       border-collapse: collapse;
       color: var(--light);
+      font-size: 0.8rem;
     }
 
     th, td {
-      padding: 0.8rem 1rem;
+      padding: 0.6rem;
       text-align: left;
       border-bottom: 1px solid var(--glass-border);
     }
@@ -390,11 +438,11 @@
     .team-modal {
       background: rgba(30, 41, 59, 0.95);
       border-radius: 12px;
-      width: 90%;
+      width: 95%;
       max-width: 1000px;
       max-height: 80vh;
       overflow: auto;
-      padding: 2rem;
+      padding: 1.5rem;
       border: 1px solid var(--glass-border);
       box-shadow: 0 15px 30px rgba(0, 0, 0, 0.3);
       position: relative;
@@ -402,13 +450,13 @@
 
     .close-modal {
       position: absolute;
-      top: 1rem;
-      right: 1rem;
+      top: 0.8rem;
+      right: 0.8rem;
       background: var(--danger);
       color: white;
       border: none;
-      width: 30px;
-      height: 30px;
+      width: 28px;
+      height: 28px;
       border-radius: 50%;
       display: flex;
       align-items: center;
@@ -424,15 +472,15 @@
 
     .team-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-      gap: 1.5rem;
-      margin-top: 1.5rem;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 1rem;
+      margin-top: 1rem;
     }
 
     .user-card {
       background: rgba(15, 23, 42, 0.7);
-      border-radius: 10px;
-      padding: 1.5rem;
+      border-radius: 8px;
+      padding: 1rem;
       text-align: center;
       transition: var(--transition);
       border: 1px solid var(--glass-border);
@@ -444,23 +492,23 @@
     }
 
     .user-avatar {
-      width: 80px;
-      height: 80px;
+      width: 70px;
+      height: 70px;
       border-radius: 50%;
       object-fit: cover;
       border: 2px solid var(--neon-blue);
-      margin: 0 auto 1rem;
+      margin: 0 auto 0.8rem;
       box-shadow: 0 0 15px var(--neon-blue);
     }
 
     .user-name {
-      font-size: 1.1rem;
+      font-size: 1rem;
       font-weight: 600;
       margin-bottom: 0.5rem;
     }
 
     .user-detail {
-      font-size: 0.85rem;
+      font-size: 0.8rem;
       color: var(--gray);
       margin-bottom: 0.3rem;
     }
@@ -474,13 +522,116 @@
       background: linear-gradient(to right, var(--primary-dark), var(--darker));
       color: white;
       text-align: center;
-      padding: 1rem;
-      font-size: 0.9rem;
+      padding: 0.8rem;
+      font-size: 0.8rem;
       position: fixed;
-      bottom: 0;
+      bottom: 60px; /* Above bottom nav */
       left: 0;
       width: 100%;
       z-index: 100;
+      display: none; /* Hidden on mobile */
+    }
+
+    /* Notification Panel */
+    .notification-panel {
+      position: fixed;
+      top: 70px;
+      right: 1rem;
+      background: rgba(30, 41, 59, 0.95);
+      border-radius: 12px;
+      padding: 1rem;
+      width: 280px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+      border: 1px solid var(--glass-border);
+      z-index: 1100;
+      display: none;
+      animation: fadeIn 0.3s ease;
+    }
+
+    .notification-panel.show {
+      display: block;
+    }
+
+    /* Chat User List */
+    .chat-user-list {
+      position: fixed;
+      top: 70px;
+      right: 1rem;
+      background: rgba(30, 41, 59, 0.95);
+      border-radius: 12px;
+      padding: 1rem;
+      width: 280px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+      border: 1px solid var(--glass-border);
+      z-index: 1100;
+      display: none;
+      animation: fadeIn 0.3s ease;
+    }
+
+    .chat-user-list.show {
+      display: block;
+    }
+
+    /* Chat Box */
+    .chat-box {
+      position: fixed;
+      bottom: 80px;
+      right: 1rem;
+      width: 280px;
+      max-width: 90%;
+      background: rgba(30, 41, 59, 0.95);
+      border-radius: 12px;
+      border: 1px solid var(--glass-border);
+      box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+      z-index: 2000;
+      display: none;
+    }
+
+    .chat-box.show {
+      display: block;
+      animation: fadeIn 0.3s ease;
+    }
+
+    .chat-header {
+      background: linear-gradient(to right, var(--primary), var(--primary-dark));
+      color: white;
+      padding: 0.8rem;
+      border-top-left-radius: 12px;
+      border-top-right-radius: 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .chat-messages {
+      height: 250px;
+      overflow-y: auto;
+      padding: 0.8rem;
+    }
+
+    .chat-input-container {
+      padding: 0.8rem;
+      display: flex;
+      gap: 0.5rem;
+      border-top: 1px solid var(--glass-border);
+    }
+
+    .chat-input {
+      flex: 1;
+      padding: 0.7rem;
+      background: rgba(255,255,255,0.1);
+      border: none;
+      border-radius: 8px;
+      color: white;
+    }
+
+    .chat-send-btn {
+      padding: 0 1rem;
+      background: var(--primary);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
     }
 
     /* Animations */
@@ -489,10 +640,32 @@
       to { opacity: 1; transform: translateY(0); }
     }
 
+    @keyframes fadeOut {
+      from { opacity: 1; transform: translateY(0); }
+      to { opacity: 0; transform: translateY(10px); }
+    }
+
+    /* Toast Notification */
+    .toast {
+      position: fixed;
+      bottom: 80px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--darker);
+      color: white;
+      padding: 0.8rem 1.5rem;
+      border-radius: 8px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+      z-index: 3000;
+      border: 1px solid var(--glass-border);
+      animation: fadeIn 0.3s ease;
+      display: none;
+    }
+
     /* Scrollbar */
     ::-webkit-scrollbar {
-      width: 8px;
-      height: 8px;
+      width: 6px;
+      height: 6px;
     }
 
     ::-webkit-scrollbar-track {
@@ -508,27 +681,96 @@
       background: var(--primary-light);
     }
 
-    /* Responsive */
-    @media (max-width: 768px) {
+    /* Desktop Styles */
+    @media (min-width: 768px) {
+      header {
+        height: 70px;
+        padding: 0 2rem;
+      }
+
+      .company-name {
+        display: block; /* Show company name on desktop */
+        font-size: 1.2rem;
+      }
+
+      .header-controls {
+        gap: 1.5rem;
+      }
+
+      .header-icon {
+        font-size: 1.4rem;
+      }
+
+      .profile-img {
+        width: 40px;
+        height: 40px;
+      }
+
+      .bottom-nav {
+        display: none; /* Hide bottom nav on desktop */
+      }
+
       .content {
-        padding: 1rem;
+        margin-top: 70px;
+        padding: 2rem;
+        margin-bottom: 0;
       }
-      
+
       .content.expanded {
-        margin-left: 0;
+        margin-left: 250px; /* Push content when sidebar is open */
       }
-      
-      .sidebar {
-        width: 80%;
-      }
-      
+
       .filters {
-        flex-direction: column;
-        align-items: stretch;
+        flex-direction: row;
+        align-items: center;
       }
-      
+
       .search-box {
-        min-width: 100%;
+        min-width: 250px;
+      }
+
+      .data-buttons {
+        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+        gap: 0.8rem;
+      }
+
+      .data-btn {
+        font-size: 0.9rem;
+      }
+
+      footer {
+        display: block; /* Show footer on desktop */
+        bottom: 0;
+      }
+
+      .profile-card {
+        top: 80px;
+      }
+
+      .notification-panel {
+        top: 80px;
+        width: 350px;
+      }
+
+      .chat-user-list {
+        top: 80px;
+        width: 300px;
+      }
+
+      .chat-box {
+        bottom: 20px;
+        width: 350px;
+      }
+    }
+
+    /* Mobile Landscape */
+    @media (max-height: 500px) and (orientation: landscape) {
+      .content {
+        margin-bottom: 0;
+      }
+
+      footer {
+        display: none;
       }
     }
   </style>
@@ -541,7 +783,7 @@
         <i class="fas fa-bars"></i>
       </button>
       <img src="assets/logo.png" alt="Logo" class="logo" onclick="goHome()">
-      <span class="company-name">BALAJI ACTION BUILDEWELL PRIVATE LIMITED</span>
+      <span class="company-name">BALAJI ACTION BUILDEWELL</span>
     </div>
     
     <div class="header-controls">
@@ -554,10 +796,6 @@
         <i class="fas fa-comment-dots"></i>
         <span id="messageNotifyDot" class="notification-badge" style="display: none;"></span>
       </div>
-      
-      <button onclick="logout()" class="logout-btn">
-        <i class="fas fa-sign-out-alt"></i> Logout
-      </button>
       
       <img id="profileImage" src="assets/profile.png" class="profile-img" onclick="toggleProfileCard()">
     </div>
@@ -580,13 +818,13 @@
   </header>
 
   <!-- Notification Panel -->
-  <div id="updatePanel" class="profile-card" style="display: none; right: 1rem; top: 80px; width: 350px;">
+  <div id="updatePanel" class="notification-panel">
     <h4 style="margin-bottom: 1rem;"><i class="fas fa-bell"></i> Latest Updates</h4>
     <div id="updatesList" style="max-height: 300px; overflow-y: auto;"></div>
   </div>
 
   <!-- Chat User List -->
-  <div id="chatUserList" class="profile-card" style="display: none; right: 1rem; top: 80px; width: 300px;">
+  <div id="chatUserList" class="chat-user-list">
     <h4 style="margin-bottom: 1rem;"><i class="fas fa-comments"></i> Chat with:</h4>
     <div id="userListContainer">
       <p>No users available.</p>
@@ -660,7 +898,31 @@
 
     <!-- Iframe for Register Forms -->
     <div id="iframeContainer" style="display:none;">
-      <iframe id="registerIframe" src="" style="width:100%; height:650px; border:none;"></iframe>
+      <iframe id="registerIframe" src="" style="width:100%; height:calc(100vh - 120px); border:none;"></iframe>
+    </div>
+  </div>
+
+  <!-- Bottom Navigation (Mobile Only) -->
+  <div class="bottom-nav" id="bottomNav">
+    <div class="nav-item" onclick="loadTable('WOOD PO')">
+      <i class="fas fa-tree"></i>
+      <span>WOOD PO</span>
+    </div>
+    <div class="nav-item" onclick="loadTable('CONTACTS')">
+      <i class="fas fa-address-book"></i>
+      <span>CONTACTS</span>
+    </div>
+    <div class="nav-item" onclick="loadTable('SHIFT SCHEDULE')">
+      <i class="fas fa-calendar-alt"></i>
+      <span>SHIFTS</span>
+    </div>
+    <div class="nav-item" onclick="toggleChatUserList()">
+      <i class="fas fa-comments"></i>
+      <span>CHAT</span>
+    </div>
+    <div class="nav-item" onclick="toggleProfileCard()">
+      <i class="fas fa-user"></i>
+      <span>PROFILE</span>
     </div>
   </div>
 
@@ -676,17 +938,17 @@
   </div>
 
   <!-- Chat Box -->
-  <div id="chatBox" style="display:none; position:fixed; bottom:20px; right:20px; width:350px; max-width:90%; background:rgba(30, 41, 59, 0.95); border-radius:12px; border:1px solid var(--glass-border); box-shadow:0 10px 25px rgba(0,0,0,0.2); z-index:2000;">
-    <div style="background:linear-gradient(to right, var(--primary), var(--primary-dark)); color:white; padding:1rem; border-top-left-radius:12px; border-top-right-radius:12px; display:flex; justify-content:space-between; align-items:center;">
+  <div id="chatBox" class="chat-box">
+    <div class="chat-header">
       <span id="chatWith"><i class="fas fa-comment"></i> Chat</span>
       <button onclick="closeChat()" style="background:none; border:none; color:white; font-size:1.2rem; cursor:pointer;">
         <i class="fas fa-times"></i>
       </button>
     </div>
-    <div id="chatMessages" style="height:300px; overflow-y:auto; padding:1rem;"></div>
-    <div style="padding:1rem; display:flex; gap:0.5rem; border-top:1px solid var(--glass-border);">
-      <input type="text" id="chatInput" placeholder="Type a message..." style="flex:1; padding:0.8rem; background:rgba(255,255,255,0.1); border:none; border-radius:8px; color:white;" onkeypress="if(event.key==='Enter') sendMessage()">
-      <button onclick="sendMessage()" style="padding:0 1.2rem; background:var(--primary); color:white; border:none; border-radius:8px; cursor:pointer;">
+    <div id="chatMessages" class="chat-messages"></div>
+    <div class="chat-input-container">
+      <input type="text" id="chatInput" class="chat-input" placeholder="Type a message..." onkeypress="if(event.key==='Enter') sendMessage()">
+      <button onclick="sendMessage()" class="chat-send-btn">
         <i class="fas fa-paper-plane"></i>
       </button>
     </div>
@@ -697,8 +959,12 @@
     &copy; All Rights Reserved easyGate
   </footer>
 
+  <!-- Toast Notification -->
+  <div id="toast" class="toast"></div>
+
   <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
   <script>
+    // Global variables
     let originalData = [];
     let currentUser = null;
     let currentCategory = '';
@@ -708,10 +974,124 @@
     const userElements = {};
     const unreadSenders = new Set();
     const notifySound = new Audio("/assets/notification.mp3");
+    let isMobile = false;
+
+    // Initialize the app
+    function initApp() {
+      checkMobile();
+      setupEventListeners();
+      loadUserProfile();
+      
+      // Initialize socket connection
+      const socket = io();
+      socket.emit("join", userId);
+
+      // Setup socket listeners
+      setupSocketListeners(socket);
+      
+      // Initialize notification permission
+      initNotifications();
+    }
+
+    // Check if device is mobile
+    function checkMobile() {
+      isMobile = window.matchMedia("(max-width: 768px)").matches || 
+                window.matchMedia("(max-height: 500px)").matches;
+      
+      if (isMobile) {
+        document.getElementById('bottomNav').style.display = 'flex';
+        document.querySelector('footer').style.display = 'none';
+      } else {
+        document.getElementById('bottomNav').style.display = 'none';
+        document.querySelector('footer').style.display = 'block';
+      }
+    }
+
+    // Setup event listeners
+    function setupEventListeners() {
+      // Window resize handler
+      window.addEventListener('resize', checkMobile);
+
+      // Click outside handlers
+      window.addEventListener('click', function(e) {
+        if (!document.getElementById('profileImage').contains(e.target) && 
+            !document.getElementById('profileCard').contains(e.target)) {
+          hideProfileCard();
+        }
+        
+        if (!document.getElementById('notification-icon').contains(e.target) && 
+            !document.getElementById('updatePanel').contains(e.target)) {
+          hideNotifications();
+        }
+        
+        if (!document.getElementById('message-icon').contains(e.target) && 
+            !document.getElementById('chatUserList').contains(e.target) &&
+            !document.getElementById('chatBox').contains(e.target)) {
+          hideChatUserList();
+        }
+      });
+
+      // Active nav item highlighting
+      document.querySelectorAll('.nav-item').forEach(item => {
+        item.addEventListener('click', function() {
+          document.querySelectorAll('.nav-item').forEach(nav => nav.classList.remove('active'));
+          this.classList.add('active');
+        });
+      });
+    }
+
+    // Setup socket listeners
+    function setupSocketListeners(socket) {
+      // Load messages from server
+      socket.on("loadMessages", (messages) => {
+        allMessages = messages;
+
+        const incoming = messages.filter(m => m.to === userId);
+        incoming.forEach(m => {
+          if (!activeChatUser || m.from !== activeChatUser.userId) {
+            unreadSenders.add(m.from);
+
+            if (userElements[m.from]) {
+              addBadge(userElements[m.from]);
+            }
+            showMessageNotificationDot();
+          }
+        });
+
+        if (activeChatUser) renderMessages();
+      });
+
+      // New message received
+      socket.on("chatMessage", (data) => {
+        allMessages.push(data);
+
+        if (!activeChatUser || (data.from !== activeChatUser.userId && data.to !== activeChatUser.userId)) {
+          unreadSenders.add(data.from);
+
+          // Add badge to user
+          if (userElements[data.from]) addBadge(userElements[data.from]);
+
+          // Show message icon red dot
+          showMessageNotificationDot();
+
+          // Show Desktop Notification
+          showDesktopNotification(`New Message from ${data.from}`, data.message);
+
+          // Play notification sound
+          playNotificationSound();
+          return;
+        }
+
+        // Else, in active chat
+        appendMessage(data);
+      });
+    }
 
     // Initialize notification permission
-    if ("Notification" in window) {
-      Notification.requestPermission();
+    function initNotifications() {
+      if ("Notification" in window) {
+        Notification.requestPermission();
+      }
     }
 
     // Toggle sidebar
@@ -730,32 +1110,42 @@
       document.getElementById('profileCard').classList.toggle('show');
       // Hide other popups when showing profile
       if (document.getElementById('profileCard').classList.contains('show')) {
-        document.getElementById('updatePanel').style.display = 'none';
-        document.getElementById('chatUserList').style.display = 'none';
+        hideNotifications();
+        hideChatUserList();
       }
+    }
+
+    function hideProfileCard() {
+      document.getElementById('profileCard').classList.remove('show');
     }
 
     // Toggle notifications
     function toggleNotifications() {
-      const panel = document.getElementById('updatePanel');
-      panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+      document.getElementById('updatePanel').classList.toggle('show');
       document.getElementById('notification-dot').style.display = 'none';
       // Hide other popups when showing notifications
-      if (panel.style.display === 'block') {
-        document.getElementById('profileCard').classList.remove('show');
-        document.getElementById('chatUserList').style.display = 'none';
+      if (document.getElementById('updatePanel').classList.contains('show')) {
+        hideProfileCard();
+        hideChatUserList();
       }
+    }
+
+    function hideNotifications() {
+      document.getElementById('updatePanel').classList.remove('show');
     }
 
     // Toggle chat user list
     function toggleChatUserList() {
-      const panel = document.getElementById('chatUserList');
-      panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+      document.getElementById('chatUserList').classList.toggle('show');
       // Hide other popups when showing chat list
-      if (panel.style.display === 'block') {
-        document.getElementById('profileCard').classList.remove('show');
-        document.getElementById('updatePanel').style.display = 'none';
+      if (document.getElementById('chatUserList').classList.contains('show')) {
+        hideProfileCard();
+        hideNotifications();
       }
+    }
+
+    function hideChatUserList() {
+      document.getElementById('chatUserList').classList.remove('show');
     }
 
     // Load user profile
@@ -846,7 +1236,7 @@
         : '';
 
       const html = `
-        <div style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(30, 41, 59, 0.98); border-radius: 12px; padding: 2rem; max-width: 600px; width: 90%; box-shadow: 0 15px 30px rgba(0,0,0,0.3); z-index: 2100; border: 1px solid var(--glass-border);">
+        <div style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(30, 41, 59, 0.98); border-radius: 12px; padding: 1.5rem; max-width: 90%; width: 500px; box-shadow: 0 15px 30px rgba(0,0,0,0.3); z-index: 2100; border: 1px solid var(--glass-border);">
           <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
             <h3 style="color:var(--primary);"><i class="fas fa-bullhorn"></i> Update Detail</h3>
             <button onclick="this.parentElement.parentElement.remove()" style="background:none; border:none; color:var(--gray); font-size:1.2rem; cursor:pointer;">
@@ -968,26 +1358,16 @@
 
     // Show toast notification
     function showToast(message) {
-      const toast = document.createElement('div');
-      toast.style.position = 'fixed';
-      toast.style.bottom = '20px';
-      toast.style.left = '50%';
-      toast.style.transform = 'translateX(-50%)';
-      toast.style.backgroundColor = 'var(--darker)';
-      toast.style.color = 'white';
-      toast.style.padding = '0.8rem 1.5rem';
-      toast.style.borderRadius = '8px';
-      toast.style.boxShadow = '0 4px 15px rgba(0,0,0,0.2)';
-      toast.style.zIndex = '3000';
-      toast.style.border = '1px solid var(--glass-border)';
-      toast.style.animation = 'fadeIn 0.3s ease';
+      const toast = document.getElementById('toast');
       toast.textContent = message;
-      
-      document.body.appendChild(toast);
+      toast.style.display = 'block';
       
       setTimeout(() => {
         toast.style.animation = 'fadeOut 0.3s ease';
-        setTimeout(() => toast.remove(), 300);
+        setTimeout(() => {
+          toast.style.display = 'none';
+          toast.style.animation = 'fadeIn 0.3s ease';
+        }, 300);
       }, 2000);
     }
 
@@ -1058,58 +1438,25 @@
       hideSidebar();
     }
 
-    // Socket.io chat functionality
-    const socket = io();
-    socket.emit("join", userId);
-
-    // Load messages from server
-    socket.on("loadMessages", (messages) => {
-      allMessages = messages;
-
-      const incoming = messages.filter(m => m.to === userId);
-      incoming.forEach(m => {
-        if (!activeChatUser || m.from !== activeChatUser.userId) {
-          unreadSenders.add(m.from);
-
-          if (userElements[m.from]) {
-            addBadge(userElements[m.from]);
-          }
-          document.getElementById("messageNotifyDot").style.display = "block";
-        }
-      });
-
-      if (activeChatUser) renderMessages();
-    });
-
-    // New message received
-    socket.on("chatMessage", (data) => {
-      allMessages.push(data);
-
-      if (!activeChatUser || (data.from !== activeChatUser.userId && data.to !== activeChatUser.userId)) {
-        unreadSenders.add(data.from);
-
-        // Add badge to user
-        if (userElements[data.from]) addBadge(userElements[data.from]);
-
-        // Show message icon red dot
-        document.getElementById("messageNotifyDot").style.display = "block";
-
-        // Show Desktop Notification
-        if ("Notification" in window && Notification.permission === "granted") {
-          new Notification(`New Message from ${data.from}`, {
-            body: data.message,
-            icon: "/assets/profile.png"
-          });
-        }
-
-        // Play notification sound
-        notifySound.play().catch(e => console.warn("Audio play failed:", e));
-        return;
+    // Show desktop notification
+    function showDesktopNotification(title, body) {
+      if ("Notification" in window && Notification.permission === "granted") {
+        new Notification(title, {
+          body: body,
+          icon: "/assets/profile.png"
+        });
       }
+    }
 
-      // Else, in active chat
-      appendMessage(data);
-    });
+    // Play notification sound
+    function playNotificationSound() {
+      notifySound.play().catch(e => console.warn("Audio play failed:", e));
+    }
+
+    // Show message notification dot
+    function showMessageNotificationDot() {
+      document.getElementById("messageNotifyDot").style.display = "block";
+    }
 
     // Add red badge to user
     function addBadge(el) {
@@ -1125,54 +1472,11 @@
       }
     }
 
-    // Toggle user list panel
-    function toggleChatUserList() {
-      const panel = document.getElementById("chatUserList");
-      panel.style.display = panel.style.display === "none" ? "block" : "none";
-
-      if (panel.style.display === "block") {
-        fetch("/api/users")
-          .then(res => res.json())
-          .then(users => {
-            const container = document.getElementById("userListContainer");
-            container.innerHTML = "";
-
-            users.filter(u => u.userId !== userId).forEach(user => {
-              const div = document.createElement("div");
-              div.id = `user-${user.userId}`;
-              div.innerHTML = `
-                <div style="display:flex; align-items:center; gap:0.8rem; padding:0.5rem; border-radius:8px; transition:var(--transition);">
-                  <img src="${user.profilePic || 'assets/profile.png'}" style="width:30px; height:30px; border-radius:50%; object-fit:cover;">
-                  <div>
-                    <div style="font-weight:500;">${user.username}</div>
-                    <div style="font-size:0.8rem; color:var(--gray);">${user.department}</div>
-                  </div>
-                </div>
-              `;
-              div.style.cssText = "cursor:pointer; margin-bottom:0.5rem; border-radius:8px; transition:var(--transition);";
-              div.onclick = () => openChatWith(user);
-              div.addEventListener('mouseenter', () => {
-                div.style.background = 'rgba(255,255,255,0.05)';
-              });
-              div.addEventListener('mouseleave', () => {
-                div.style.background = 'transparent';
-              });
-              container.appendChild(div);
-              userElements[user.userId] = div;
-
-              if (unreadSenders.has(user.userId)) {
-                addBadge(div);
-              }
-            });
-          });
-      }
-    }
-
     // Open chat with a user
     function openChatWith(user) {
       activeChatUser = user;
       document.getElementById("chatWith").innerHTML = `<i class="fas fa-user"></i> Chat with ${user.username}`;
-      document.getElementById("chatBox").style.display = "block";
+      document.getElementById("chatBox").classList.add('show');
       document.getElementById("chatMessages").innerHTML = '';
       document.getElementById("chatInput").value = '';
 
@@ -1237,47 +1541,38 @@
         message
       };
 
+      // Emit message through socket
+      const socket = io();
       socket.emit("chatMessage", msg);
+      
+      // Add message to local array
+      allMessages.push(msg);
+      
+      // Append message to chat
+      appendMessage(msg);
+      
+      // Clear input
       input.value = "";
     }
 
     // Close chat window
     function closeChat() {
-      document.getElementById("chatBox").style.display = "none";
+      document.getElementById("chatBox").classList.remove('show');
       activeChatUser = null;
     }
 
-    // Close modals when clicking outside
-    window.addEventListener('click', function(e) {
-      if (!document.getElementById('profileImage').contains(e.target) && 
-          !document.getElementById('profileCard').contains(e.target)) {
-        document.getElementById('profileCard').classList.remove('show');
-      }
-      
-      if (!document.getElementById('notification-icon').contains(e.target) && 
-          !document.getElementById('updatePanel').contains(e.target)) {
-        document.getElementById('updatePanel').style.display = 'none';
-      }
-      
-      if (!document.getElementById('message-icon').contains(e.target) && 
-          !document.getElementById('chatUserList').contains(e.target) &&
-          !document.getElementById('chatBox').contains(e.target)) {
-        document.getElementById('chatUserList').style.display = 'none';
-      }
-    });
+    // Go to home page
+    function goHome() {
+      window.location.href = 'index.html';
+    }
 
-    // Initialize
-    document.addEventListener('DOMContentLoaded', () => {
-      // Add animation for fadeOut
-      const style = document.createElement('style');
-      style.textContent = `
-        @keyframes fadeOut {
-          from { opacity: 1; transform: translateY(0); }
-          to { opacity: 0; transform: translateY(10px); }
-        }
-      `;
-      document.head.appendChild(style);
-    });
+    // Handle notification click
+    function handleNotificationClick() {
+      toggleNotifications();
+    }
+
+    // Initialize the app when DOM is loaded
+    document.addEventListener('DOMContentLoaded', initApp);
   </script>
 </body>
 </html>
