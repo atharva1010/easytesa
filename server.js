@@ -481,6 +481,7 @@ app.post('/api/shift-report/previous-pending', async (req, res) => {
 });
 app.post("/api/updates", upload.single("image"), async (req, res) => {
   try {
+        const result = await new Promise((resolve, reject) => {
     const { title, message } = req.body;
     const imageUrl = req.file ? req.file.path : null;
 
@@ -495,7 +496,7 @@ app.post("/api/updates", upload.single("image"), async (req, res) => {
 });
 
     // Upload to Cloudinary using stream
-    const result = await new Promise((resolve, reject) => {
+
       const stream = cloudinary.uploader.upload_stream(
         { folder: "updates", resource_type: "image" },
         (error, result) => {
