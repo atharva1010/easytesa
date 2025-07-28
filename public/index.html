@@ -5,11 +5,27 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Login - BALAJI ACTION</title>
   <style>
+<<<<<<< HEAD
   @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@600&display=swap');
 
   * {
     box-sizing: border-box;
   }
+=======
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background-image: url("bg/background.jpg");
+      background-size: cover;
+      background-repeat: no-repeat;
+      background-position: center;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+    }
+>>>>>>> 753d17177996d40ab9a3d4aba738d7e1bdfb9fe9
 
   body {
     margin: 0;
@@ -165,10 +181,24 @@
 
   @media screen and (max-width: 1023px) {
     header {
+<<<<<<< HEAD
       display: none; /* 🔥 Header hidden on mobile & tablet */
+=======
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      background: #004466;
+      color: white;
+      padding: 10px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+>>>>>>> 753d17177996d40ab9a3d4aba738d7e1bdfb9fe9
     }
   }
 
+<<<<<<< HEAD
   @media screen and (max-width: 768px) {
     .left span {
       font-size: 14px;
@@ -193,6 +223,82 @@
     .left span {
       font-size: 12px;
       text-align: center;
+=======
+    .logo {
+      height: 40px;
+      margin-right: 10px;
+    }
+
+    .left {
+      display: flex;
+      align-items: center;
+    }
+
+    h2 {
+      margin-bottom: 20px;
+      color: white;
+    }
+
+    form {
+      background: rgba(255, 255, 255, 0.95);
+      padding: 30px;
+      border-radius: 10px;
+      box-shadow: 0 0 10px #0003;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    input {
+      margin: 10px 0;
+      padding: 10px;
+      width: 250px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+    }
+
+    button {
+      padding: 10px 20px;
+      background: #004466;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    #msg {
+      color: red;
+      margin-top: 10px;
+    }
+
+    .link {
+      margin-top: 10px;
+    }
+
+    /* Forgot Password Modal */
+    #forgotPasswordModal {
+      display: none;
+      position: fixed;
+      top: 10%;
+      left: 50%;
+      transform: translateX(-50%);
+      background: white;
+      border: 2px solid black;
+      padding: 20px;
+      z-index: 1000;
+      border-radius: 8px;
+      width: 300px;
+    }
+
+    #forgotPasswordModal input {
+      width: 100%;
+      margin-bottom: 10px;
+    }
+
+    #forgotPasswordModal button {
+      width: 100%;
+      margin-bottom: 10px;
+>>>>>>> 753d17177996d40ab9a3d4aba738d7e1bdfb9fe9
     }
 
     .logo {
@@ -212,8 +318,8 @@
 
 
 </head>
-
 <body>
+
   <header>
     <div class="left">
       <img src="assets/logo.png" alt="Logo" class="logo">
@@ -228,29 +334,37 @@
     <button type="submit">Login</button>
     <p id="msg"></p>
     <div class="link">
-      <a onclick="showForgotModal()">Forgot Password?</a>
+      <a href="#" onclick="showForgotModal()">Forgot Password?</a>
     </div>
   </form>
 
   <!-- Forgot Password Modal -->
   <div id="forgotPasswordModal">
     <h3>Forgot Password</h3>
+
     <div id="step1">
-      <input id="fpUserId" placeholder="Enter User ID" />
+      <label>User ID:</label>
+      <input type="text" id="fpUserId">
       <button onclick="sendOTP()">Send OTP</button>
     </div>
-    <div id="step2" style="display: none;">
-      <input id="fpOTP" placeholder="Enter OTP" />
+
+    <div id="step2" style="display:none;">
+      <label>Enter OTP:</label>
+      <input type="text" id="fpOTP">
       <button onclick="verifyOTP()">Verify OTP</button>
     </div>
-    <div id="step3" style="display: none;">
-      <input id="fpNewPassword" type="password" placeholder="New Password" />
+
+    <div id="step3" style="display:none;">
+      <label>New Password:</label>
+      <input type="password" id="fpNewPassword">
       <button onclick="updatePassword()">Update Password</button>
     </div>
+
+    <button onclick="closeForgotModal()" style="background:red;">Close</button>
   </div>
 
   <script>
-    // Login
+    // Handle both form submission and Enter key press
     document.getElementById("loginForm").addEventListener("submit", handleLogin);
     document.getElementById("password").addEventListener("keypress", function(event) {
       if (event.key === "Enter") {
@@ -294,10 +408,11 @@
         }
       } catch (error) {
         document.getElementById("msg").innerText = "Login failed. Please try again.";
+        console.error("Login error:", error);
       }
     }
 
-    // Forgot Password
+    // Forgot Password Logic
     function showForgotModal() {
       document.getElementById("forgotPasswordModal").style.display = "block";
       document.getElementById("step1").style.display = "block";
@@ -317,9 +432,7 @@
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ userId })
-      })
-      .then(res => res.json())
-      .then(data => {
+      }).then(res => res.json()).then(data => {
         if (data.success) {
           alert("OTP sent to registered mobile number");
           document.getElementById("step1").style.display = "none";
@@ -334,20 +447,17 @@
       const userId = document.getElementById("fpUserId").value;
       const otp = document.getElementById("fpOTP").value;
 
-      if (!otp) return alert("Enter OTP");
-
       fetch('/api/verify-otp', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ userId, otp })
-      })
-      .then(res => res.json())
-      .then(data => {
+      }).then(res => res.json()).then(data => {
         if (data.success) {
+          alert("OTP Verified");
           document.getElementById("step2").style.display = "none";
           document.getElementById("step3").style.display = "block";
         } else {
-          alert("Invalid OTP");
+          alert("Incorrect OTP");
         }
       });
     }
@@ -356,15 +466,11 @@
       const userId = document.getElementById("fpUserId").value;
       const newPassword = document.getElementById("fpNewPassword").value;
 
-      if (!newPassword) return alert("Enter new password");
-
       fetch('/api/update-password', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ userId, newPassword })
-      })
-      .then(res => res.json())
-      .then(data => {
+      }).then(res => res.json()).then(data => {
         if (data.success) {
           alert("Password updated successfully");
           closeForgotModal();
