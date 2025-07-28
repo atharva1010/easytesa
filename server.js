@@ -73,6 +73,7 @@ app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 app.use("/bg", express.static("bg"));
 app.use("/assets", express.static("assets"));
 app.use(express.static("public"));
+app.use(express.static(path.join(__dirname, "public")));
 
 // DB Connection
 mongoose.connect(process.env.MONGODB_URI || "mongodb://127.0.0.1:27017/bab_system", {
@@ -471,33 +472,31 @@ app.post('/api/shift-report/previous-pending', async (req, res) => {
 
 app.post("/api/updates", upload.single("image"), async (req, res) => {
   try {
-    const { category, filename } = req.body;
-    const file = req.file;
+    if (!req.file) return res.status(400).json({ error: "No file uploaded" });
 
-    if (!file) {
-      return res.status(400).json({ success: false, message: "No file uploaded" });
-    }
+    // Upload to Cloudinary
+    const result = await cloudinary.uploader.upload_stream(
+      { resource_type: "image", folder: "uploads" },
+      async (error, result) => {
+        if (error) return res.status(500).json({ error: "Cloudinary Error" });
 
-    const newFile = new Upload({
-      filename: file.filename,
-      originalname: file.originalname,
-      category,
-      type: file.mimetype.startsWith("image/") ? "image" : "excel"
-    });
+        const update = new Update({
+          title: req.body.title,
+          description: req.body.description,
+          imageUrl: result.secure_url
+        });
 
-    await newFile.save();
-    res.json({ success: true, message: "File uploaded successfully" });
-  } catch (error) {
-    console.error("Upload error:", error);
-    res.status(500).json({ success: false, message: "Server error" });
+        await update.save();
+        res.json({ success: true, update });
+      }
+    );
+
+      require("streamifier").createReadStream(req.file.buffer).pipe(result);
+  } catch (err) {
+    console.error("Upload error:", err);
+    res.status(500).json({ error: "Server Error" });
   }
 });
-
-const uploadDir = path.join(__dirname, "uploads");
-if (!fs.existsSync(uploadDir)) {
-  fs.mkdirSync(uploadDir);
-}
-
 
 // Material Reports
 app.post("/api/wood-bill", async (req, res) => {
