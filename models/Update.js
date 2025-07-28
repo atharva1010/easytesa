@@ -1,3 +1,5 @@
+const mongoose = require('mongoose');
+
 const updateSchema = new mongoose.Schema({
   title: String,
   message: String,
@@ -7,4 +9,5 @@ const updateSchema = new mongoose.Schema({
     default: Date.now
   }
 });
-const Update = mongoose.model("Update", updateSchema);
+
+module.exports = mongoose.model("Update", updateSchema);
