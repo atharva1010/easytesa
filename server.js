@@ -471,16 +471,29 @@ app.post('/api/shift-report/previous-pending', async (req, res) => {
   }
 });
 
-app.post("/api/updates", upload.single("image"), async (req, res) => {
+app.post("/api/updates", uploadUpdate.single("image"), async (req, res) => {
   try {
-    const { username, category } = req.body;
-    const fileBuffer = req.file?.buffer;
-    const originalName = req.file?.originalname;
-
-    if (!fileBuffer || !originalName) {
-      return res.status(400).json({ success: false, message: "Image not provided" });
+    const { title, message } = req.body;
+    if (!req.file || !req.file.path) {
+      return res.status(400).json({ success: false, message: "Image not provided or upload failed" });
     }
 
+    const imageUrl = req.file.path; // Cloudinary URL provided by multer-storage-cloudinary
+
+    const update = new Update({
+      title,
+      message,
+      image: imageUrl,
+      createdAt: new Date()
+    });
+    await update.save();
+
+    res.status(201).json({ success: true, message: "Update posted successfully", update });
+  } catch (err) {
+    console.error("Update post error:", err);
+    res.status(500).json({ success: false, message: "Failed to post update" });
+  }
+});
     // Check for duplicate
     const existing = await Upload.findOne({ filename: originalName, category, username });
     if (existing) {
