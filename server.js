@@ -12,7 +12,7 @@ const http = require("http");
 const { Server } = require("socket.io");
 const twilio = require("twilio");
 const multer = require("multer");
-const { uploadUser } = require('./cloudinary');
+const { uploadUser, uploadUpdate } = require('./cloudinary');
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server, {
@@ -470,56 +470,27 @@ app.post('/api/shift-report/previous-pending', async (req, res) => {
   }
 });
 
-app.post("/api/updates", upload.single("image"), async (req, res) => {
+app.post("/api/updates", uploadUpdate.single("image"), async (req, res) => {
   try {
-    const { username, category } = req.body;
-    const fileBuffer = req.file?.buffer;
-    const originalName = req.file?.originalname;
+    const { title, message } = req.body;
+    const imageUrl = req.file?.path;
 
-    if (!fileBuffer || !originalName) {
-      return res.status(400).json({ success: false, message: "Image not provided" });
-    }
-
-    // Duplicate check in DB
-    const existing = await Upload.findOne({ filename: originalName, category, username });
-    if (existing) {
-      return res.status(400).json({ success: false, message: "Duplicate image. Already uploaded." });
-    }
-
-    // Upload to Cloudinary using stream
-    const streamifier = require("streamifier");
-
-    const cloudinaryUpload = () =>
-      new Promise((resolve, reject) => {
-        const stream = cloudinary.uploader.upload_stream(
-          { folder: "uploads", resource_type: "image" },
-          (error, result) => {
-            if (error) reject(error);
-            else resolve(result);
-          }
-        );
-        streamifier.createReadStream(fileBuffer).pipe(stream);
-      });
-
-    const result = await cloudinaryUpload();
-
-    // Save to DB
-    const newUpload = new Upload({
-      filename: originalName,
-      url: result.secure_url,
-      category,
-      username,
+    const update = new Update({
+      title,
+      message,
+      image: imageUrl,
+      createdAt: new Date()
     });
 
-    await newUpload.save();
-
-    res.json({ success: true, message: "Image uploaded to Cloudinary & saved", data: newUpload });
-
-  } catch (err) {
-    console.error("Upload Error:", err);
-    res.status(500).json({ success: false, message: "Upload failed" });
+    await update.save();
+    res.status(201).json({ success: true, message: "Update posted successfully", update });
+  } catch (error) {
+    console.error("Update post error:", error);
+    res.status(500).json({ success: false, message: "Failed to post update" });
   }
 });
+
+
 
 // Material Reports
 app.post("/api/wood-bill", async (req, res) => {
