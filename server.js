@@ -497,6 +497,8 @@ app.post("/api/updates", upload.single("image"), async (req, res) => {
   }
 });
 
+console.log("Uploaded file info:", req.file);
+
 // 5. API Route - Get all updates
 app.get("/api/updates", async (req, res) => {
   try {
