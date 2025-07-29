@@ -985,6 +985,10 @@
 </head>
 <body onload="loadUserProfile()">
   <!-- Header -->
+  <audio id="notificationSound" preload="auto">
+  <source src="assets/notification.mp3" type="audio/mpeg">
+  <source src="assets/notification.ogg" type="audio/ogg">
+</audio>
   <header>
     <div class="logo-container">
       <button id="hamburger" class="header-icon" onclick="toggleSidebar()">
@@ -1038,10 +1042,6 @@
       <p>No users available.</p>
     </div>
   </div>
-<audio id="notificationSound" preload="auto">
-  <source src="assets/notification.mp3" type="audio/mpeg">
-  <source src="assets/notification.ogg" type="audio/ogg">
-</audio>
   
   <!-- Sidebar -->
   <div class="sidebar" id="sidebar">
@@ -1175,164 +1175,123 @@
   <div id="toast" class="toast"></div>
 
   <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
-  <script>// Global variables
-let originalData = [];
-let currentUser = null;
-let currentCategory = '';
-let allMessages = [];
-let activeChatUser = null;
-const userId = localStorage.getItem("userId");
-const userElements = {};
-const unreadSenders = new Set();
-let notificationSound;
-let isMobile = false;
-let socket = null;
+  <script>// Global variables   // Global variables
+    let originalData = [];
+    let currentUser = null;
+    let currentCategory = '';
+    let allMessages = [];
+    let activeChatUser = null;
+    const userId = localStorage.getItem("userId");
+    const userElements = {};
+    const unreadSenders = new Set();
+    let notificationSound;
+    let isMobile = false;
+    let socket = null;
+    let audioEnabled = false;
 
-// Initialize the app
-function initApp() {
-  // Initialize notification sound
-  notificationSound = document.getElementById('notificationSound');
-  
-  // Set small volume to avoid startling users
-  notificationSound.volume = 0.3;
-  
-  // Rest of your initialization
-  checkMobile();
-  setupEventListeners();
-  loadUserProfile();
-  
-  if (userId) {
-    socket = io();
-    socket.emit("join", userId);
-    setupSocketListeners();
-  }
-  
-  initNotifications();
-}
-// Add this to your initApp function
-document.body.addEventListener('click', function() {
-  // This will unlock audio on first user interaction
-  notificationSound.volume = 0.001;
-  notificationSound.play().then(() => {
-    notificationSound.pause();
-    notificationSound.currentTime = 0;
-  }).catch(e => console.log("Audio warmup failed:", e));
-}, { once: true });
-    
-// Setup socket listeners
-function setupSocketListeners() {
-  // Load messages from server
-  socket.on("loadMessages", (messages) => {
-    allMessages = messages;
-
-    const incoming = messages.filter(m => m.to === userId);
-    incoming.forEach(m => {
-      if (!activeChatUser || m.from !== activeChatUser.userId) {
-        unreadSenders.add(m.from);
-
-        if (userElements[m.from]) {
-          addBadge(userElements[m.from]);
-        }
-        showMessageNotificationDot();
-      }
-    });
-
-    if (activeChatUser) renderMessages();
-  });
-
-  // New message received
-  socket.on("chatMessage", (data) => {
-    allMessages.push(data);
-
-    if (!activeChatUser || (data.from !== activeChatUser.userId && data.to !== activeChatUser.userId)) {
-      unreadSenders.add(data.from);
-
-      // Add badge to user
-      if (userElements[data.from]) addBadge(userElements[data.from]);
-
-      // Show message icon red dot
-      showMessageNotificationDot();
-
-      // Show Desktop Notification
-      showDesktopNotification(`New Message from ${data.from}`, data.message);
-
-      // Play notification sound
-      playNotificationSound();
-      return;
-    }
-
-    // Else, in active chat
-    appendMessage(data);
-  });
-
-  // New notification received
-  socket.on("newNotification", () => {
-    document.getElementById('notification-dot').style.display = 'block';
-    playNotificationSound();
-  });
-}
-
-// Play notification sound
-function playNotificationSound() {
-  try {
-    if (notificationSound) {
-      notificationSound.currentTime = 0; // Rewind to start
-      notificationSound.play().catch(e => {
-        console.warn("Notification sound play failed:", e);
-        // Fallback to using new Audio if the existing one fails
-        const fallbackSound = new Audio("assets/notification.mp3");
-        fallbackSound.play().catch(e => console.warn("Fallback sound play failed:", e));
-      });
-    } else {
-      // If notificationSound not initialized, create new one
-      notificationSound = new Audio("assets/notification.mp3");
-      notificationSound.play().catch(e => console.warn("New sound play failed:", e));
-    }
-  } catch (e) {
-    console.error("Error playing notification sound:", e);
-  }
-}
-
-// Updated socket listeners to include sound
-function setupSocketListeners() {
-  socket.on("chatMessage", (data) => {
-    allMessages.push(data);
-
-    if (!activeChatUser || (data.from !== activeChatUser.userId && data.to !== activeChatUser.userId)) {
-      unreadSenders.add(data.from);
-      if (userElements[data.from]) addBadge(userElements[data.from]);
-      showMessageNotificationDot();
-      showDesktopNotification(`New Message from ${data.from}`, data.message);
-      playNotificationSound(); // Play sound here
-      return;
-    }
-    appendMessage(data);
-  });
-
-  socket.on("newNotification", () => {
-    document.getElementById('notification-dot').style.display = 'block';
-    playNotificationSound(); // Play sound for notifications too
-  });
-}
-// Improved notification sound function
-function playNotificationSound() {
-  try {
-    // Reset sound to start if already playing
-    notificationSound.currentTime = 0;
-    
-    // Play the sound
-    notificationSound.play().catch(error => {
-      console.log("Sound play failed, trying fallback:", error);
+    // Initialize the app
+    function initApp() {
+      // Initialize notification sound
+      notificationSound = document.getElementById('notificationSound');
+      notificationSound.volume = 0.3; // Set reasonable volume
       
-      // Fallback method
-      const fallbackSound = new Audio("assets/notification.mp3");
-      fallbackSound.volume = 0.3;
-      fallbackSound.play().catch(e => console.log("Fallback also failed:", e));
-    });
-  } catch (e) {
-    console.log("Error playing sound:", e);
-  }
-}
+      // Enable audio on first user interaction (required by browsers)
+      document.body.addEventListener('click', enableAudio, { once: true });
+      
+      checkMobile();
+      setupEventListeners();
+      loadUserProfile();
+      
+      if (userId) {
+        socket = io();
+        socket.emit("join", userId);
+        setupSocketListeners();
+      }
+      
+      initNotifications();
+    }
+
+    // Enable audio playback (required by browser autoplay policies)
+    function enableAudio() {
+      // Play/pause quickly to unlock audio
+      notificationSound.play()
+        .then(() => {
+          notificationSound.pause();
+          notificationSound.currentTime = 0;
+          audioEnabled = true;
+        })
+        .catch(e => {
+          console.log("Audio initialization failed:", e);
+          audioEnabled = false;
+        });
+    }
+
+    // Play notification sound with robust error handling
+    function playNotificationSound() {
+      if (!audioEnabled) return;
+      
+      try {
+        // Reset sound to start if already playing
+        notificationSound.currentTime = 0;
+        
+        // Play the sound
+        notificationSound.play().catch(error => {
+          console.log("Sound play failed, trying fallback:", error);
+          
+          // Fallback method
+          const fallbackSound = new Audio("assets/notification.mp3");
+          fallbackSound.volume = 0.3;
+          fallbackSound.play().catch(e => console.log("Fallback also failed:", e));
+        });
+      } catch (e) {
+        console.log("Error playing sound:", e);
+      }
+    }
+
+    // Setup socket listeners with sound notifications
+    function setupSocketListeners() {
+      socket.on("chatMessage", (data) => {
+        allMessages.push(data);
+
+        if (!activeChatUser || (data.from !== activeChatUser.userId && data.to !== activeChatUser.userId)) {
+          unreadSenders.add(data.from);
+          if (userElements[data.from]) addBadge(userElements[data.from]);
+          showMessageNotificationDot();
+          showDesktopNotification(`New Message from ${data.from}`, data.message);
+          playNotificationSound();
+          return;
+        }
+        appendMessage(data);
+      });
+
+      socket.on("newNotification", () => {
+        document.getElementById('notification-dot').style.display = 'block';
+        playNotificationSound();
+      });
+    }
+
+    // Show desktop notification with sound
+    function showDesktopNotification(title, body) {
+      if ("Notification" in window && Notification.permission === "granted") {
+        new Notification(title, {
+          body: body,
+          icon: "/assets/profile.png"
+        });
+        playNotificationSound();
+      }
+    }
+
+    // Initialize notification permission
+    function initNotifications() {
+      if ("Notification" in window) {
+        Notification.requestPermission().then(permission => {
+          if (permission === "granted") {
+            console.log("Notification permission granted");
+          }
+        });
+      }
+    }
+
 
 // Toggle sidebar
 function toggleSidebar() {
