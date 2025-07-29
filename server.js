@@ -343,12 +343,35 @@ app.get("/api/excel-data/:category", async (req, res) => {
 app.post("/api/send-otp", async (req, res) => {
   const { userId } = req.body;
 
+  console.log("Received OTP request for userId:", userId);
+
   const user = await User.findOne({ userId });
 
-  if (!user) return res.json({ success: false, message: "User ID not found" });
+  if (!user) {
+    console.log("User not found in database");
+    return res.json({ success: false, message: "User ID not found" });
+  }
+
+  console.log("User found:", user);
 
   const otp = Math.floor(100000 + Math.random() * 900000);
-  otpStore.set(userId, { otp, expires: Date.now() + 10 * 60 * 1000 }); // 10 min expiry
+  const expiryTime = Date.now() + 10 * 60 * 1000;
+
+  otpStore.set(userId, { otp, expires: expiryTime });
+
+  // Validate required fields
+  if (!user.mobile) {
+    console.log("User mobile number missing");
+    return res.json({ success: false, message: "User mobile number not found" });
+  }
+
+  if (!process.env.TWILIO_PHONE) {
+    console.log("TWILIO_PHONE not set in .env");
+    return res.json({ success: false, message: "Server config error (from number missing)" });
+  }
+
+  const fullToNumber = `+91${user.mobile}`;
+  const fromNumber = process.env.TWILIO_PHONE;
 
   const message = `
 Hi ${user.name || user.userId},
@@ -364,20 +387,26 @@ If you didn’t request this, please ignore this message.
 - easyTesa Support
   `;
 
+  console.log("Sending OTP:", otp);
+  console.log("To:", fullToNumber);
+  console.log("From:", fromNumber);
+  console.log("Message body:\n", message);
+
   try {
-    await twilioClient.messages.create({
+    const result = await twilioClient.messages.create({
       body: message.trim(),
-      from: process.env.TWILIO_PHONE,
-      to: `+91${user.mobile}`
+      from: fromNumber,
+      to: fullToNumber,
     });
 
-    res.json({ success: true, message: "OTP sent to registered mobile" });
+    console.log("Twilio response:", result);
+
+    res.json({ success: true, message: "OTP sent to registered mobile", sid: result.sid });
   } catch (err) {
     console.error("Twilio Error:", err);
-    res.json({ success: false, message: "Failed to send OTP" });
+    res.json({ success: false, message: "Failed to send OTP", error: err.message });
   }
 });
-
 app.post("/api/reset-password", async (req, res) => {
 
 const { userId, otp, newPassword } = req.body;
