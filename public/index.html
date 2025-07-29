@@ -117,10 +117,20 @@
       outline: none;
       box-shadow: 0 0 10px #00ffff33;
       font-family: 'Orbitron', sans-serif;
+      font-size: 16px;
     }
 
     input::placeholder {
-      color: #00ffff88;
+      color: #00ffffaa !important;
+      opacity: 1 !important;
+    }
+
+    input:-ms-input-placeholder {
+      color: #00ffffaa !important;
+    }
+
+    input::-ms-input-placeholder {
+      color: #00ffffaa !important;
     }
 
     input:focus {
@@ -138,6 +148,7 @@
       color: #00ffff;
       cursor: pointer;
       font-size: 16px;
+      padding: 5px;
     }
 
     button {
@@ -332,20 +343,20 @@
 
     <div id="step1">
       <label for="fpUserId">User ID:</label>
-      <input type="text" id="fpUserId">
+      <input type="text" id="fpUserId" placeholder="Enter your User ID">
       <button onclick="sendOTP()">Send OTP</button>
     </div>
 
     <div id="step2" style="display:none;">
       <label for="fpOTP">Enter OTP:</label>
-      <input type="text" id="fpOTP">
+      <input type="text" id="fpOTP" placeholder="Enter OTP">
       <button onclick="verifyOTP()">Verify OTP</button>
     </div>
 
     <div id="step3" style="display:none;">
       <label for="fpNewPassword">New Password:</label>
       <div class="input-container">
-        <input type="password" id="fpNewPassword">
+        <input type="password" id="fpNewPassword" placeholder="Enter new password">
         <button type="button" class="toggle-password" onclick="toggleNewPassword()">👁️</button>
       </div>
       <button onclick="updatePassword()">Update Password</button>
