@@ -10,10 +10,11 @@
     * {
       box-sizing: border-box;
       -webkit-tap-highlight-color: transparent;
+      margin: 0;
+      padding: 0;
     }
 
     body {
-      margin: 0;
       font-family: 'Orbitron', sans-serif;
       display: flex;
       flex-direction: column;
@@ -23,9 +24,9 @@
       background-position: center;
       background-attachment: fixed;
       min-height: 100vh;
-      overflow-x: hidden;
       color: #00ffff;
       touch-action: manipulation;
+      overflow-x: hidden;
     }
 
     /* Desktop Header */
@@ -55,7 +56,6 @@
       color: #00ffff;
       font-weight: bold;
       text-shadow: 0 0 5px #00ffff, 0 0 10px #00ffff88;
-      flex-wrap: wrap;
     }
 
     /* Mobile Header (logo only) */
@@ -137,6 +137,7 @@
       border: none;
       color: #00ffff;
       cursor: pointer;
+      font-size: 16px;
     }
 
     button {
@@ -151,6 +152,7 @@
       transition: all 0.3s ease;
       width: 100%;
       font-family: 'Orbitron', sans-serif;
+      margin-top: 10px;
     }
 
     button:hover {
@@ -160,13 +162,14 @@
 
     #msg {
       color: #ff4444;
-      margin-top: 10px;
+      margin: 10px 0;
       text-shadow: 0 0 5px red;
       text-align: center;
+      min-height: 20px;
     }
 
     .link {
-      margin-top: 10px;
+      margin-top: 15px;
     }
 
     .link a {
@@ -179,10 +182,10 @@
     #forgotPasswordModal {
       display: none;
       position: fixed;
-      top: 10%;
+      top: 50%;
       left: 50%;
-      transform: translateX(-50%);
-      background: rgba(0, 0, 0, 0.8);
+      transform: translate(-50%, -50%);
+      background: rgba(0, 0, 0, 0.9);
       border: 2px solid #00ffff55;
       padding: 20px;
       z-index: 1000;
@@ -192,6 +195,16 @@
       box-shadow: 0 0 20px #00ffff88;
       backdrop-filter: blur(10px);
       color: #00ffff;
+    }
+
+    #forgotPasswordModal h3 {
+      margin-bottom: 15px;
+      text-align: center;
+    }
+
+    #forgotPasswordModal label {
+      display: block;
+      margin-bottom: 5px;
     }
 
     #forgotPasswordModal input,
@@ -205,7 +218,6 @@
       body {
         -webkit-user-select: none;
         user-select: none;
-        overflow: hidden;
         height: 100vh;
       }
 
@@ -228,7 +240,7 @@
 
       /* Prevent zooming on input focus */
       input, select, textarea {
-        font-size: 16px!important;
+        font-size: 16px !important;
       }
     }
 
@@ -247,6 +259,7 @@
       }
 
       input, button {
+        padding: 10px;
         font-size: 14px;
       }
     }
@@ -269,10 +282,13 @@
       max-width: 400px;
     }
 
+    .install-prompt p {
+      margin-bottom: 10px;
+    }
+
     .install-prompt button {
-      margin-top: 10px;
-      background: #00ffff;
-      color: #001f2f;
+      margin: 5px;
+      padding: 8px 15px;
     }
   </style>
 </head>
@@ -282,7 +298,7 @@
   <header>
     <div class="left">
       <img src="assets/logo.png" alt="Logo" class="logo">
-      <span><strong>BALAJI ACTION BUILDEWELL PRIVATE LIMITED</strong></span>
+      <span>BALAJI ACTION BUILDEWELL PRIVATE LIMITED</span>
     </div>
   </header>
 
@@ -294,7 +310,9 @@
   <form id="loginForm">
     <h2>User Login</h2>
     
-    <input type="text" id="userId" placeholder="User ID" required>
+    <div class="input-container">
+      <input type="text" id="userId" placeholder="User ID" required>
+    </div>
     
     <div class="input-container">
       <input type="password" id="password" placeholder="Password" required>
@@ -313,20 +331,20 @@
     <h3>Forgot Password</h3>
 
     <div id="step1">
-      <label>User ID:</label>
+      <label for="fpUserId">User ID:</label>
       <input type="text" id="fpUserId">
       <button onclick="sendOTP()">Send OTP</button>
     </div>
 
     <div id="step2" style="display:none;">
-      <label>Enter OTP:</label>
+      <label for="fpOTP">Enter OTP:</label>
       <input type="text" id="fpOTP">
       <button onclick="verifyOTP()">Verify OTP</button>
     </div>
 
     <div id="step3" style="display:none;">
+      <label for="fpNewPassword">New Password:</label>
       <div class="input-container">
-        <label>New Password:</label>
         <input type="password" id="fpNewPassword">
         <button type="button" class="toggle-password" onclick="toggleNewPassword()">👁️</button>
       </div>
@@ -416,6 +434,7 @@
       document.getElementById("step1").style.display = "block";
       document.getElementById("step2").style.display = "none";
       document.getElementById("step3").style.display = "none";
+      document.getElementById("fpUserId").value = document.getElementById("userId").value.trim();
     }
 
     function closeForgotModal() {
@@ -484,19 +503,14 @@
     const installButton = document.getElementById('installButton');
 
     window.addEventListener('beforeinstallprompt', (e) => {
-      // Prevent the mini-infobar from appearing on mobile
       e.preventDefault();
-      // Stash the event so it can be triggered later
       deferredPrompt = e;
-      // Show the install prompt
       installPrompt.style.display = 'block';
     });
 
     installButton.addEventListener('click', async () => {
       if (deferredPrompt) {
-        // Show the install prompt
         deferredPrompt.prompt();
-        // Wait for the user to respond to the prompt
         const { outcome } = await deferredPrompt.userChoice;
         if (outcome === 'accepted') {
           installPrompt.style.display = 'none';
