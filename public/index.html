@@ -318,12 +318,11 @@
     <button onclick="closeForgotModal()" style="background:#ff4444;">Close</button>
   </div>
 
-  <!-- Install Prompt -->
-  <div class="install-prompt" id="installPrompt">
+<div class="install-prompt" id="installPrompt">
     <p>Install this app for better experience</p>
-    <button id="installButton">Install Now</button>
+    <button id="installButton" onclick="window.open('https://old.appsgeyser.com/building/?type=apk&widget_name=easyTESA_18979394&_gl=1*qtet79*_ga*MTgwNTIyMzExMi4xNzUzNzIxODU3*_ga_WRFFFBGC4Z*czE3NTM3NjExMjkkbzIkZzEkdDE3NTM3NjEyMDIkajU0JGwwJGgw', '_blank')">Install Now</button>
     <button onclick="dismissInstallPrompt()" style="background:#ff4444;">Not Now</button>
-  </div>
+</div>
 
   <script>
     // Password visibility toggle
@@ -462,46 +461,41 @@
     }
 
     // PWA Installation Prompt
-    let deferredPrompt;
-    const installPrompt = document.getElementById('installPrompt');
-    const installButton = document.getElementById('installButton');
+let deferredPrompt;
+const installPrompt = document.getElementById('installPrompt');
+const installButton = document.getElementById('installButton');
 
-    window.addEventListener('beforeinstallprompt', (e) => {
-      e.preventDefault();
-      deferredPrompt = e;
-      installPrompt.style.display = 'block';
-    });
+// For direct APK download (AppsGeyser)
+installButton.addEventListener('click', function() {
+    window.open('https://old.appsgeyser.com/building/?type=apk&widget_name=easyTESA_18979394&_gl=1*qtet79*_ga*MTgwNTIyMzExMi4xNzUzNzIxODU3*_ga_WRFFFBGC4Z*czE3NTM3NjExMjkkbzIkZzEkdDE3NTM3NjEyMDIkajU0JGwwJGgw', '_blank');
+    installPrompt.style.display = 'none';
+});
 
-    installButton.addEventListener('click', async () => {
-      if (deferredPrompt) {
-        deferredPrompt.prompt();
-        const { outcome } = await deferredPrompt.userChoice;
-        if (outcome === 'accepted') {
-          installPrompt.style.display = 'none';
-        }
-        deferredPrompt = null;
-      }
-    });
+// Original PWA install prompt (kept as fallback)
+window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    deferredPrompt = e;
+    installPrompt.style.display = 'block';
+});
 
-    function dismissInstallPrompt() {
-      installPrompt.style.display = 'none';
-    }
+function dismissInstallPrompt() {
+    installPrompt.style.display = 'none';
+}
 
-    // For iOS - Add to Home Screen instructions
-    const isIos = () => {
-      const userAgent = window.navigator.userAgent.toLowerCase();
-      return /iphone|ipad|ipod/.test(userAgent);
-    };
+// For iOS - Add to Home Screen instructions
+const isIos = () => {
+    const userAgent = window.navigator.userAgent.toLowerCase();
+    return /iphone|ipad|ipod/.test(userAgent);
+};
 
-    const isInStandaloneMode = () => ('standalone' in window.navigator) && (window.navigator.standalone);
+const isInStandaloneMode = () => ('standalone' in window.navigator) && (window.navigator.standalone);
 
-    if (isIos() && !isInStandaloneMode()) {
-      setTimeout(() => {
+if (isIos() && !isInStandaloneMode()) {
+    setTimeout(() => {
         installPrompt.style.display = 'block';
-        installButton.style.display = 'none';
         document.querySelector('.install-prompt p').innerText = 'For full app experience: Tap Share then "Add to Home Screen"';
-      }, 3000);
-    }
+    }, 3000);
+}
   </script>
 </body>
 </html>
