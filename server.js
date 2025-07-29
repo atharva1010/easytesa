@@ -377,6 +377,8 @@ res.json({ success: false, message: "Failed to send OTP" });
 });
 
 
+
+
 app.post("/api/reset-password", async (req, res) => {
 
 const { userId, otp, newPassword } = req.body;
