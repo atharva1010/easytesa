@@ -1038,7 +1038,10 @@
       <p>No users available.</p>
     </div>
   </div>
-
+<audio id="notificationSound" preload="auto">
+  <source src="assets/notification.mp3" type="audio/mpeg">
+</audio>
+  
   <!-- Sidebar -->
   <div class="sidebar" id="sidebar">
     <div class="sidebar-section">
@@ -1171,8 +1174,7 @@
   <div id="toast" class="toast"></div>
 
   <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
-  <script>
-    // Global variables
+  <script>// Global variables
 let originalData = [];
 let currentUser = null;
 let currentCategory = '';
@@ -1181,12 +1183,16 @@ let activeChatUser = null;
 const userId = localStorage.getItem("userId");
 const userElements = {};
 const unreadSenders = new Set();
-const notifySound = new Audio("/assets/notification.mp3");
+let notificationSound;
 let isMobile = false;
 let socket = null;
 
 // Initialize the app
 function initApp() {
+  // Initialize notification sound
+  notificationSound = new Audio("assets/notification.mp3");
+  notificationSound.preload = "auto";
+  
   checkMobile();
   setupEventListeners();
   loadUserProfile();
@@ -1296,12 +1302,49 @@ function setupSocketListeners() {
     // Else, in active chat
     appendMessage(data);
   });
+
+  // New notification received
+  socket.on("newNotification", () => {
+    document.getElementById('notification-dot').style.display = 'block';
+    playNotificationSound();
+  });
+}
+
+// Play notification sound
+function playNotificationSound() {
+  try {
+    if (notificationSound) {
+      notificationSound.currentTime = 0; // Rewind to start
+      notificationSound.play().catch(e => {
+        console.warn("Notification sound play failed:", e);
+        // Fallback to using new Audio if the existing one fails
+        const fallbackSound = new Audio("assets/notification.mp3");
+        fallbackSound.play().catch(e => console.warn("Fallback sound play failed:", e));
+      });
+    } else {
+      // If notificationSound not initialized, create new one
+      notificationSound = new Audio("assets/notification.mp3");
+      notificationSound.play().catch(e => console.warn("New sound play failed:", e));
+    }
+  } catch (e) {
+    console.error("Error playing notification sound:", e);
+  }
 }
 
 // Initialize notification permission
 function initNotifications() {
   if ("Notification" in window) {
     Notification.requestPermission();
+  }
+}
+
+// Show desktop notification
+function showDesktopNotification(title, body) {
+  if ("Notification" in window && Notification.permission === "granted") {
+    new Notification(title, {
+      body: body,
+      icon: "/assets/profile.png"
+    });
   }
 }
 
@@ -1390,7 +1433,7 @@ function loadChatUsers() {
     });
 }
 
-// Load user profile - MODIFIED TO PREVENT AUTO LOGOUT
+// Load user profile
 function loadUserProfile() {
   const token = localStorage.getItem('token');
   
@@ -1508,7 +1551,7 @@ function showUpdateDetail(update) {
   document.body.appendChild(container);
 }
 
-// MODIFIED LOGOUT FUNCTION
+// Logout function
 function logout(forceRedirect = false) {
   localStorage.clear();
   // Only redirect to index.html if forced or if already on dashboard
@@ -1694,21 +1737,6 @@ function openRegister(type) {
   tableSection.style.display = "none";
   topButtons.style.display = "none";
   hideSidebar();
-}
-
-// Show desktop notification
-function showDesktopNotification(title, body) {
-  if ("Notification" in window && Notification.permission === "granted") {
-    new Notification(title, {
-      body: body,
-      icon: "/assets/profile.png"
-    });
-  }
-}
-
-// Play notification sound
-function playNotificationSound() {
-  notifySound.play().catch(e => console.warn("Audio play failed:", e));
 }
 
 // Show message notification dot
