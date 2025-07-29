@@ -340,46 +340,42 @@ app.get("/api/excel-data/:category", async (req, res) => {
   }
 });
 // OTP Endpoints
-
 app.post("/api/send-otp", async (req, res) => {
-  const { userId } = req.body;
 
-  const user = await User.findOne({ userId });
+const { userId } = req.body;
 
-  if (!user) return res.json({ success: false, message: "User ID not found" });
+const user = await User.findOne({ userId });
 
-  const otp = Math.floor(100000 + Math.random() * 900000).toString();
-  const expiryTime = Date.now() + 10 * 60 * 1000; // 10 minutes
+if (!user) return res.json({ success: false, message: "User ID not found" });
 
-  otpStore.set(userId, { otp, expires: expiryTime });
+const otp = Math.floor(100000 + Math.random() * 900000);
 
-  const message = `
-Hi ${user.name || user.userId},
+otpStore.set(userId, { otp, expires: Date.now() + 5 * 60 * 1000 });
 
-Your easyTesa password reset OTP is: ${otp}
+try {
 
-⚠️ Do not share this code with anyone.
+await twilioClient.messages.create({
 
-This OTP is valid for 10 minutes.
+body: Your OTP is: ${otp},
 
-If you didn’t request this, please ignore this message.
+from: process.env.TWILIO_PHONE,
 
-- easyTesa Support
-`;
+to: +91${user.mobile}
 
-  try {
-    await twilioClient.messages.create({
-      body: message.trim(),
-      from: process.env.TWILIO_PHONE,
-      to: `+91${user.mobile}`,
-    });
-
-    res.json({ success: true, message: "OTP sent to registered mobile" });
-  } catch (err) {
-    console.error("Twilio Error:", err.message);
-    res.json({ success: false, message: "Failed to send OTP" });
-  }
 });
+
+res.json({ success: true, message: "OTP sent to registered mobile" });
+
+} catch (err) {
+
+console.error("Twilio Error:", err);
+
+res.json({ success: false, message: "Failed to send OTP" });
+
+}
+
+});
+
 
 app.post("/api/reset-password", async (req, res) => {
 
