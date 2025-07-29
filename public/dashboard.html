@@ -39,6 +39,13 @@
         background: rgba(30, 41, 59, 0.95);
         z-index: 5;
       }
+
+      /* Show password text in ID PASSWORD table on mobile */
+      #dataTable tbody tr td:nth-child(2) button {
+        background: transparent !important;
+        color: var(--light) !important;
+        padding: 0 !important;
+      }
     }
 
     :root {
@@ -711,7 +718,6 @@
       background-color: var(--success);
       border-radius: 50%;
       border: 2px solid var(--dark);
-      display: none;
     }
 
     .chat-user-info {
@@ -828,37 +834,6 @@
       font-style: italic;
     }
 
-    .message-actions {
-      position: absolute;
-      right: 0;
-      top: 0;
-      background: rgba(30, 41, 59, 0.9);
-      border-radius: 8px;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.2);
-      display: none;
-      z-index: 10;
-    }
-
-    .message:hover .message-actions {
-      display: block;
-    }
-
-    .message-action-btn {
-      display: block;
-      width: 100%;
-      padding: 0.5rem;
-      background: none;
-      border: none;
-      color: var(--light);
-      text-align: left;
-      cursor: pointer;
-      font-size: 0.8rem;
-    }
-
-    .message-action-btn:hover {
-      background: rgba(255,255,255,0.1);
-    }
-
     .chat-input-container {
       padding: 0.8rem;
       display: flex;
@@ -923,6 +898,38 @@
       gap: 0.5rem;
     }
 
+    /* Full Screen User List */
+    .full-screen-user-list {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: var(--darker);
+      z-index: 3000;
+      display: none;
+      flex-direction: column;
+    }
+
+    .full-screen-user-list.show {
+      display: flex;
+    }
+
+    .full-user-list-header {
+      background: linear-gradient(to right, var(--primary), var(--primary-dark));
+      color: white;
+      padding: 1rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .full-user-list-container {
+      flex: 1;
+      overflow-y: auto;
+      padding: 1rem;
+    }
+
     /* Iframe Container */
     #iframeContainer {
       display: none;
@@ -939,6 +946,27 @@
       width: 100%;
       height: 100%;
       border: none;
+    }
+
+    /* Context Menu */
+    .context-menu {
+      position: fixed;
+      background: rgba(30, 41, 59, 0.95);
+      border-radius: 8px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+      z-index: 10000;
+      display: none;
+    }
+
+    .context-menu-item {
+      padding: 0.8rem 1.2rem;
+      cursor: pointer;
+      color: var(--light);
+      font-size: 0.9rem;
+    }
+
+    .context-menu-item:hover {
+      background: rgba(255,255,255,0.1);
     }
 
     /* Animations */
@@ -967,27 +995,6 @@
       border: 1px solid var(--glass-border);
       animation: fadeIn 0.3s ease;
       display: none;
-    }
-
-    /* Context Menu */
-    .context-menu {
-      position: fixed;
-      background: rgba(30, 41, 59, 0.95);
-      border-radius: 8px;
-      box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-      z-index: 10000;
-      display: none;
-    }
-
-    .context-menu-item {
-      padding: 0.8rem 1.2rem;
-      cursor: pointer;
-      color: var(--light);
-      font-size: 0.9rem;
-    }
-
-    .context-menu-item:hover {
-      background: rgba(255,255,255,0.1);
     }
 
     /* Scrollbar */
@@ -1103,7 +1110,7 @@
     }
   </style>
 </head>
-<body onload="loadUserProfile()">
+<body onload="checkAuth()">
   <!-- Header -->
   <header>
     <div class="logo-container">
@@ -1155,6 +1162,19 @@
   <div id="chatUserList" class="chat-user-list">
     <h4 style="margin-bottom: 1rem;"><i class="fas fa-comments"></i> Chat with:</h4>
     <div id="userListContainer" class="user-list-container">
+      <p>No users available.</p>
+    </div>
+  </div>
+
+  <!-- Full Screen User List (Mobile Only) -->
+  <div id="fullScreenUserList" class="full-screen-user-list">
+    <div class="full-user-list-header">
+      <span><i class="fas fa-comments"></i> Chat Users</span>
+      <button onclick="closeFullScreenUserList()" style="background:none; border:none; color:white; font-size:1.2rem; cursor:pointer;">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+    <div id="fullUserListContainer" class="full-user-list-container">
       <p>No users available.</p>
     </div>
   </div>
@@ -1285,7 +1305,7 @@
   <!-- Full Screen Chat (Mobile Only) -->
   <div id="fullScreenChat" class="full-screen-chat">
     <div class="full-chat-header">
-      <span id="fullChatWith"><i class="fas fa-comment"></i> Chat</span>
+      <span id="fullChatWith"><i class="fas fa-user"></i> Chat with <span id="fullChatUserName"></span></span>
       <button onclick="closeFullScreenChat()" style="background:none; border:none; color:white; font-size:1.2rem; cursor:pointer;">
         <i class="fas fa-times"></i>
       </button>
@@ -1333,6 +1353,17 @@
     let socket = null;
     let onlineUsers = new Set();
     let selectedMessage = null;
+    let hasUnreadUpdates = false;
+
+    // Check authentication before loading the page
+    function checkAuth() {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        window.location.href = 'index.html';
+        return;
+      }
+      initApp();
+    }
 
     // Initialize the app
     function initApp() {
@@ -1391,7 +1422,8 @@
         if (!document.getElementById('message-icon').contains(e.target) && 
             !document.getElementById('chatUserList').contains(e.target) &&
             !document.getElementById('chatBox').contains(e.target) &&
-            !document.getElementById('fullScreenChat').contains(e.target)) {
+            !document.getElementById('fullScreenChat').contains(e.target) &&
+            !document.getElementById('fullScreenUserList').contains(e.target)) {
           hideChatUserList();
         }
 
@@ -1416,17 +1448,16 @@
       socket.on("loadMessages", (messages) => {
         allMessages = messages;
 
-        const incoming = messages.filter(m => m.to === userId);
-        incoming.forEach(m => {
-          if (!activeChatUser || m.from !== activeChatUser.userId) {
+        const incoming = messages.filter(m => m.to === userId && !m.seen);
+        if (incoming.length > 0) {
+          incoming.forEach(m => {
             unreadSenders.add(m.from);
-
             if (userElements[m.from]) {
               addBadge(userElements[m.from]);
             }
-            showMessageNotificationDot();
-          }
-        });
+          });
+          showMessageNotificationDot();
+        }
 
         if (activeChatUser) renderMessages();
       });
@@ -1465,6 +1496,22 @@
       // Message seen confirmation
       socket.on("messageSeen", (data) => {
         updateMessageSeenStatus(data.messageId);
+      });
+
+      // Message edited confirmation
+      socket.on("messageEdited", (data) => {
+        const msgIndex = allMessages.findIndex(m => m.id === data.messageId);
+        if (msgIndex !== -1) {
+          allMessages[msgIndex].message = data.newMessage;
+          allMessages[msgIndex].edited = true;
+          renderMessages();
+        }
+      });
+
+      // Message deleted confirmation
+      socket.on("messageDeleted", (data) => {
+        allMessages = allMessages.filter(m => m.id !== data.messageId);
+        renderMessages();
       });
     }
 
@@ -1511,9 +1558,9 @@
     // Toggle notifications
     function toggleNotifications() {
       document.getElementById('updatePanel').classList.toggle('show');
-      document.getElementById('notification-dot').style.display = 'none';
-      // Hide other popups when showing notifications
       if (document.getElementById('updatePanel').classList.contains('show')) {
+        hasUnreadUpdates = false;
+        document.getElementById('notification-dot').style.display = 'none';
         hideProfileCard();
         hideChatUserList();
       }
@@ -1525,21 +1572,34 @@
 
     // Toggle chat user list
     function toggleChatUserList() {
-      document.getElementById('chatUserList').classList.toggle('show');
+      if (isMobile) {
+        document.getElementById('fullScreenUserList').classList.toggle('show');
+      } else {
+        document.getElementById('chatUserList').classList.toggle('show');
+      }
+      
       // Hide other popups when showing chat list
-      if (document.getElementById('chatUserList').classList.contains('show')) {
+      if (document.getElementById('chatUserList').classList.contains('show') || 
+          document.getElementById('fullScreenUserList').classList.contains('show')) {
         hideProfileCard();
         hideNotifications();
       }
       
       // Load users if not already loaded
-      if (document.getElementById('chatUserList').classList.contains('show')) {
+      if (document.getElementById('chatUserList').classList.contains('show') || 
+          document.getElementById('fullScreenUserList').classList.contains('show')) {
         loadChatUsers();
       }
     }
 
     function hideChatUserList() {
       document.getElementById('chatUserList').classList.remove('show');
+      document.getElementById('fullScreenUserList').classList.remove('show');
+    }
+
+    // Close full screen user list
+    function closeFullScreenUserList() {
+      document.getElementById('fullScreenUserList').classList.remove('show');
     }
 
     // Load chat users
@@ -1547,8 +1607,13 @@
       fetch("/api/users")
         .then(res => res.json())
         .then(users => {
-          const container = document.getElementById("userListContainer");
+          const container = isMobile ? document.getElementById("fullUserListContainer") : document.getElementById("userListContainer");
           container.innerHTML = '';
+
+          if (users.length === 0) {
+            container.innerHTML = '<p>No users available.</p>';
+            return;
+          }
 
           users.filter(u => u.userId !== userId).forEach(user => {
             const div = document.createElement("div");
@@ -1556,7 +1621,7 @@
             div.innerHTML = `
               <div style="position:relative;">
                 <img src="${user.profilePic || 'assets/profile.png'}" class="chat-user-avatar">
-                <div class="online-dot" id="online-${user.userId}"></div>
+                <div class="online-dot" id="online-${user.userId}" style="display:${onlineUsers.has(user.userId) ? 'block' : 'none'}"></div>
               </div>
               <div class="chat-user-info">
                 <div class="chat-user-name">${user.username}</div>
@@ -1569,11 +1634,8 @@
             userElements[user.userId] = div;
 
             if (unreadSenders.has(user.userId)) {
-              addBadge(div);
+              addBadge(userElements[user.userId]);
             }
-
-            // Update online status
-            updateOnlineStatus(user.userId);
           });
         });
     }
@@ -1581,29 +1643,17 @@
     // Update online status indicators
     function updateOnlineStatusIndicators() {
       Object.keys(userElements).forEach(userId => {
-        updateOnlineStatus(userId);
+        const dot = document.getElementById(`online-${userId}`);
+        if (dot) {
+          dot.style.display = onlineUsers.has(userId) ? 'block' : 'none';
+        }
       });
     }
 
-    // Update online status for a specific user
-    function updateOnlineStatus(userId) {
-      const dot = document.getElementById(`online-${userId}`);
-      if (dot) {
-        dot.style.display = onlineUsers.has(userId) ? 'block' : 'none';
-      }
-    }
-
-    // Load user profile - MODIFIED TO PREVENT AUTO LOGOUT
+    // Load user profile
     function loadUserProfile() {
       const token = localStorage.getItem('token');
       
-      // Don't automatically logout if no token - just show loading state
-      if (!token) {
-        console.log("No token found - showing loading state");
-        document.getElementById('profile-name').textContent = "Please login";
-        return;
-      }
-
       fetch('/api/me', {
         headers: { Authorization: `Bearer ${token}` }
       })
@@ -1611,7 +1661,7 @@
         .then(data => {
           if (!data.success || !data.user) {
             console.log("Invalid token - redirecting to login");
-            return logout(true); // Pass true to force redirect to index.html
+            return logout(true);
           }
 
           currentUser = data.user;
@@ -1639,8 +1689,7 @@
         })
         .catch(error => {
           console.error("Failed to fetch user:", error);
-          // Don't auto-logout on fetch error - just show error state
-          document.getElementById('profile-name').textContent = "Error loading profile";
+          logout(true);
         });
     }
 
@@ -1651,6 +1700,7 @@
         .then(data => {
           const updates = data.updates || data;
           if (updates.length > 0) {
+            hasUnreadUpdates = true;
             document.getElementById('notification-dot').style.display = 'block';
             const updatesList = document.getElementById('updatesList');
             updatesList.innerHTML = '';
@@ -1711,14 +1761,10 @@
       document.body.appendChild(container);
     }
 
-    // MODIFIED LOGOUT FUNCTION
+    // Logout function
     function logout(forceRedirect = false) {
       localStorage.clear();
-      // Only redirect to index.html if forced or if already on dashboard
-      if (forceRedirect || window.location.pathname.endsWith('dashboard.html')) {
-        window.location.href = 'index.html';
-      }
-      // Otherwise stay on current page (cleared session but no redirect)
+      window.location.href = 'index.html';
     }
 
     // Load table data
@@ -1785,7 +1831,7 @@
           if (currentCategory === 'WOOD PO' && colIndex === 0) {
             td.innerHTML = `<button onclick="copyText('${value}', 'PO Copied')" style="background:var(--primary); color:white; border:none; padding:0.3rem 0.6rem; border-radius:4px; cursor:pointer;">${value}</button>`;
           } else if (currentCategory === 'ID PASSWORD' && colIndex === 1) {
-            td.innerHTML = `<button onclick="copyText('${value}', 'Password Copied')" style="background:var(--success); color:white; border:none; padding:0.3rem 0.6rem; border-radius:4px; cursor:pointer;">******</button>`;
+            td.innerHTML = `<button onclick="copyText('${value}', 'Password Copied')" style="background:var(--success); color:white; border:none; padding:0.3rem 0.6rem; border-radius:4px; cursor:pointer;">${isMobile ? value : '******'}</button>`;
           } else {
             td.textContent = value;
           }
@@ -1911,7 +1957,11 @@
 
     // Show message notification dot
     function showMessageNotificationDot() {
-      document.getElementById("messageNotifyDot").style.display = "block";
+      if (unreadSenders.size > 0) {
+        document.getElementById("messageNotifyDot").style.display = "block";
+      } else {
+        document.getElementById("messageNotifyDot").style.display = "none";
+      }
     }
 
     // Add red badge to user
@@ -1935,6 +1985,7 @@
       if (isMobile) {
         // Show full screen chat on mobile
         document.getElementById("fullChatWith").innerHTML = `<i class="fas fa-user"></i> Chat with ${user.username}`;
+        document.getElementById("fullChatUserName").textContent = user.username;
         document.getElementById("fullScreenChat").classList.add('show');
         document.getElementById("fullChatMessages").innerHTML = '';
         document.getElementById("fullChatInput").value = '';
@@ -1953,12 +2004,7 @@
       }
 
       unreadSenders.delete(user.userId);
-
-      // Hide icon red dot if none left
-      if (unreadSenders.size === 0) {
-        document.getElementById("messageNotifyDot").style.display = "none";
-      }
-
+      showMessageNotificationDot();
       renderMessages();
     }
 
@@ -1991,6 +2037,14 @@
       contentDiv.className = "message-content";
       contentDiv.textContent = msg.message;
       
+      if (msg.edited) {
+        const editedSpan = document.createElement("span");
+        editedSpan.textContent = " (edited)";
+        editedSpan.style.fontSize = "0.7rem";
+        editedSpan.style.color = "var(--gray)";
+        contentDiv.appendChild(editedSpan);
+      }
+      
       // Add timestamp
       const timeDiv = document.createElement("div");
       timeDiv.className = "message-time";
@@ -2005,12 +2059,12 @@
       if (isMe && msg.seen) {
         const seenDiv = document.createElement("div");
         seenDiv.className = "message-seen";
-        seenDiv.textContent = "Seen";
+        seenDiv.textContent = "Seen " + new Date(msg.seenTimestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
         messageDiv.appendChild(seenDiv);
       }
       
-      // Add context menu for messages
-      if (isMe) {
+      // Add context menu for messages (only for outgoing and not seen messages)
+      if (isMe && !msg.seen) {
         contentDiv.oncontextmenu = (e) => {
           e.preventDefault();
           showContextMenu(e, msg);
@@ -2104,6 +2158,7 @@
       const msgIndex = allMessages.findIndex(m => m.id === messageId);
       if (msgIndex !== -1) {
         allMessages[msgIndex].seen = true;
+        allMessages[msgIndex].seenTimestamp = Date.now();
         renderMessages();
       }
     }
@@ -2178,9 +2233,6 @@
     function goHome() {
       window.location.href = 'dashboard.html';
     }
-
-    // Initialize the app when DOM is loaded
-    document.addEventListener('DOMContentLoaded', initApp);
   </script>
 </body>
 </html>
