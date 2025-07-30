@@ -2007,29 +2007,47 @@ function showDesktopNotification(title, body) {
 function openChatWith(user) {
   activeChatUser = user;
   
-  // Remove user from unread senders and update UI
-  unreadSenders.delete(user.userId);
-  updateTotalUnreadCount();
-  loadChatUsers();
-  
   if (isMobile) {
     // Show full screen chat on mobile
-    document.getElementById("fullChatWith").innerHTML = `<i class="fas fa-user"></i> Chat with ${user.username}`;
-    document.getElementById("fullChatUserName").textContent = user.username;
-    document.getElementById("fullScreenChat").classList.add('show');
-    document.getElementById("fullChatMessages").innerHTML = '';
-    document.getElementById("fullChatInput").value = '';
+    const fullChatWith = document.getElementById("fullChatWith");
+    const fullChatUserName = document.getElementById("fullChatUserName");
+    
+    if (fullChatWith && fullChatUserName) {
+      fullChatWith.innerHTML = `<i class="fas fa-user"></i> Chat with ${user.username}`;
+      fullChatUserName.textContent = user.username;
+    }
+    
+    const fullScreenChat = document.getElementById("fullScreenChat");
+    if (fullScreenChat) {
+      fullScreenChat.classList.add('show');
+      document.getElementById("fullChatMessages").innerHTML = '';
+      document.getElementById("fullChatInput").value = '';
+    }
   } else {
     // Show regular chat box on desktop
-    document.getElementById("chatWith").innerHTML = `<i class="fas fa-user"></i> Chat with ${user.username}`;
-    document.getElementById("chatBox").classList.add('show');
-    document.getElementById("chatMessages").innerHTML = '';
-    document.getElementById("chatInput").value = '';
+    const chatWith = document.getElementById("chatWith");
+    if (chatWith) {
+      chatWith.innerHTML = `<i class="fas fa-user"></i> Chat with ${user.username}`;
+    }
+    
+    const chatBox = document.getElementById("chatBox");
+    if (chatBox) {
+      chatBox.classList.add('show');
+      document.getElementById("chatMessages").innerHTML = '';
+      document.getElementById("chatInput").value = '';
+    }
   }
 
+  const el = userElements[user.userId];
+  if (el) {
+    const badge = el.querySelector(".msg-count");
+    if (badge) badge.remove();
+  }
+
+  unreadSenders.delete(user.userId);
+  showMessageNotificationDot();
   renderMessages();
 }
-
 // Show all messages between active users
 function renderMessages() {
   const box = isMobile ? document.getElementById("fullChatMessages") : document.getElementById("chatMessages");
