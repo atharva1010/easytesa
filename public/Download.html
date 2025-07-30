@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Downloads</title>
   <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500&display=swap" rel="stylesheet">
   <style>
@@ -11,25 +12,28 @@
       box-sizing: border-box;
     }
 
-    .header .title {
-      font-size: 28px;
-      font-weight: bold;
-      text-align: center;
-      color: #fff;
-      margin-bottom: 20px;
-    }
-
     body {
       background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
       font-family: 'Orbitron', sans-serif;
       color: #ffffff;
-      padding: 40px;
+      padding: 20px;
+      min-height: 100vh;
+    }
+
+    .header .title {
+      font-size: clamp(18px, 4vw, 28px);
+      font-weight: bold;
+      text-align: center;
+      color: #fff;
+      margin-bottom: 20px;
+      padding: 10px;
+      word-break: break-word;
     }
 
     h1 {
       text-align: center;
       margin-bottom: 30px;
-      font-size: 2.5rem;
+      font-size: clamp(1.5rem, 5vw, 2.5rem);
       background: linear-gradient(90deg, #00f, #0ff, #0f0, #ff0, #f00);
       background-size: 400% 400%;
       -webkit-background-clip: text;
@@ -54,7 +58,7 @@
     }
 
     th, td {
-      padding: 14px 20px;
+      padding: 12px 15px;
       text-align: left;
       border-bottom: 1px solid rgba(255, 255, 255, 0.1);
     }
@@ -63,7 +67,7 @@
       background: rgba(0, 0, 0, 0.3);
       color: #0ff;
       text-transform: uppercase;
-      font-size: 0.95rem;
+      font-size: 0.9rem;
       letter-spacing: 1px;
     }
 
@@ -71,14 +75,21 @@
       background-color: rgba(0, 255, 255, 0.05);
     }
 
+    .action-buttons {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
     button {
-      padding: 8px 14px;
-      margin: 5px 5px 5px 0;
+      padding: 8px 12px;
       border: none;
-      border-radius: 8px;
+      border-radius: 6px;
       font-weight: bold;
       cursor: pointer;
       transition: all 0.3s ease;
+      font-size: 0.85rem;
+      white-space: nowrap;
     }
 
     .view-btn {
@@ -117,20 +128,37 @@
       background: #fff176;
     }
 
-    @media screen and (max-width: 600px) {
+    @media screen and (max-width: 768px) {
       table, thead, tbody, th, td, tr {
         display: block;
       }
 
-      th, td {
-        text-align: right;
-        padding-left: 50%;
-        position: relative;
+      thead tr {
+        position: absolute;
+        top: -9999px;
+        left: -9999px;
       }
 
-      th::before, td::before {
+      tr {
+        margin-bottom: 15px;
+        border-radius: 8px;
+        overflow: hidden;
+      }
+
+      td {
+        padding: 10px 15px 10px 50%;
+        position: relative;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      }
+
+      td:last-child {
+        border-bottom: none;
+      }
+
+      td::before {
+        content: attr(data-label);
         position: absolute;
-        left: 20px;
+        left: 15px;
         width: 45%;
         white-space: nowrap;
         text-align: left;
@@ -138,13 +166,28 @@
         color: #0ff;
       }
 
-      th:nth-of-type(1)::before { content: "#"; }
-      th:nth-of-type(2)::before { content: "File Name"; }
-      th:nth-of-type(3)::before { content: "Actions"; }
+      .action-buttons {
+        justify-content: flex-end;
+      }
+    }
 
-      td:nth-of-type(1)::before { content: "#"; }
-      td:nth-of-type(2)::before { content: "File Name"; }
-      td:nth-of-type(3)::before { content: "Actions"; }
+    @media screen and (max-width: 480px) {
+      body {
+        padding: 15px;
+      }
+
+      td {
+        padding: 8px 10px 8px 50%;
+      }
+
+      button {
+        padding: 6px 8px;
+        font-size: 0.75rem;
+      }
+
+      .action-buttons {
+        gap: 5px;
+      }
     }
   </style>
 </head>
@@ -183,11 +226,17 @@
 
       const tdIndex = document.createElement("td");
       tdIndex.textContent = index + 1;
+      tdIndex.setAttribute('data-label', '#');
 
       const tdName = document.createElement("td");
       tdName.textContent = file.name;
+      tdName.setAttribute('data-label', 'File Name');
 
       const tdActions = document.createElement("td");
+      tdActions.setAttribute('data-label', 'Actions');
+      
+      const actionButtons = document.createElement("div");
+      actionButtons.className = "action-buttons";
 
       const viewBtn = document.createElement("button");
       viewBtn.className = "view-btn";
@@ -224,10 +273,12 @@
         a.click();
       };
 
-      tdActions.appendChild(viewBtn);
-      tdActions.appendChild(downloadBtn);
-      tdActions.appendChild(printBtn);
-      tdActions.appendChild(excelBtn);
+      actionButtons.appendChild(viewBtn);
+      actionButtons.appendChild(downloadBtn);
+      actionButtons.appendChild(printBtn);
+      actionButtons.appendChild(excelBtn);
+
+      tdActions.appendChild(actionButtons);
 
       tr.appendChild(tdIndex);
       tr.appendChild(tdName);
