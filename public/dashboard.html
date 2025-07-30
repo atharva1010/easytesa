@@ -165,12 +165,12 @@
       border: 2px solid var(--neon-blue);
       cursor: pointer;
       transition: var(--transition);
-      box-shadow: 0 0 10px var(--neon-blue));
+      box-shadow: 0 0 10px var(--neon-blue);
     }
 
     .profile-img:hover {
       transform: scale(1.05);
-      box-shadow: 0 0 15px var(--neon-blue));
+      box-shadow: 0 0 15px var(--neon-blue);
     }
 
     /* Bottom Navigation (Mobile Only) */
@@ -606,7 +606,7 @@
       object-fit: cover;
       border: 2px solid var(--neon-blue);
       margin: 0 auto 0.8rem;
-      box-shadow: 0 0 15px var(--neon-blue));
+      box-shadow: 0 0 15px var(--neon-blue);
     }
 
     .user-name {
@@ -1108,7 +1108,65 @@
         display: none;
       }
     }
-  </style>
+/* Add to your existing CSS */
+.full-screen-chat {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: var(--darker);
+  z-index: 3000;
+  display: none;
+  flex-direction: column;
+}
+
+.full-chat-header {
+  background: linear-gradient(to right, var(--primary), var(--primary-dark));
+  color: white;
+  padding: 1rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.full-chat-messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 1rem;
+  background: rgba(15, 23, 42, 0.7);
+}
+
+.full-chat-input-container {
+  padding: 1rem;
+  background: rgba(15, 23, 42, 0.9);
+  display: flex;
+  gap: 0.5rem;
+  position: sticky;
+  bottom: 0;
+  border-top: 1px solid var(--glass-border);
+}
+
+/* Make sure chat takes full height on mobile */
+@media (max-width: 768px) {
+  .full-screen-chat {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 3000;
+  }
+  
+  .full-screen-chat.show {
+    display: flex;
+  }
+}
+</style>
 </head>
 <body onload="checkAuth()">
   <!-- Header -->
@@ -1980,46 +2038,74 @@
 
     // Open chat with a user
     function openChatWith(user) {
-      activeChatUser = user;
-      
-      if (isMobile) {
-        // Show full screen chat on mobile
-        document.getElementById("fullChatWith").innerHTML = `<i class="fas fa-user"></i> Chat with ${user.username}`;
-        document.getElementById("fullChatUserName").textContent = user.username;
-        document.getElementById("fullScreenChat").classList.add('show');
-        document.getElementById("fullChatMessages").innerHTML = '';
-        document.getElementById("fullChatInput").value = '';
-      } else {
-        // Show regular chat box on desktop
-        document.getElementById("chatWith").innerHTML = `<i class="fas fa-user"></i> Chat with ${user.username}`;
-        document.getElementById("chatBox").classList.add('show');
-        document.getElementById("chatMessages").innerHTML = '';
-        document.getElementById("chatInput").value = '';
-      }
+  activeChatUser = user;
+  
+  if (isMobile) {
+    // Hide user list and show full screen chat
+    document.getElementById("fullScreenUserList").classList.remove('show');
+    document.getElementById("fullChatWith").innerHTML = `<i class="fas fa-user"></i> Chat with ${user.username}`;
+    document.getElementById("fullChatUserName").textContent = user.username;
+    document.getElementById("fullScreenChat").classList.add('show');
+    document.getElementById("fullChatMessages").innerHTML = '';
+    document.getElementById("fullChatInput").value = '';
+    
+    // Scroll to bottom of chat
+    setTimeout(() => {
+      const chatBox = document.getElementById("fullChatMessages");
+      chatBox.scrollTop = chatBox.scrollHeight;
+    }, 100);
+  } else {
+    // Desktop behavior remains the same
+    document.getElementById("chatWith").innerHTML = `<i class="fas fa-user"></i> Chat with ${user.username}`;
+    document.getElementById("chatBox").classList.add('show');
+    document.getElementById("chatMessages").innerHTML = '';
+    document.getElementById("chatInput").value = '';
+  }
 
-      const el = userElements[user.userId];
-      if (el) {
-        const badge = el.querySelector(".msg-count");
-        if (badge) badge.remove();
-      }
+  // Remove notification badge
+  const el = userElements[user.userId];
+  if (el) {
+    const badge = el.querySelector(".msg-count");
+    if (badge) badge.remove();
+  }
 
-      unreadSenders.delete(user.userId);
-      showMessageNotificationDot();
-      renderMessages();
-    }
-
+  // Update unread status
+  unreadSenders.delete(user.userId);
+  showMessageNotificationDot();
+  
+  // Load messages
+  renderMessages();
+  
+  // Mark messages as seen
+  if (socket) {
+    const unseenMessages = allMessages.filter(m => 
+      m.from === user.userId && 
+      m.to === userId && 
+      !m.seen
+    );
+    
+    unseenMessages.forEach(msg => {
+      socket.emit("markAsSeen", { messageId: msg.id });
+    });
+  }
+}
     // Show all messages between active users
     function renderMessages() {
-      const box = isMobile ? document.getElementById("fullChatMessages") : document.getElementById("chatMessages");
-      box.innerHTML = "";
+  const box = isMobile ? document.getElementById("fullChatMessages") : document.getElementById("chatMessages");
+  box.innerHTML = "";
 
-      const msgs = allMessages.filter(m =>
-        (m.from === userId && m.to === activeChatUser.userId) ||
-        (m.to === userId && m.from === activeChatUser.userId)
-      );
+  const msgs = allMessages.filter(m =>
+    (m.from === userId && m.to === activeChatUser.userId) ||
+    (m.to === userId && m.from === activeChatUser.userId)
+  );
 
-      msgs.forEach(m => appendMessage(m));
-    }
+  msgs.forEach(m => appendMessage(m));
+  
+  // Scroll to bottom
+  setTimeout(() => {
+    box.scrollTop = box.scrollHeight;
+  }, 50);
+}
 
     // Add one message to the box
     function appendMessage(msg) {
@@ -2225,10 +2311,14 @@
 
     // Close full screen chat
     function closeFullScreenChat() {
-      document.getElementById("fullScreenChat").classList.remove('show');
-      activeChatUser = null;
-    }
-
+  document.getElementById("fullScreenChat").classList.remove('show');
+  activeChatUser = null;
+  
+  // Reload user list to update statuses
+  if (isMobile) {
+    loadChatUsers();
+  }
+}
     // Go to home page
     function goHome() {
       window.location.href = 'dashboard.html';
