@@ -350,23 +350,10 @@ app.post("/api/send-otp", async (req, res) => {
 
   try {
     await twilioClient.messages.create({
-      body: `Hi {{username}, 
-Your easyTesa password reset OTP is: {{OTP}}
-
-⚠️ Do not share this code with anyone.
-This OTP is valid for 10 minutes.
-
-If you didn’t request this, please ignore this message.
-- easyTesa Support`,
+      body: `Your OTP is: ${otp}`,
       from: process.env.TWILIO_PHONE,
       to: `+91${user.mobile}`
     });
-    res.json({ success: true, message: "OTP sent to registered mobile" });
-  } catch (err) {
-    console.error("Twilio Error:", err);
-    res.json({ success: false, message: "Failed to send OTP" });
-  }
-});
 
 app.post("/api/reset-password", async (req, res) => {
 
