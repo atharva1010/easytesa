@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Downloads</title>
-  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500&family=Roboto:wght@400;500&display=swap" rel="stylesheet">
   <style>
     * {
       margin: 0;
@@ -14,13 +14,14 @@
 
     body {
       background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
-      font-family: 'Orbitron', sans-serif;
+      font-family: 'Roboto', sans-serif;
       color: #ffffff;
-      padding: 20px;
+      padding: 15px;
       min-height: 100vh;
     }
 
     .header .title {
+      font-family: 'Orbitron', sans-serif;
       font-size: clamp(18px, 4vw, 28px);
       font-weight: bold;
       text-align: center;
@@ -28,6 +29,7 @@
       margin-bottom: 20px;
       padding: 10px;
       word-break: break-word;
+      text-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
     }
 
     h1 {
@@ -39,6 +41,8 @@
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
       animation: gradientText 5s ease infinite;
+      font-family: 'Orbitron', sans-serif;
+      padding: 0 10px;
     }
 
     @keyframes gradientText {
@@ -47,14 +51,20 @@
       100% { background-position: 0% 50%; }
     }
 
+    .table-container {
+      overflow-x: auto;
+      margin-bottom: 30px;
+      border-radius: 12px;
+      box-shadow: 0 0 20px rgba(0,255,255,0.2);
+    }
+
     table {
       width: 100%;
       border-collapse: collapse;
       border-radius: 12px;
-      overflow: hidden;
-      box-shadow: 0 0 20px rgba(0,255,255,0.2);
       background: rgba(255, 255, 255, 0.05);
       backdrop-filter: blur(10px);
+      min-width: 600px;
     }
 
     th, td {
@@ -69,6 +79,7 @@
       text-transform: uppercase;
       font-size: 0.9rem;
       letter-spacing: 1px;
+      font-family: 'Orbitron', sans-serif;
     }
 
     tr:hover {
@@ -90,6 +101,14 @@
       transition: all 0.3s ease;
       font-size: 0.85rem;
       white-space: nowrap;
+      font-family: 'Roboto', sans-serif;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    button i {
+      font-size: 14px;
     }
 
     .view-btn {
@@ -99,6 +118,7 @@
 
     .view-btn:hover {
       background: #00f7ff;
+      transform: translateY(-2px);
     }
 
     .download-btn {
@@ -108,6 +128,7 @@
 
     .download-btn:hover {
       background: #9eff9e;
+      transform: translateY(-2px);
     }
 
     .print-btn {
@@ -117,6 +138,7 @@
 
     .print-btn:hover {
       background: #ff9e9e;
+      transform: translateY(-2px);
     }
 
     .excel-btn {
@@ -126,70 +148,133 @@
 
     .excel-btn:hover {
       background: #fff176;
+      transform: translateY(-2px);
     }
 
+    /* Responsive table styles */
     @media screen and (max-width: 768px) {
-      table, thead, tbody, th, td, tr {
-        display: block;
-      }
-
-      thead tr {
-        position: absolute;
-        top: -9999px;
-        left: -9999px;
-      }
-
-      tr {
-        margin-bottom: 15px;
+      .table-container {
         border-radius: 8px;
-        overflow: hidden;
       }
-
-      td {
-        padding: 10px 15px 10px 50%;
-        position: relative;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      
+      table {
+        min-width: 100%;
       }
-
-      td:last-child {
-        border-bottom: none;
+      
+      th, td {
+        padding: 10px 12px;
       }
-
-      td::before {
-        content: attr(data-label);
-        position: absolute;
-        left: 15px;
-        width: 45%;
-        white-space: nowrap;
-        text-align: left;
-        font-weight: bold;
-        color: #0ff;
-      }
-
+      
       .action-buttons {
-        justify-content: flex-end;
+        gap: 6px;
       }
-    }
-
-    @media screen and (max-width: 480px) {
-      body {
-        padding: 15px;
-      }
-
-      td {
-        padding: 8px 10px 8px 50%;
-      }
-
+      
       button {
         padding: 6px 8px;
-        font-size: 0.75rem;
-      }
-
-      .action-buttons {
-        gap: 5px;
+        font-size: 0.8rem;
       }
     }
+
+    @media screen and (max-width: 600px) {
+      body {
+        padding: 10px;
+      }
+      
+      .header .title {
+        margin-bottom: 15px;
+      }
+      
+      h1 {
+        margin-bottom: 20px;
+      }
+      
+      th, td {
+        padding: 8px 10px;
+        font-size: 0.85rem;
+      }
+      
+      .action-buttons {
+        flex-direction: column;
+        gap: 5px;
+      }
+      
+      button {
+        width: 100%;
+        justify-content: center;
+        padding: 8px;
+      }
+    }
+
+    @media screen and (max-width: 400px) {
+      .header .title {
+        font-size: 1.2rem;
+      }
+      
+      h1 {
+        font-size: 1.3rem;
+      }
+      
+      button span {
+        display: none;
+      }
+      
+      button i {
+        font-size: 16px;
+      }
+      
+      button {
+        padding: 10px;
+        border-radius: 50%;
+        width: 40px;
+        height: 40px;
+        justify-content: center;
+      }
+    }
+
+    /* Footer styles */
+    footer {
+      text-align: center;
+      padding: 20px;
+      color: rgba(255, 255, 255, 0.7);
+      font-size: 0.9rem;
+      margin-top: 30px;
+    }
+
+    /* Loading animation */
+    .loading {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.7);
+      z-index: 1000;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+    }
+
+    .loading-spinner {
+      width: 50px;
+      height: 50px;
+      border: 5px solid rgba(0, 255, 255, 0.3);
+      border-radius: 50%;
+      border-top-color: #0ff;
+      animation: spin 1s ease-in-out infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .loading-text {
+      margin-top: 15px;
+      color: #0ff;
+      font-family: 'Orbitron', sans-serif;
+    }
   </style>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 </head>
 <body>
 
@@ -199,18 +284,39 @@
 
   <h1>Available Downloads</h1>
 
-  <table id="pdfTable">
-    <thead>
-      <tr>
-        <th>#</th>
-        <th>File Name</th>
-        <th>Actions</th>
-      </tr>
-    </thead>
-    <tbody></tbody>
-  </table>
+  <div class="table-container">
+    <table id="pdfTable">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>File Name</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
+
+  <footer>
+    &copy; 2023 Balaji Action Buildwell Pvt. Ltd. All rights reserved.
+  </footer>
+
+  <div class="loading" id="loading">
+    <div class="loading-spinner"></div>
+    <div class="loading-text">Loading...</div>
+  </div>
 
   <script>
+    // Show loading animation
+    function showLoading() {
+      document.getElementById('loading').style.display = 'flex';
+    }
+
+    // Hide loading animation
+    function hideLoading() {
+      document.getElementById('loading').style.display = 'none';
+    }
+
     const fileList = [
       { name: "Advance Salary Form", pdf: "Advance_Salary_Form.pdf", excel: "Advance_Salary_Form.xlsx" },
       { name: "Gate Pass", pdf: "Gate_Pass.pdf", excel: "Gate_Pass.xlsx" },
@@ -226,51 +332,62 @@
 
       const tdIndex = document.createElement("td");
       tdIndex.textContent = index + 1;
-      tdIndex.setAttribute('data-label', '#');
 
       const tdName = document.createElement("td");
       tdName.textContent = file.name;
-      tdName.setAttribute('data-label', 'File Name');
-
+      
       const tdActions = document.createElement("td");
-      tdActions.setAttribute('data-label', 'Actions');
       
       const actionButtons = document.createElement("div");
       actionButtons.className = "action-buttons";
 
       const viewBtn = document.createElement("button");
       viewBtn.className = "view-btn";
-      viewBtn.textContent = "View PDF";
+      viewBtn.innerHTML = '<i class="fas fa-eye"></i><span>View PDF</span>';
       viewBtn.onclick = () => {
+        showLoading();
         window.open(`Files/${file.pdf}`, "_blank");
+        setTimeout(hideLoading, 1000);
       };
 
       const downloadBtn = document.createElement("button");
       downloadBtn.className = "download-btn";
-      downloadBtn.textContent = "Download PDF";
+      downloadBtn.innerHTML = '<i class="fas fa-download"></i><span>Download PDF</span>';
       downloadBtn.onclick = () => {
-        const a = document.createElement("a");
-        a.href = `Files/${file.pdf}`;
-        a.download = file.pdf;
-        a.click();
+        showLoading();
+        setTimeout(() => {
+          const a = document.createElement("a");
+          a.href = `Files/${file.pdf}`;
+          a.download = file.pdf;
+          a.click();
+          hideLoading();
+        }, 500);
       };
 
       const printBtn = document.createElement("button");
       printBtn.className = "print-btn";
-      printBtn.textContent = "Print PDF";
+      printBtn.innerHTML = '<i class="fas fa-print"></i><span>Print PDF</span>';
       printBtn.onclick = () => {
+        showLoading();
         const printWin = window.open(`Files/${file.pdf}`, "_blank");
-        printWin.onload = () => printWin.print();
+        printWin.onload = () => {
+          printWin.print();
+          hideLoading();
+        };
       };
 
       const excelBtn = document.createElement("button");
       excelBtn.className = "excel-btn";
-      excelBtn.textContent = "Download Excel";
+      excelBtn.innerHTML = '<i class="fas fa-file-excel"></i><span>Download Excel</span>';
       excelBtn.onclick = () => {
-        const a = document.createElement("a");
-        a.href = `Files/${file.excel}`;
-        a.download = file.excel;
-        a.click();
+        showLoading();
+        setTimeout(() => {
+          const a = document.createElement("a");
+          a.href = `Files/${file.excel}`;
+          a.download = file.excel;
+          a.click();
+          hideLoading();
+        }, 500);
       };
 
       actionButtons.appendChild(viewBtn);
@@ -286,6 +403,9 @@
 
       tbody.appendChild(tr);
     });
+
+    // Hide loading after page loads
+    window.addEventListener('load', hideLoading);
   </script>
 
 </body>
