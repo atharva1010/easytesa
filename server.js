@@ -346,11 +346,13 @@ app.post("/api/send-otp", async (req, res) => {
   if (!user) return res.json({ success: false, message: "User ID not found" });
 
   const otp = Math.floor(100000 + Math.random() * 900000);
-  otpStore.set(userId, { otp, expires: Date.now() + 5 * 60 * 1000 });
+  otpStore.set(userId, { otp, expires: Date.now() + 10 * 60 * 1000 }); // 10 minutes validity
+
+  const messageBody = `Hi ${user.username},\n\nYour easyTesa password reset OTP is: ${otp}\n\n⚠️ Do not share this code with anyone.\nThis OTP is valid for 10 minutes.\n\nIf you didn’t request this, please ignore this message.\n- easyTesa Support`;
 
   try {
     await twilioClient.messages.create({
-      body: `Your OTP is: ${otp}`,
+      body: messageBody,
       from: process.env.TWILIO_PHONE,
       to: `+91${user.mobile}`
     });
