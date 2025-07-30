@@ -350,10 +350,17 @@ app.post("/api/send-otp", async (req, res) => {
 
   try {
     await twilioClient.messages.create({
-      body: `Your OTP is: ${otp}`,
+      body: `Your easyTESA OTP is: ${otp}`,
       from: process.env.TWILIO_PHONE,
       to: `+91${user.mobile}`
     });
+    res.json({ success: true, message: "OTP sent to registered mobile" });
+  } catch (err) {
+    console.error("Twilio Error:", err);
+    res.json({ success: false, message: "Failed to send OTP" });
+  }
+});
+
 
 app.post("/api/reset-password", async (req, res) => {
 
