@@ -1,11 +1,9 @@
-
-
 require("dotenv").config();
 const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
 const jwt = require("jsonwebtoken");
-const bcrypt = require("bcryptjs"); // Using bcryptjs instead of bcrypt
+const bcrypt = require("bcryptjs");
 const path = require("path");
 const fs = require("fs");
 const ExcelJS = require("exceljs");
@@ -13,10 +11,11 @@ const http = require("http");
 const { Server } = require("socket.io");
 const twilio = require("twilio");
 const multer = require("multer");
-const streamifier = require("streamifier"); // make sure this is imported at the top
+const streamifier = require("streamifier");
 const { uploadUser, uploadUpdate } = require('./cloudinary');
 const cloudinary = require("cloudinary").v2;
 const { CloudinaryStorage } = require("multer-storage-cloudinary");
+
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server, {
@@ -46,9 +45,8 @@ app.use("/api/updates", updateRoutes);
 app.use("/api/reports/shift", shiftReportRoutes);
 app.use("/api/long-body", longBodyRoutes);
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
-app.use(express.static(path.join(__dirname, 'public'))); // for frontend HTML
-app.use('/Files', express.static(path.join(__dirname, 'Files'))); // for serving files like PDFs
-
+app.use(express.static(path.join(__dirname, 'public')));
+app.use('/Files', express.static(path.join(__dirname, 'Files')));
 
 // Multer Setup
 const storage = new CloudinaryStorage({
@@ -61,7 +59,6 @@ const storage = new CloudinaryStorage({
 });
 
 const upload = multer({ storage });
-
 
 const bgStorage = multer.diskStorage({
   destination: (req, file, cb) => cb(null, "bg/"),
@@ -102,6 +99,7 @@ io.on("connection", (socket) => {
   socket.on("join", async (userId) => {
     onlineUsers[userId] = socket.id;
     socket.userId = userId;
+    io.emit("onlineUsers", Object.keys(onlineUsers));
 
     const messages = await Message.find({
       $or: [{ from: userId }, { to: userId }]
@@ -122,9 +120,58 @@ io.on("connection", (socket) => {
     socket.emit("chatMessage", newMsg);
   });
 
+  socket.on("markAsSeen", async ({ messageIds, senderId }) => {
+    await Message.updateMany(
+      { _id: { $in: messageIds } },
+      { $set: { seen: true, seenTimestamp: Date.now() } }
+    );
+    
+    if (onlineUsers[senderId]) {
+      io.to(onlineUsers[senderId]).emit("messageSeen", { 
+        messageIds,
+        seenBy: socket.userId 
+      });
+    }
+  });
+
+  socket.on("editMessage", async ({ messageId, newMessage }) => {
+    const updated = await Message.findByIdAndUpdate(
+      messageId,
+      { $set: { message: newMessage, edited: true } },
+      { new: true }
+    );
+    
+    if (updated) {
+      const recipients = [updated.from, updated.to].filter(id => id !== socket.userId);
+      recipients.forEach(id => {
+        if (onlineUsers[id]) {
+          io.to(onlineUsers[id]).emit("messageEdited", {
+            messageId,
+            newMessage
+          });
+        }
+      });
+    }
+  });
+
+  socket.on("deleteMessage", async ({ messageId }) => {
+    const deleted = await Message.findByIdAndDelete(messageId);
+    if (deleted) {
+      const recipients = [deleted.from, deleted.to].filter(id => id !== socket.userId);
+      recipients.forEach(id => {
+        if (onlineUsers[id]) {
+          io.to(onlineUsers[id]).emit("messageDeleted", {
+            messageId
+          });
+        }
+      });
+    }
+  });
+
   socket.on("disconnect", () => {
     if (socket.userId) {
       delete onlineUsers[socket.userId];
+      io.emit("onlineUsers", Object.keys(onlineUsers));
       console.log("❌ User disconnected:", socket.userId);
     }
   });
@@ -134,7 +181,7 @@ io.on("connection", (socket) => {
 const twilioClient = twilio(process.env.TWILIO_SID, process.env.TWILIO_AUTH_TOKEN);
 const otpStore = new Map();
 
-// ✅ Auth Middleware (Token Verification)
+// Auth Middleware
 const authMiddleware = (req, res, next) => {
   const token = req.headers.authorization?.split(" ")[1];
   if (!token) return res.status(401).json({ success: false, message: "No token provided" });
@@ -147,9 +194,6 @@ const authMiddleware = (req, res, next) => {
     return res.status(403).json({ success: false, message: "Invalid token" });
   }
 };
-
-// Password configuration
-const SALT_ROUNDS = 10;
 
 // User Management Endpoints
 app.post("/api/create-user", uploadUser.single("profilePic"), async (req, res) => {
@@ -166,7 +210,7 @@ app.post("/api/create-user", uploadUser.single("profilePic"), async (req, res) =
       password
     } = req.body;
 
-    const profilePic = req.file ? req.file.path : null; // Cloudinary URL
+    const profilePic = req.file ? req.file.path : null;
 
     if (userIdUpdate) {
       const user = await User.findById(userIdUpdate);
@@ -210,38 +254,7 @@ app.post("/api/create-user", uploadUser.single("profilePic"), async (req, res) =
     res.status(500).json({ success: false, message: "Server error" });
   }
 });
-// Separate Update API (if used)
-app.put("/api/update-user/:id", uploadUser.single("profilePic"), async (req, res) => {
-  try {
-    const { username, department, designation, mobile, email, role, password } = req.body;
 
-    const updates = { username, department, designation, mobile, email, role };
-    if (password) updates.password = await bcrypt.hash(password, SALT_ROUNDS);
-    if (req.file) updates.profilePic = `/uploads/${req.file.filename}`;
-
-    const updated = await User.findByIdAndUpdate(req.params.id, updates, { new: true });
-    if (!updated) return res.json({ success: false, message: "User not found" });
-
-    res.json({ success: true, message: "User updated" });
-  } catch (err) {
-    console.error("Update User Error:", err);
-    res.json({ success: false, message: "Failed to update user" });
-  }
-});
-
-// Delete User
-app.delete("/api/delete-user/:id", async (req, res) => {
-  try {
-    const deleted = await User.findByIdAndDelete(req.params.id);
-    if (!deleted) return res.json({ success: false, message: "User not found" });
-    res.json({ success: true, message: "User deleted" });
-  } catch (err) {
-    console.error("Delete User Error:", err);
-    res.json({ success: false, message: "Failed to delete user" });
-  }
-});
-
-// Get All Users (excluding password)
 app.get("/api/users", async (req, res) => {
   try {
     const users = await User.find().select("-password");
@@ -250,11 +263,6 @@ app.get("/api/users", async (req, res) => {
     console.error("Get Users Error:", err);
     res.status(500).json({ success: false, message: "Failed to fetch users" });
   }
-});
-
-app.get("/api/users", async (req, res) => {
-  const users = await User.find().select("-password");
-  res.json(users);
 });
 
 // Auth Endpoints
@@ -296,7 +304,6 @@ app.post("/api/upload-background", uploadBackground.single("background"), (req, 
   res.json({ success: true, message: "Background uploaded" });
 });
 
-// ✅ Excel Upload Endpoint (Protected)
 app.post("/api/upload-excel", authMiddleware, uploadExcel.single("excelFile"), async (req, res) => {
   try {
     const { category } = req.body;
@@ -308,7 +315,7 @@ app.post("/api/upload-excel", authMiddleware, uploadExcel.single("excelFile"), a
     const data = [];
 
     sheet.eachRow((row) => {
-      const rowData = row.values.slice(1); // remove empty first cell
+      const rowData = row.values.slice(1);
       data.push(rowData);
     });
 
@@ -327,7 +334,6 @@ app.post("/api/upload-excel", authMiddleware, uploadExcel.single("excelFile"), a
   }
 });
 
-// ✅ Fetch Excel Data by Category
 app.get("/api/excel-data/:category", async (req, res) => {
   try {
     const { category } = req.params;
@@ -339,6 +345,7 @@ app.get("/api/excel-data/:category", async (req, res) => {
     res.json({ success: false, message: "Failed to fetch data" });
   }
 });
+
 // OTP Endpoints
 app.post("/api/send-otp", async (req, res) => {
   const { userId } = req.body;
@@ -361,31 +368,22 @@ app.post("/api/send-otp", async (req, res) => {
   }
 });
 
-
 app.post("/api/reset-password", async (req, res) => {
+  const { userId, otp, newPassword } = req.body;
+  const stored = otpStore.get(userId);
 
-const { userId, otp, newPassword } = req.body;
+  if (!stored || stored.otp != otp || stored.expires < Date.now()) {
+    return res.json({ success: false, message: "Invalid or expired OTP" });
+  }
 
-const stored = otpStore.get(userId);
+  const user = await User.findOne({ userId });
+  if (!user) return res.json({ success: false, message: "User not found" });
 
-if (!stored || stored.otp != otp || stored.expires < Date.now()) {
+  user.password = await bcrypt.hash(newPassword, 10);
+  await user.save();
 
-return res.json({ success: false, message: "Invalid or expired OTP" });
-
-}
-
-const user = await User.findOne({ userId });
-
-if (!user) return res.json({ success: false, message: "User not found" });
-
-user.password = await bcrypt.hash(newPassword, 10);
-
-await user.save();
-
-otpStore.delete(userId);
-
-res.json({ success: true, message: "Password reset successful" });
-
+  otpStore.delete(userId);
+  res.json({ success: true, message: "Password reset successful" });
 });
 
 app.post("/api/verify-otp", (req, res) => {
@@ -403,8 +401,6 @@ app.post("/api/verify-otp", (req, res) => {
   return res.json({ success: true, message: "OTP verified successfully" });
 });
 
-
-
 app.post("/api/update-password", async (req, res) => {
   try {
     const { userId, newPassword } = req.body;
@@ -412,7 +408,7 @@ app.post("/api/update-password", async (req, res) => {
     const user = await User.findOne({ userId });
     if (!user) return res.json({ success: false, message: "User not found" });
 
-    const hashedPassword = await bcrypt.hash(newPassword, 10); // 🔒 Hash the new password
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
     user.password = hashedPassword;
     await user.save();
 
@@ -423,81 +419,35 @@ app.post("/api/update-password", async (req, res) => {
   }
 });
 
-
-app.post('/api/shift-report/previous-pending', async (req, res) => {
-  console.log("✅ Incoming Previous Pending Body:", req.body);  // Debug log
-
+// Chat System Endpoints
+app.get("/api/unread-count/:userId", async (req, res) => {
   try {
-    const { plant, shift, date } = req.body;
-
-    const shifts = ["A", "B", "C"];
-    const currentIndex = shifts.indexOf(shift);
-    const previousShift = shifts[(currentIndex + 2) % 3];
-
-    const queryDate = new Date(date);
-    if (shift === "A") {
-      queryDate.setDate(queryDate.getDate() - 1);
-    }
-
-    const formattedDate = queryDate.toISOString().split("T")[0];
-
-    const previous = await ShiftReport.findOne({
-      plant,
-      shift: previousShift,
-      date: formattedDate
-    }).sort({ _id: -1 });
-
-    if (!previous) {
-      return res.json({ success: true, pending: {} });
-    }
-
-    res.json({
-      success: true,
-      pending: {
-        woodPending: previous.woodPending || 0,
-        storePending: previous.storePending || 0,
-        dispatchPending: previous.dispatchPending || 0
-      }
+    const count = await Message.countDocuments({
+      to: req.params.userId,
+      seen: false
     });
-
+    res.json({ success: true, count });
   } catch (err) {
-    console.error("❌ Error loading previous shift pending:", err);
     res.status(500).json({ success: false, message: "Server error" });
   }
 });
 
-// 4. API Route - Post update
-app.post('/api/updates', upload.single('image'), async (req, res) => {
+app.get("/api/messages/:userId1/:userId2", async (req, res) => {
   try {
-    console.log("Uploaded file info:", req.file); // ✅ सही जगह
-
-    const result = await cloudinary.uploader.upload(req.file.path, {
-      folder: "updates"
-    });
-
-    const update = new Update({
-      title: req.body.title,
-      message: req.body.message,
-      image: result.secure_url // ✅ Cloudinary image URL
-    });
-
-    await update.save();
-    res.status(201).json({ success: true, message: 'Update created successfully', update });
-  } catch (error) {
-    console.error("Error uploading update:", error);
-    res.status(500).json({ success: false, message: 'Internal server error' });
+    const messages = await Message.find({
+      $or: [
+        { from: req.params.userId1, to: req.params.userId2 },
+        { from: req.params.userId2, to: req.params.userId1 }
+      ]
+    }).sort({ timestamp: 1 });
+    
+    res.json({ success: true, messages });
+  } catch (err) {
+    res.status(500).json({ success: false, message: "Server error" });
   }
 });
 
-// 5. API Route - Get all updates
-app.get("/api/updates", async (req, res) => {
-  try {
-    const updates = await Update.find().sort({ createdAt: -1 });
-    res.json({ success: true, updates });
-  } catch (err) {
-    res.status(500).json({ success: false, message: "Server error." });
-  }
-});// Material Reports
+// Material Reports
 app.post("/api/wood-bill", async (req, res) => {
   try {
     const newBill = new WoodBill(req.body);
@@ -589,37 +539,14 @@ app.put("/api/methanol/:id", async (req, res) => {
   }
 });
 
-// POST /api/reports/long-body
-app.post('/api/reports/long-body', async (req, res) => {
-  try {
-    const {
-      date,
-      vehicle,
-      material,
-      outsideWeight,
-      old80,
-      new80,
-      difference,
-      name
-    } = req.body;
-
-    const report = new LongBodyReport({
-      date,
-      vehicle,
-      material,
-      outsideWeight,
-      old80,
-      new80,
-      difference,
-      name
-    });
-
-    await report.save();
-    res.json({ success: true, message: 'Report saved successfully.' });
-  } catch (err) {
-    console.error('Error saving long body report:', err);
-    res.status(500).json({ success: false, message: 'Server error.' });
-  }
+// Error Handling Middleware
+app.use((err, req, res, next) => {
+  console.error("Error:", err.stack);
+  res.status(500).json({ 
+    success: false, 
+    message: "Internal server error",
+    error: process.env.NODE_ENV === "development" ? err.message : undefined
+  });
 });
 
 // Start Server
