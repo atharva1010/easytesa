@@ -1487,43 +1487,6 @@ function setupSocketListeners() {
     if (activeChatUser) renderMessages();
   });
 
-// Add these functions to your frontend code
-
-// Store active chat in localStorage
-function storeActiveChat(userId) {
-  localStorage.setItem('activeChat', userId);
-}
-
-// Load chat history on page load
-async function loadChatHistory() {
-  const activeChatId = localStorage.getItem('activeChat');
-  if (activeChatId) {
-    const response = await fetch(`/api/messages/${userId}/${activeChatId}`);
-    if (response.ok) {
-      const { messages } = await response.json();
-      allMessages = messages;
-      
-      // Find the user info from your user list
-      const chatUser = /* get user from your user list */;
-      if (chatUser) {
-        openChatWith(chatUser);
-      }
-    }
-  }
-}
-
-// Call this when the page loads
-window.addEventListener('DOMContentLoaded', () => {
-  loadChatHistory();
-});
-
-// Modify your openChatWith function to store the active chat
-function openChatWith(user) {
-  activeChatUser = user;
-  storeActiveChat(user.userId);
-  // ... rest of your existing code ...
-}
-  
   // New message received
   socket.on("chatMessage", (data) => {
     allMessages.push(data);
