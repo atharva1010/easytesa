@@ -3,11 +3,20 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Balaji Action Buildwell Pvt. Ltd.</title>
+  <title>Products - Balaji Action Buildwell Pvt. Ltd.</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
   <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
     body {
       margin: 0;
-      font-family: Arial, sans-serif;
+      font-family: 'Arial', sans-serif;
+      color: #333;
+      background-color: #f5f5f5;
     }
 
     /* Navbar Styling */
@@ -16,232 +25,438 @@
       justify-content: space-between;
       align-items: center;
       background-color: #002147;
-      padding: 10px 20px;
+      padding: 15px 20px;
       color: white;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      flex-wrap: wrap;
     }
 
     .navbar img {
       height: 50px;
+      width: auto;
     }
 
     .nav-links {
       display: flex;
       gap: 20px;
       align-items: center;
+      flex-wrap: wrap;
     }
 
     .nav-links a {
       color: white;
       text-decoration: none;
       font-weight: bold;
+      padding: 5px 0;
+      transition: all 0.3s ease;
     }
 
     .nav-links a:hover {
-      text-decoration: underline;
+      color: #ff8800;
     }
 
-    .login-btn {
-      background-color: #ff8800;
-      padding: 8px 16px;
-      color: white;
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
-      font-weight: bold;
-    }
-
-    /* Slideshow */
-    .slideshow-container {
-      position: relative;
-      max-width: 100%;
-      height: 400px;
-      overflow: hidden;
-    }
-
-    .slide {
+    /* Mobile menu toggle */
+    .menu-toggle {
       display: none;
-      width: 100%;
-      height: 100%;
+      cursor: pointer;
+      font-size: 24px;
     }
 
-    .slide img {
+    /* Banner Image */
+    .banner-image {
       width: 100%;
-      height: 100%;
+      height: auto;
+      max-height: 400px;
       object-fit: cover;
     }
 
-    /* Navigation buttons */
-    .prev, .next {
-      cursor: pointer;
-      position: absolute;
-      top: 50%;
-      transform: translateY(-50%);
-      padding: 12px;
-      color: white;
-      font-size: 24px;
-      font-weight: bold;
-      background-color: rgba(0, 0, 0, 0.4);
-      border-radius: 50%;
-      user-select: none;
+    /* Products Section */
+    .products-section {
+      padding: 40px 20px;
+      max-width: 1200px;
+      margin: 0 auto;
     }
 
-    .prev {
-      left: 20px;
-    }
-
-    .next {
-      right: 20px;
-    }
-
-    /* About Section */
-    .about-section {
-      padding: 30px 40px;
-      background-color: #f5f5f5;
-      text-align: justify;
-      line-height: 1.6;
-    }
-
-    .about-section h2 {
+    .section-title {
       text-align: center;
+      margin: 30px 0;
       color: #002147;
+      font-size: 2rem;
+      position: relative;
+      padding-bottom: 15px;
+    }
+
+    .section-title:after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 80px;
+      height: 3px;
+      background-color: #ff8800;
+    }
+
+    .products-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+      gap: 25px;
+      margin-top: 30px;
+    }
+
+    .product-card {
+      background: white;
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+      transition: all 0.3s ease;
+    }
+
+    .product-card:hover {
+      transform: translateY(-10px);
+      box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+    }
+
+    .product-image {
+      width: 100%;
+      height: 200px;
+      object-fit: cover;
+      border-bottom: 1px solid #eee;
+    }
+
+    .product-info {
+      padding: 15px;
+      text-align: center;
+    }
+
+    .product-title {
+      font-size: 16px;
+      font-weight: bold;
+      color: #002147;
+      margin: 0;
+    }
+
+    /* Modal for Product Details */
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 1000;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0,0,0,0.8);
+      overflow: auto;
+    }
+
+    .modal-content {
+      background-color: #fff;
+      margin: 5% auto;
+      padding: 30px;
+      border-radius: 10px;
+      width: 80%;
+      max-width: 800px;
+      position: relative;
+      box-shadow: 0 5px 30px rgba(0,0,0,0.3);
+    }
+
+    .close {
+      position: absolute;
+      top: 15px;
+      right: 25px;
+      color: #aaa;
+      font-size: 28px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .close:hover {
+      color: #333;
+    }
+
+    .modal-image {
+      width: 100%;
+      max-height: 400px;
+      object-fit: contain;
+      margin-bottom: 20px;
+    }
+
+    /* Footer */
+    footer {
+      text-align: center;
+      padding: 20px;
+      background-color: #002147;
+      color: #fff;
+      font-size: 14px;
+      margin-top: 40px;
+    }
+
+    /* Responsive Styles */
+    @media (max-width: 1024px) {
+      .products-grid {
+        grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      }
+    }
+
+    @media (max-width: 768px) {
+      .navbar {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+      
+      .nav-links {
+        display: none;
+        width: 100%;
+        flex-direction: column;
+        gap: 15px;
+        padding-top: 15px;
+      }
+      
+      .nav-links.active {
+        display: flex;
+      }
+      
+      .menu-toggle {
+        display: block;
+        position: absolute;
+        right: 20px;
+        top: 15px;
+      }
+      
+      .products-section {
+        padding: 30px 15px;
+      }
+      
+      .section-title {
+        font-size: 1.8rem;
+      }
+      
+      .products-grid {
+        gap: 20px;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .navbar {
+        padding: 10px;
+      }
+      
+      .navbar img {
+        height: 40px;
+      }
+      
+      .section-title {
+        font-size: 1.5rem;
+      }
+      
+      .products-grid {
+        grid-template-columns: 1fr;
+        gap: 15px;
+      }
+      
+      .product-card {
+        max-width: 300px;
+        margin: 0 auto;
+      }
+      
+      .modal-content {
+        width: 95%;
+        padding: 20px;
+      }
     }
   </style>
 </head>
 <body>
-   <!-- Navbar -->
+
+  <!-- Navbar -->
   <div class="navbar">
     <a href="index.html"><img src="assets/logo.png" alt="Logo"></a>
+    <div class="menu-toggle">☰</div>
     <div class="nav-links">
-       <a href="About.html">Home</a>
+      <a href="About.html">Home</a>
       <a href="about-us.html">About Us</a>
       <a href="products.html">Products</a>
       <a href="media.html">Media Gallery</a>
       <a href="contactus.html">Contact Us</a>
- 
-</a>
     </div>
   </div>
 
-<!-- ✅ Products Section -->
-<section id="products" style="padding: 40px; background: #f9f9f9; font-family: sans-serif;">
-  <!-- Top Image -->
-  <div style="text-align: center;">
-    <img src="assets/products.jpg" alt="Products" style="width: 100%; max-height: 400px; object-fit: cover; border-radius: 8px;" />
+  <!-- Products Section -->
+  <section class="products-section">
+    <!-- Banner Image -->
+    <img src="assets/products.jpg" alt="Products Banner" class="banner-image">
+
+    <h2 class="section-title">Our Products</h2>
+
+    <div class="products-grid">
+      <!-- Product 1 -->
+      <div class="product-card" onclick="openModal('assets/7d hmr particle.jpg', '7D HMR Particle Board')">
+        <img src="assets/7d hmr particle.jpg" alt="7D HMR Particle Board" class="product-image">
+        <div class="product-info">
+          <h3 class="product-title">7D HMR Particle Board</h3>
+        </div>
+      </div>
+
+      <!-- Product 2 -->
+      <div class="product-card" onclick="openModal('assets/abraze.jpg', 'Abraze Board')">
+        <img src="assets/abraze.jpg" alt="Abraze Board" class="product-image">
+        <div class="product-info">
+          <h3 class="product-title">Abraze Board</h3>
+        </div>
+      </div>
+
+      <!-- Product 3 -->
+      <div class="product-card" onclick="openModal('assets/acrylic.jpg', 'Acrylic Gloss Board')">
+        <img src="assets/acrylic.jpg" alt="Acrylic Gloss Board" class="product-image">
+        <div class="product-info">
+          <h3 class="product-title">Acrylic Gloss Board</h3>
+        </div>
+      </div>
+
+      <!-- Product 4 -->
+      <div class="product-card" onclick="openModal('assets/boilo.jpg', 'Boilo Board')">
+        <img src="assets/boilo.jpg" alt="Boilo Board" class="product-image">
+        <div class="product-info">
+          <h3 class="product-title">Boilo-BWP-FR-HDF-board</h3>
+        </div>
+      </div>
+
+      <!-- Product 5 -->
+      <div class="product-card" onclick="openModal('assets/embossed hdf.jpg', 'Embossed HDF Boards')">
+        <img src="assets/embossed hdf.jpg" alt="Embossed HDF Boards" class="product-image">
+        <div class="product-info">
+          <h3 class="product-title">Embossed HDF Boards</h3>
+        </div>
+      </div>
+
+      <!-- Product 6 -->
+      <div class="product-card" onclick="openModal('assets/flooring.jpg', 'Flooring Accessories')">
+        <img src="assets/flooring.jpg" alt="Flooring Accessories" class="product-image">
+        <div class="product-info">
+          <h3 class="product-title">Flooring Accessories</h3>
+        </div>
+      </div>
+
+      <!-- Product 7 -->
+      <div class="product-card" onclick="openModal('assets/hdf laminated.jpg', 'HDF Laminated Flooring')">
+        <img src="assets/hdf laminated.jpg" alt="HDF Laminated Flooring" class="product-image">
+        <div class="product-info">
+          <h3 class="product-title">HDF Laminated Flooring</h3>
+        </div>
+      </div>
+
+      <!-- Product 8 -->
+      <div class="product-card" onclick="openModal('assets/hdhmr door.jpg', 'HDHMR Doors')">
+        <img src="assets/hdhmr door.jpg" alt="HDHMR Doors" class="product-image">
+        <div class="product-info">
+          <h3 class="product-title">HDHMR Doors</h3>
+        </div>
+      </div>
+
+      <!-- Product 9 -->
+      <div class="product-card" onclick="openModal('assets/hdhmr.jpg', 'HDHMR Boards')">
+        <img src="assets/hdhmr.jpg" alt="HDHMR Boards" class="product-image">
+        <div class="product-info">
+          <h3 class="product-title">HDHMR Boards</h3>
+        </div>
+      </div>
+
+      <!-- Product 10 -->
+      <div class="product-card" onclick="openModal('assets/mdf.jpg', 'MDF Board')">
+        <img src="assets/mdf.jpg" alt="MDF Board" class="product-image">
+        <div class="product-info">
+          <h3 class="product-title">MDF Board</h3>
+        </div>
+      </div>
+
+      <!-- Product 11 -->
+      <div class="product-card" onclick="openModal('assets/ornamatte.jpg', 'Ornamatte')">
+        <img src="assets/ornamatte.jpg" alt="Ornamatte" class="product-image">
+        <div class="product-info">
+          <h3 class="product-title">Ornamatte</h3>
+        </div>
+      </div>
+
+      <!-- Product 12 -->
+      <div class="product-card" onclick="openModal('assets/particle.jpg', 'Particle Boards')">
+        <img src="assets/particle.jpg" alt="Particle Boards" class="product-image">
+        <div class="product-info">
+          <h3 class="product-title">Particle Boards</h3>
+        </div>
+      </div>
+
+      <!-- Product 13 -->
+      <div class="product-card" onclick="openModal('assets/uv high glass.jpg', 'UV High Gloss boards')">
+        <img src="assets/uv high glass.jpg" alt="UV High Gloss boards" class="product-image">
+        <div class="product-info">
+          <h3 class="product-title">UV High Gloss Boards</h3>
+        </div>
+      </div>
+
+      <!-- Product 14 -->
+      <div class="product-card" onclick="openModal('assets/value added.jpg', 'Value Added Flooring')">
+        <img src="assets/value added.jpg" alt="Value Added Flooring" class="product-image">
+        <div class="product-info">
+          <h3 class="product-title">Value Added Flooring</h3>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Product Modal -->
+  <div id="productModal" class="modal">
+    <div class="modal-content">
+      <span class="close" onclick="closeModal()">&times;</span>
+      <img id="modalProductImage" class="modal-image">
+      <h2 id="modalProductTitle" style="text-align: center; color: #002147;"></h2>
+    </div>
   </div>
 
-  <!-- Product Grid -->
-  <h2 style="text-align: center; margin: 30px 0 10px;">Our Products</h2>
-  <div style="display: flex; flex-wrap: wrap; justify-content: center; gap: 20px;">
+  <!-- Footer -->
+  <footer>
+    &copy; 2023 Balaji Action Buildwell Pvt. Ltd. All Rights Reserved | Designed by Atharva Creation
+  </footer>
 
-    <!-- Product Box Template -->
-    <div style="width: 250px; background: #fff; box-shadow: 0 2px 10px rgba(0,0,0,0.1); border-radius: 10px; overflow: hidden; text-align: center;">
-      <img src="assets/7d hmr particle.jpg" alt="7D HMR Particle Board" style="width: 100%; height: 180px; object-fit: cover;">
-      <div style="padding: 10px; border-top: 1px solid #eee;">
-        <h3 style="font-size: 16px;">7D HMR Particle Board</h3>
-      </div>
-    </div>
+  <script>
+    // Mobile menu toggle functionality
+    const menuToggle = document.querySelector('.menu-toggle');
+    const navLinks = document.querySelector('.nav-links');
+    
+    menuToggle.addEventListener('click', () => {
+      navLinks.classList.toggle('active');
+    });
 
-    <div style="width: 250px; background: #fff; box-shadow: 0 2px 10px rgba(0,0,0,0.1); border-radius: 10px; overflow: hidden; text-align: center;">
-      <img src="assets/abraze.jpg" alt="Abraze Board" style="width: 100%; height: 180px; object-fit: cover;">
-      <div style="padding: 10px; border-top: 1px solid #eee;">
-        <h3 style="font-size: 16px;">Abraze Board</h3>
-      </div>
-    </div>
+    // Product Modal functionality
+    function openModal(imageSrc, title) {
+      const modal = document.getElementById('productModal');
+      const modalImg = document.getElementById('modalProductImage');
+      const modalTitle = document.getElementById('modalProductTitle');
+      
+      modal.style.display = "block";
+      modalImg.src = imageSrc;
+      modalTitle.innerHTML = title;
+      
+      // Close modal when clicking outside image
+      modal.onclick = function(event) {
+        if (event.target === modal) {
+          closeModal();
+        }
+      }
+    }
 
-    <div style="width: 250px; background: #fff; box-shadow: 0 2px 10px rgba(0,0,0,0.1); border-radius: 10px; overflow: hidden; text-align: center;">
-      <img src="assets/acrylic.jpg" alt="Acrylic Gloss Board" style="width: 100%; height: 180px; object-fit: cover;">
-      <div style="padding: 10px; border-top: 1px solid #eee;">
-        <h3 style="font-size: 16px;">Acrylic Gloss Board</h3>
-      </div>
-    </div>
+    function closeModal() {
+      document.getElementById('productModal').style.display = "none";
+    }
 
-    <div style="width: 250px; background: #fff; box-shadow: 0 2px 10px rgba(0,0,0,0.1); border-radius: 10px; overflow: hidden; text-align: center;">
-      <img src="assets/boilo.jpg" alt="Boilo Board" style="width: 100%; height: 180px; object-fit: cover;">
-      <div style="padding: 10px; border-top: 1px solid #eee;">
-        <h3 style="font-size: 16px;">Boilo-BWP-FR-HDF-board</h3>
-      </div>
-    </div>
+    // Close modal with ESC key
+    document.addEventListener('keydown', function(event) {
+      if (event.key === 'Escape') {
+        closeModal();
+      }
+    });
+  </script>
 
-    <div style="width: 250px; background: #fff; box-shadow: 0 2px 10px rgba(0,0,0,0.1); border-radius: 10px; overflow: hidden; text-align: center;">
-      <img src="assets/embossed hdf.jpg" alt="Embossed HDF Boards" style="width: 100%; height: 180px; object-fit: cover;">
-      <div style="padding: 10px; border-top: 1px solid #eee;">
-        <h3 style="font-size: 16px;">Embossed HDF Boards</h3>
-      </div>
-    </div>
-
-    <div style="width: 250px; background: #fff; box-shadow: 0 2px 10px rgba(0,0,0,0.1); border-radius: 10px; overflow: hidden; text-align: center;">
-      <img src="assets/flooring.jpg" alt="Flooring Accessories" style="width: 100%; height: 180px; object-fit: cover;">
-      <div style="padding: 10px; border-top: 1px solid #eee;">
-        <h3 style="font-size: 16px;">Flooring Accessories</h3>
-      </div>
-    </div>
-
-    <div style="width: 250px; background: #fff; box-shadow: 0 2px 10px rgba(0,0,0,0.1); border-radius: 10px; overflow: hidden; text-align: center;">
-      <img src="assets/hdf laminated.jpg" alt="HDF Laminated Flooring" style="width: 100%; height: 180px; object-fit: cover;">
-      <div style="padding: 10px; border-top: 1px solid #eee;">
-        <h3 style="font-size: 16px;">HDF Laminated Flooring</h3>
-      </div>
-    </div>
-
-    <div style="width: 250px; background: #fff; box-shadow: 0 2px 10px rgba(0,0,0,0.1); border-radius: 10px; overflow: hidden; text-align: center;">
-      <img src="assets/hdhmr door.jpg" alt="HDHMR Doors" style="width: 100%; height: 180px; object-fit: cover;">
-      <div style="padding: 10px; border-top: 1px solid #eee;">
-        <h3 style="font-size: 16px;">HDHMR Doors</h3>
-      </div>
-    </div>
-
-    <div style="width: 250px; background: #fff; box-shadow: 0 2px 10px rgba(0,0,0,0.1); border-radius: 10px; overflow: hidden; text-align: center;">
-      <img src="assets/hdhmr.jpg" alt="HDHMR Boards" style="width: 100%; height: 180px; object-fit: cover;">
-      <div style="padding: 10px; border-top: 1px solid #eee;">
-        <h3 style="font-size: 16px;">HDHMR Boards</h3>
-      </div>
-    </div>
-
-    <div style="width: 250px; background: #fff; box-shadow: 0 2px 10px rgba(0,0,0,0.1); border-radius: 10px; overflow: hidden; text-align: center;">
-      <img src="assets/mdf.jpg" alt="MDF Board" style="width: 100%; height: 180px; object-fit: cover;">
-      <div style="padding: 10px; border-top: 1px solid #eee;">
-        <h3 style="font-size: 16px;">MDF Board</h3>
-      </div>
-    </div>
-
-    <div style="width: 250px; background: #fff; box-shadow: 0 2px 10px rgba(0,0,0,0.1); border-radius: 10px; overflow: hidden; text-align: center;">
-      <img src="assets/ornamatte.jpg" alt="Ornamatte" style="width: 100%; height: 180px; object-fit: cover;">
-      <div style="padding: 10px; border-top: 1px solid #eee;">
-        <h3 style="font-size: 16px;">Ornamatte</h3>
-      </div>
-    </div>
-
-    <div style="width: 250px; background: #fff; box-shadow: 0 2px 10px rgba(0,0,0,0.1); border-radius: 10px; overflow: hidden; text-align: center;">
-      <img src="assets/particle.jpg" alt="Particle Boards" style="width: 100%; height: 180px; object-fit: cover;">
-      <div style="padding: 10px; border-top: 1px solid #eee;">
-        <h3 style="font-size: 16px;">Particle Boards</h3>
-      </div>
-    </div>
-
-    <div style="width: 250px; background: #fff; box-shadow: 0 2px 10px rgba(0,0,0,0.1); border-radius: 10px; overflow: hidden; text-align: center;">
-      <img src="assets/uv high glass.jpg" alt="UV High Gloss boards" style="width: 100%; height: 180px; object-fit: cover;">
-      <div style="padding: 10px; border-top: 1px solid #eee;">
-        <h3 style="font-size: 16px;">UV High Gloss Boards</h3>
-      </div>
-    </div>
-
-    <div style="width: 250px; background: #fff; box-shadow: 0 2px 10px rgba(0,0,0,0.1); border-radius: 10px; overflow: hidden; text-align: center;">
-      <img src="assets/value added.jpg" alt="Value Added Flooring" style="width: 100%; height: 180px; object-fit: cover;">
-      <div style="padding: 10px; border-top: 1px solid #eee;">
-        <h3 style="font-size: 16px;">Value Added Flooring</h3>
-      </div>
-    </div>
-
-  </div>
-</section>
-<!-- Footer -->
-<footer style="text-align: center; padding: 15px; background-color: #222; color: #eee; font-family: Arial, sans-serif; font-size: 14px;">
-  &copy; Atharva Creation
-</footer>
-
-<style>
-  @keyframes marquee {
-    0% { transform: translateX(0); }
-    100% { transform: translateX(-50%); }
-  }
-</style>
+</body>
+</html>
