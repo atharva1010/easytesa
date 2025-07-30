@@ -1,14 +1,21 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Balaji Action Buildwell Pvt. Ltd.</title>
+  <title>About Us - Balaji Action Buildwell Pvt. Ltd.</title>
   <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
     body {
       margin: 0;
-      font-family: Arial, sans-serif;
+      font-family: 'Arial', sans-serif;
+      color: #333;
+      line-height: 1.6;
     }
 
     /* Navbar Styling */
@@ -17,28 +24,36 @@
       justify-content: space-between;
       align-items: center;
       background-color: #002147;
-      padding: 10px 20px;
+      padding: 15px 20px;
       color: white;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      flex-wrap: wrap;
     }
 
     .navbar img {
       height: 50px;
+      width: auto;
     }
 
     .nav-links {
       display: flex;
       gap: 20px;
       align-items: center;
+      flex-wrap: wrap;
     }
 
     .nav-links a {
       color: white;
       text-decoration: none;
       font-weight: bold;
+      padding: 5px 0;
+      transition: all 0.3s ease;
     }
 
     .nav-links a:hover {
-      text-decoration: underline;
+      color: #ff8800;
     }
 
     .login-btn {
@@ -49,62 +64,175 @@
       border-radius: 5px;
       cursor: pointer;
       font-weight: bold;
+      transition: all 0.3s ease;
     }
 
-    /* Slideshow */
-    .slideshow-container {
-      position: relative;
-      max-width: 100%;
-      height: 400px;
-      overflow: hidden;
+    .login-btn:hover {
+      background-color: #e67300;
     }
 
-    .slide {
+    /* Mobile menu toggle */
+    .menu-toggle {
       display: none;
-      width: 100%;
-      height: 100%;
+      cursor: pointer;
+      font-size: 24px;
     }
 
-    .slide img {
+    /* About Us Page Styles */
+    .banner-image {
       width: 100%;
-      height: 100%;
+      height: auto;
+      max-height: 400px;
       object-fit: cover;
     }
 
-    /* Navigation buttons */
-    .prev, .next {
-      cursor: pointer;
-      position: absolute;
-      top: 50%;
-      transform: translateY(-50%);
-      padding: 12px;
-      color: white;
-      font-size: 24px;
-      font-weight: bold;
-      background-color: rgba(0, 0, 0, 0.4);
-      border-radius: 50%;
-      user-select: none;
+    .content-section {
+      display: flex;
+      align-items: flex-start;
+      padding: 40px;
+      gap: 40px;
+      flex-wrap: wrap;
     }
 
-    .prev {
-      left: 20px;
+    .content-image {
+      width: 100%;
+      max-width: 400px;
+      height: auto;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+      border-radius: 10px;
+      transition: transform 0.3s ease;
     }
 
-    .next {
-      right: 20px;
+    .content-image:hover {
+      transform: translateY(-5px);
     }
 
-    /* About Section */
-    .about-section {
-      padding: 30px 40px;
-      background-color: #f5f5f5;
-      text-align: justify;
-      line-height: 1.6;
+    .content-text {
+      flex: 1;
+      min-width: 300px;
     }
 
-    .about-section h2 {
-      text-align: center;
+    .section-title {
       color: #002147;
+      margin-bottom: 20px;
+      font-size: 28px;
+      position: relative;
+      padding-bottom: 10px;
+    }
+
+    .section-title:after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 60px;
+      height: 3px;
+      background-color: #ff8800;
+    }
+
+    .text-block {
+      padding: 0 40px 40px;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    /* Footer */
+    footer {
+      text-align: center;
+      padding: 20px;
+      background-color: #002147;
+      color: #fff;
+      font-size: 14px;
+    }
+
+    /* Responsive Styles */
+    @media (max-width: 1024px) {
+      .content-section {
+        padding: 30px;
+        gap: 30px;
+      }
+      
+      .text-block {
+        padding: 0 30px 30px;
+      }
+    }
+
+    @media (max-width: 768px) {
+      .navbar {
+        flex-direction: column;
+        align-items: flex-start;
+        padding: 15px;
+      }
+      
+      .nav-links {
+        display: none;
+        width: 100%;
+        flex-direction: column;
+        gap: 15px;
+        padding-top: 15px;
+      }
+      
+      .nav-links.active {
+        display: flex;
+      }
+      
+      .menu-toggle {
+        display: block;
+        position: absolute;
+        right: 20px;
+        top: 15px;
+      }
+      
+      .content-section {
+        padding: 20px;
+        flex-direction: column;
+      }
+      
+      .content-image {
+        max-width: 100%;
+        margin-bottom: 20px;
+      }
+      
+      .text-block {
+        padding: 0 20px 20px;
+      }
+      
+      .section-title {
+        font-size: 24px;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .navbar {
+        padding: 10px;
+      }
+      
+      .navbar img {
+        height: 40px;
+      }
+      
+      .content-section {
+        padding: 15px;
+        gap: 15px;
+      }
+      
+      .text-block {
+        padding: 0 15px 15px;
+      }
+      
+      .section-title {
+        font-size: 22px;
+      }
+    }
+
+    /* Animation */
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .animated-section {
+      animation: fadeIn 0.8s ease-out forwards;
     }
   </style>
 </head>
@@ -113,55 +241,98 @@
   <!-- Navbar -->
   <div class="navbar">
     <a href="index.html"><img src="assets/logo.png" alt="Logo"></a>
+    <div class="menu-toggle">☰</div>
     <div class="nav-links">
-     <a href="About.html">Home</a>
+      <a href="About.html">Home</a>
       <a href="about-us.html">About Us</a>
       <a href="products.html">Products</a>
       <a href="media.html">Media Gallery</a>
       <a href="contactus.html">Contact Us</a>
- 
-</a>
     </div>
   </div>
 
-<!-- About Us Section -->
-<div style="font-family: Arial, sans-serif;">
+  <!-- About Us Content -->
+  <div style="font-family: Arial, sans-serif;">
 
-  <!-- Top Banner Image -->
-  <img src="assets/about.jpg" alt="About Banner" style="width: 100%; height: auto; max-height: 400px; object-fit: cover;">
+    <!-- Top Banner Image -->
+    <img src="assets/about.jpg" alt="About Banner" class="banner-image">
 
-  <!-- Left Image with Text -->
-  <div style="display: flex; align-items: flex-start; padding: 40px; gap: 40px; flex-wrap: wrap;">
-    <img src="assets/01.png" alt="Action TESA" style="width: 300px; height: auto; box-shadow: 0 4px 8px rgba(0,0,0,0.2); border-radius: 10px;">
-    
-    <div style="flex: 1; min-width: 300px;">
-      <h2 style="color: #004080; margin-bottom: 15px;">ACTION TESA</h2>
-      <p style="text-align: justify; font-size: 16px; line-height: 1.6;">
-        The Action Group, one of India’s largest business conglomerates, was established in the early 1970s under the guidance of Shri N. K. Aggarwal, a respected leader, visionary, and philanthropist. Its journey began with Action Shoes, a footwear brand that quickly gained popularity and became a household name. Driven by a spirit of continuous growth, innovation, and a commitment to excellence, the group has diversified its operations across multiple sectors including footwear, electronics, real estate, chemicals, flex manufacturing, coal mining, and engineered wood panel products.
+    <!-- Left Image with Text -->
+    <div class="content-section animated-section">
+      <img src="assets/01.png" alt="Action TESA" class="content-image">
+      
+      <div class="content-text">
+        <h2 class="section-title">ACTION TESA</h2>
+        <p>
+          The Action Group, one of India's largest business conglomerates, was established in the early 1970s under the guidance of Shri N. K. Aggarwal, a respected leader, visionary, and philanthropist. Its journey began with Action Shoes, a footwear brand that quickly gained popularity and became a household name. Driven by a spirit of continuous growth, innovation, and a commitment to excellence, the group has diversified its operations across multiple sectors including footwear, electronics, real estate, chemicals, flex manufacturing, coal mining, and engineered wood panel products.
+        </p>
+      </div>
+    </div>
+
+    <!-- Center Paragraph -->
+    <div class="text-block animated-section">
+      <p>
+        Recognizing the anticipated future increase in demand for MDF, the group proactively expanded its portfolio to include the manufacturing of Particle board & MDF, along with a range of value-added products such as HDHMR, Boilo, HDF Laminate Wooden Flooring, Embossed HDF, UV-coated panel, Acrylic hi-gloss boards, and HDHMR doors under the brand name Action TESA. With a combination of technical expertise and an extensive array of designs available in a rich palette, Action TESA products have emerged as the preferred choice for customers. Notably, Action TESA proudly installed India's first and only 7th generation Contiroll machine from Seimpelkamp GmbH & Co., Germany, solidifying its position as the largest engineered wood panel products manufacturer in the country with an annual production capacity of 750,000 CBM. This commitment to innovation and excellence ensures that Action TESA maintains its leading position in the panel industry.
       </p>
     </div>
-  </div>
 
-  <!-- Center Paragraph -->
-  <div style="padding: 0 40px 40px 40px;">
-    <p style="text-align: justify; font-size: 16px; line-height: 1.6;">
-      Recognizing the anticipated future increase in demand for MDF, the group proactively expanded its portfolio to include the manufacturing of Particle board & MDF, along with a range of value-added products such as HDHMR, Boilo, HDF Laminate Wooden Flooring, Embossed HDF, UV-coated panel, Acrylic hi-gloss boards, and HDHMR doors under the brand name Action TESA. With a combination of technical expertise and an extensive array of designs available in a rich palette, Action TESA products have emerged as the preferred choice for customers. Notably, Action TESA proudly installed India’s first and only 7th generation Contiroll machine from Seimpelkamp GmbH & Co., Germany, solidifying its position as the largest engineered wood panel products manufacturer in the country with an annual production capacity of 750,000 CBM. This commitment to innovation and excellence ensures that Action TESA maintains its leading position in the panel industry.
-    </p>
-  </div>
-
-  <!-- Right Image with Text -->
-  <div style="display: flex; align-items: flex-start; padding: 0 40px 60px 40px; gap: 40px; flex-wrap: wrap; flex-direction: row-reverse;">
-    <img src="assets/02.png" alt="Action TESA Achievements" style="width: 300px; height: auto; box-shadow: 0 4px 8px rgba(0,0,0,0.2); border-radius: 10px;">
-    
-    <div style="flex: 1; min-width: 300px;">
-      <p style="text-align: justify; font-size: 16px; line-height: 1.6;">
-        Action TESA has achieved several significant milestones. It introduced the first thin MDF plant in India and currently holds the top position in the panel industry within the country. The company also pioneered the introduction of DOME Technology, providing unique features for each product. Additionally, Action TESA established the first true HDF-based laminate wooden flooring manufacturing facility in India. Furthermore, the company introduced UV High Gloss Panels for the first time in the country. This unwavering commitment to innovation and advancement solidifies Action TESA’s corporate leadership position in its respective field.
-      </p>
+    <!-- Right Image with Text -->
+    <div class="content-section animated-section" style="flex-direction: row-reverse;">
+      <img src="assets/02.png" alt="Action TESA Achievements" class="content-image">
+      
+      <div class="content-text">
+        <p>
+          Action TESA has achieved several significant milestones. It introduced the first thin MDF plant in India and currently holds the top position in the panel industry within the country. The company also pioneered the introduction of DOME Technology, providing unique features for each product. Additionally, Action TESA established the first true HDF-based laminate wooden flooring manufacturing facility in India. Furthermore, the company introduced UV High Gloss Panels for the first time in the country. This unwavering commitment to innovation and advancement solidifies Action TESA's corporate leadership position in its respective field.
+        </p>
+      </div>
     </div>
   </div>
-</div>
 
-<!-- Footer (fixed at the bottom of the page) -->
-<footer style="text-align: center; padding: 15px; background-color: #222; color: #eee; font-size: 14px; font-family: Arial, sans-serif;">
-  &copy; Atharva Creation
-</footer>
+  <!-- Footer -->
+  <footer>
+    &copy; 2023 Balaji Action Buildwell Pvt. Ltd. All Rights Reserved | Designed by Atharva Creation
+  </footer>
+
+  <script>
+    // Mobile menu toggle functionality
+    const menuToggle = document.querySelector('.menu-toggle');
+    const navLinks = document.querySelector('.nav-links');
+    
+    menuToggle.addEventListener('click', () => {
+      navLinks.classList.toggle('active');
+    });
+
+    // Smooth scrolling for anchor links
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+      anchor.addEventListener('click', function(e) {
+        e.preventDefault();
+        document.querySelector(this.getAttribute('href')).scrollIntoView({
+          behavior: 'smooth'
+        });
+      });
+    });
+
+    // Animation trigger on scroll
+    const animatedSections = document.querySelectorAll('.animated-section');
+    
+    function checkScroll() {
+      animatedSections.forEach(section => {
+        const sectionTop = section.getBoundingClientRect().top;
+        const windowHeight = window.innerHeight;
+        
+        if (sectionTop < windowHeight - 100) {
+          section.style.opacity = '1';
+          section.style.transform = 'translateY(0)';
+        }
+      });
+    }
+    
+    // Initial check
+    checkScroll();
+    
+    // Check on scroll
+    window.addEventListener('scroll', checkScroll);
+  </script>
+
+</body>
+</html>
