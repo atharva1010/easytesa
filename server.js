@@ -267,6 +267,21 @@ app.get("/api/users", async (req, res) => {
   }
 });
 
+  // Get complete chat history between two users
+app.get("/api/chat-history/:user1/:user2", authMiddleware, async (req, res) => {
+  try {
+    const messages = await Message.find({
+      $or: [
+        { from: req.params.user1, to: req.params.user2 },
+        { from: req.params.user2, to: req.params.user1 }
+      ]
+    }).sort({ timestamp: 1 });
+    
+    res.json({ success: true, messages });
+  } catch (err) {
+    res.status(500).json({ success: false, message: "Failed to load chat history" });
+  }
+});
 // Auth Endpoints
 app.post("/api/login", async (req, res) => {
   const { userId, password } = req.body;
