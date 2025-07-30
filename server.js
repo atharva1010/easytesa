@@ -350,7 +350,7 @@ app.post("/api/send-otp", async (req, res) => {
 
   try {
     await twilioClient.messages.create({
-      body: `Your easyTESA OTP is: ${otp}`,
+      body: `Hi ${user.username},\n\nYour easyTESA password reset OTP is: ${otp}\n\n⚠️ Do not share this code with anyone.\nThis OTP is valid for 10 minutes.\n\nIf you didn’t request this, please ignore this message.\n- easyTESA Support`,
       from: process.env.TWILIO_PHONE,
       to: `+91${user.mobile}`
     });
