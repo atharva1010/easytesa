@@ -1382,8 +1382,10 @@ let socket = null;
 let onlineUsers = new Set();
 let selectedMessage = null;
 let hasUnreadUpdates = false;
+let currentPage = 1;
+let isLoadingMessages = false;
+let hasMoreMessages = true;
 
-// Check authentication before loading the page
 function checkAuth() {
   const token = localStorage.getItem('token');
   if (!token) {
@@ -1408,11 +1410,36 @@ function initApp() {
     socket = io();
     socket.emit("join", userId);
     setupSocketListeners();
+    
+    // Load last active chat if exists
+    loadLastActiveChat();
   }
   
   initNotifications();
 }
-
+    async function loadLastActiveChat() {
+  const lastActiveChatId = localStorage.getItem('lastActiveChat');
+  if (lastActiveChatId) {
+    try {
+      // Load user data
+      const userResponse = await fetch(`/api/users`);
+      const users = await userResponse.json();
+      const chatUser = users.find(u => u.userId === lastActiveChatId);
+      
+      if (chatUser) {
+        // Load chat history
+        const messagesResponse = await fetch(`/api/chat-history/${userId}/${lastActiveChatId}`);
+        const { messages } = await messagesResponse.json();
+        
+        allMessages = messages || [];
+        openChatWith(chatUser);
+      }
+    } catch (error) {
+      console.error("Failed to load last active chat:", error);
+    }
+  }
+}
+    
 // Check if device is mobile
 function checkMobile() {
   isMobile = window.matchMedia("(max-width: 768px)").matches || 
@@ -1454,7 +1481,6 @@ function setupEventListeners() {
       hideChatUserList();
     }
 
-    // Hide context menu when clicking elsewhere
     if (!e.target.closest('.message-content') && !e.target.closest('.context-menu')) {
       document.getElementById('contextMenu').style.display = 'none';
     }
@@ -1467,9 +1493,82 @@ function setupEventListeners() {
       this.classList.add('active');
     });
   });
+
+  // Infinite scroll for chat messages
+  const chatContainer = isMobile ? 
+    document.getElementById('fullChatMessages') : 
+    document.getElementById('chatMessages');
+  
+  if (chatContainer) {
+    chatContainer.addEventListener('scroll', function() {
+      if (this.scrollTop < 100 && !isLoadingMessages && hasMoreMessages && activeChatUser) {
+        loadMoreMessages();
+      }
+    });
+  }
 }
 
-// Setup socket listeners
+    // Load more messages for infinite scroll
+async function loadMoreMessages() {
+  if (isLoadingMessages || !hasMoreMessages || !activeChatUser) return;
+  
+  isLoadingMessages = true;
+  showLoadingIndicator();
+  
+  try {
+    const response = await fetch(
+      `/api/chat-history/${userId}/${activeChatUser.userId}?page=${currentPage + 1}`
+    );
+    
+    if (response.ok) {
+      const { messages, pages } = await response.json();
+      if (messages && messages.length > 0) {
+        // Prepend older messages
+        allMessages = [...messages, ...allMessages];
+        currentPage++;
+        
+        // Store scroll position
+        const chatContainer = isMobile ? 
+          document.getElementById('fullChatMessages') : 
+          document.getElementById('chatMessages');
+        const scrollPos = chatContainer.scrollHeight - chatContainer.scrollTop;
+        
+        renderMessages(true); // Pass true to indicate we're prepending
+        
+        // Restore scroll position after render
+        setTimeout(() => {
+          chatContainer.scrollTop = chatContainer.scrollHeight - scrollPos;
+        }, 0);
+      }
+      hasMoreMessages = currentPage < pages;
+    }
+  } catch (error) {
+    console.error("Error loading more messages:", error);
+    showToast("Failed to load older messages");
+  } finally {
+    isLoadingMessages = false;
+    hideLoadingIndicator();
+  }
+}
+    function showLoadingIndicator() {
+  const loadingDiv = document.createElement('div');
+  loadingDiv.className = 'loading-messages';
+  loadingDiv.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Loading older messages...';
+  
+  const chatContainer = isMobile ? 
+    document.getElementById('fullChatMessages') : 
+    document.getElementById('chatMessages');
+  
+  chatContainer.prepend(loadingDiv);
+}
+
+function hideLoadingIndicator() {
+  const loadingDiv = document.querySelector('.loading-messages');
+  if (loadingDiv) {
+    loadingDiv.remove();
+  }
+}
+    
 function setupSocketListeners() {
   // Load messages from server
   socket.on("loadMessages", (messages) => {
@@ -1499,7 +1598,7 @@ function setupSocketListeners() {
       // Show Desktop Notification
       showDesktopNotification(`New Message from ${data.from}`, data.message);
 
-      // Play notification sound
+// Play notification sound
       playNotificationSound();
       return;
     }
@@ -1535,7 +1634,6 @@ function setupSocketListeners() {
     renderMessages();
   });
 }
-
     
 // Count unread messages from a specific sender
 function countUnreadMessages(senderId) {
@@ -2007,6 +2105,7 @@ function showDesktopNotification(title, body) {
 // Open chat with a user
 function openChatWith(user) {
   activeChatUser = user;
+  localStorage.setItem('lastActiveChat', user.userId);
   
   if (isMobile) {
     // Show full screen chat on mobile
@@ -2046,20 +2145,54 @@ function openChatWith(user) {
   }
 
   unreadSenders.delete(user.userId);
-  showMessageNotificationDot();
+  updateTotalUnreadCount();
+  
+  // Reset pagination
+  currentPage = 1;
+  hasMoreMessages = true;
+  
   renderMessages();
 }
+
 // Show all messages between active users
-function renderMessages() {
+function renderMessages(isPrepend = false) {
   const box = isMobile ? document.getElementById("fullChatMessages") : document.getElementById("chatMessages");
-  box.innerHTML = "";
+  
+  // Don't clear if we're prepending older messages
+  if (!isPrepend) {
+    box.innerHTML = "";
+  }
 
   const msgs = allMessages.filter(m =>
     (m.from === userId && m.to === activeChatUser.userId) ||
     (m.to === userId && m.from === activeChatUser.userId)
   );
 
-  msgs.forEach(m => appendMessage(m));
+  // If prepending, we need to maintain scroll position
+  if (isPrepend) {
+    const oldScrollHeight = box.scrollHeight;
+    const oldScrollTop = box.scrollTop;
+    
+    // Create document fragment for better performance
+    const fragment = document.createDocumentFragment();
+    
+    msgs.slice(0, -box.children.length).forEach(m => {
+      fragment.appendChild(createMessageElement(m));
+    });
+    
+    box.insertBefore(fragment, box.firstChild);
+    
+    // Restore scroll position
+    box.scrollTop = box.scrollHeight - oldScrollHeight + oldScrollTop;
+  } else {
+    // Normal render
+    msgs.forEach(m => {
+      box.appendChild(createMessageElement(m));
+    });
+    
+    // Scroll to bottom
+    box.scrollTop = box.scrollHeight;
+  }
   
   // Mark messages as seen
   if (socket && activeChatUser) {
@@ -2071,6 +2204,67 @@ function renderMessages() {
       });
     }
   }
+}
+function createMessageElement(msg) {
+  const isMe = msg.from === userId;
+  
+  const messageDiv = document.createElement("div");
+  messageDiv.className = `message message-${isMe ? 'outgoing' : 'incoming'}`;
+  
+  const senderDiv = document.createElement("div");
+  senderDiv.className = "message-sender";
+  senderDiv.textContent = isMe ? "You" : msg.from;
+  
+  const contentDiv = document.createElement("div");
+  contentDiv.className = "message-content";
+  contentDiv.textContent = msg.message;
+  
+  if (msg.edited) {
+    const editedSpan = document.createElement("span");
+    editedSpan.textContent = " (edited)";
+    editedSpan.style.fontSize = "0.7rem";
+    editedSpan.style.color = "var(--gray)";
+    contentDiv.appendChild(editedSpan);
+  }
+  
+  // Add timestamp
+  const timeDiv = document.createElement("div");
+  timeDiv.className = "message-time";
+  const sentTime = new Date(msg.timestamp || Date.now());
+  timeDiv.textContent = sentTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  
+  messageDiv.appendChild(senderDiv);
+  messageDiv.appendChild(contentDiv);
+  messageDiv.appendChild(timeDiv);
+  
+  // Add seen status for outgoing messages
+  if (isMe && msg.seen) {
+    const seenDiv = document.createElement("div");
+    seenDiv.className = "message-seen";
+    seenDiv.textContent = "Seen " + new Date(msg.seenTimestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    messageDiv.appendChild(seenDiv);
+  }
+  
+  // Add context menu for messages (only for outgoing and not seen messages)
+  if (isMe && !msg.seen) {
+    contentDiv.oncontextmenu = (e) => {
+      e.preventDefault();
+      showContextMenu(e, msg);
+      return false;
+    };
+    
+    contentDiv.addEventListener('touchstart', (e) => {
+      if (e.touches.length === 1) {
+        const touch = e.touches[0];
+        const touchHoldTimer = setTimeout(() => {
+          showContextMenu(touch, msg);
+        }, 800); // 800ms hold
+        contentDiv.addEventListener('touchend', () => clearTimeout(touchHoldTimer), { once: true });
+      }
+    });
+  }
+  
+  return messageDiv;
 }
 
 // Add one message to the box
