@@ -99,13 +99,15 @@ io.on("connection", (socket) => {
   socket.on("join", async (userId) => {
     onlineUsers[userId] = socket.id;
     socket.userId = userId;
-    io.emit("onlineUsers", Object.keys(onlineUsers));
-
+    
+    // Load all messages for this user (both sent and received)
     const messages = await Message.find({
       $or: [{ from: userId }, { to: userId }]
     }).sort({ timestamp: 1 });
 
+    // Also emit online users list
     socket.emit("loadMessages", messages);
+    io.emit("onlineUsers", Object.keys(onlineUsers));
   });
 
   socket.on("chatMessage", async (data) => {
