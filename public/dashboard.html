@@ -1110,71 +1110,73 @@
     }
 
     /* Mobile Chat Styles */
-    @media (max-width: 768px) {
-      .chat-box {
-        position: fixed;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        width: 100%;
-        max-width: 100%;
-        border-radius: 0;
-        display: none;
-        flex-direction: column;
-        z-index: 3000;
-      }
-      
-      .chat-header {
-        padding: 1rem;
-        border-radius: 0;
-      }
-      
-      .chat-messages {
-        flex: 1;
-        height: auto;
-        padding: 1rem;
-      }
-      
-      .chat-input-container {
-        padding: 1rem;
-        position: sticky;
-        bottom: 0;
-        background: rgba(15, 23, 42, 0.95);
-      }
-      
-      .full-screen-user-list {
-        position: fixed;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background: var(--darker);
-        z-index: 3000;
-        display: none;
-        flex-direction: column;
-      }
-      
-      .full-screen-user-list.show {
-        display: flex;
-      }
-      
-      .full-user-list-header {
-        background: linear-gradient(to right, var(--primary), var(--primary-dark));
-        color: white;
-        padding: 1rem;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-      }
-      
-      .full-user-list-container {
-        flex: 1;
-        overflow-y: auto;
-        padding: 1rem;
-      }
-    }
-  </style>
+/* Mobile Chat Styles */
+@media (max-width: 768px) {
+  .chat-box {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: 100%;
+    max-width: 100%;
+    border-radius: 0;
+    display: none;
+    flex-direction: column;
+    z-index: 3000;
+  }
+  
+  .chat-header {
+    padding: 1rem;
+    border-radius: 0;
+  }
+  
+  .chat-messages {
+    flex: 1;
+    height: auto;
+    padding: 1rem;
+  }
+  
+  .chat-input-container {
+    padding: 1rem;
+    position: sticky;
+    bottom: 0;
+    background: rgba(15, 23, 42, 0.95);
+  }
+  
+  .full-screen-user-list {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: var(--darker);
+    z-index: 3000;
+    display: none;
+    flex-direction: column;
+  }
+  
+  .full-screen-user-list.show {
+    display: flex;
+  }
+  
+  .full-user-list-header {
+    background: linear-gradient(to right, var(--primary), var(--primary-dark));
+    color: white;
+    padding: 1rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  
+  .full-user-list-container {
+    flex: 1;
+    overflow-y: auto;
+    padding: 1rem;
+  }
+}
+
+</style>
 </head>
 <body onload="checkAuth()">
   <!-- Header -->
@@ -1234,16 +1236,17 @@
 
   <!-- Full Screen User List (Mobile Only) -->
   <div id="fullScreenUserList" class="full-screen-user-list">
-    <div class="full-user-list-header">
-      <span><i class="fas fa-comments"></i> Chat Users</span>
-      <button onclick="closeFullScreenUserList()" style="background:none; border:none; color:white; font-size:1.2rem; cursor:pointer;">
-        <i class="fas fa-times"></i>
-      </button>
-    </div>
-    <div id="fullUserListContainer" class="full-user-list-container">
-      <p>No users available.</p>
-    </div>
+  <div class="full-user-list-header">
+    <span><i class="fas fa-comments"></i> Chat Users</span>
+    <button onclick="closeFullScreenUserList()" style="background:none; border:none; color:white; font-size:1.2rem; cursor:pointer;">
+      <i class="fas fa-times"></i>
+    </button>
   </div>
+  <div id="fullUserListContainer" class="full-user-list-container">
+    <p>No users available.</p>
+  </div>
+</div>
+
 
   <!-- Sidebar -->
   <div class="sidebar" id="sidebar">
@@ -1369,21 +1372,22 @@
   </div>
 
   <!-- Full Screen Chat (Mobile Only) -->
-  <div id="fullScreenChat" class="full-screen-chat">
-    <div class="full-chat-header">
-      <span id="fullChatWith"><i class="fas fa-user"></i> Chat with <span id="fullChatUserName"></span></span>
-      <button onclick="closeFullScreenChat()" style="background:none; border:none; color:white; font-size:1.2rem; cursor:pointer;">
-        <i class="fas fa-times"></i>
-      </button>
-    </div>
-    <div id="fullChatMessages" class="full-chat-messages"></div>
-    <div class="full-chat-input-container">
-      <input type="text" id="fullChatInput" class="chat-input" placeholder="Type a message..." onkeypress="if(event.key==='Enter') sendFullScreenMessage()">
-      <button onclick="sendFullScreenMessage()" class="chat-send-btn">
-        <i class="fas fa-paper-plane"></i>
-      </button>
-    </div>
+<div id="fullScreenChat" class="full-screen-chat">
+  <div class="full-chat-header">
+    <span id="fullChatWith"><i class="fas fa-user"></i> Chat with <span id="fullChatUserName"></span></span>
+    <button onclick="closeFullScreenChat()" style="background:none; border:none; color:white; font-size:1.2rem; cursor:pointer;">
+      <i class="fas fa-times"></i>
+    </button>
   </div>
+  <div id="fullChatMessages" class="full-chat-messages"></div>
+  <div class="full-chat-input-container">
+    <input type="text" id="fullChatInput" class="chat-input" placeholder="Type a message..." onkeypress="if(event.key==='Enter') sendFullScreenMessage()">
+    <button onclick="sendFullScreenMessage()" class="chat-send-btn">
+      <i class="fas fa-paper-plane"></i>
+    </button>
+  </div>
+</div>
+
 
   <!-- Context Menu -->
   <div id="contextMenu" class="context-menu">
@@ -1621,16 +1625,31 @@
       document.getElementById('profileCard').classList.remove('show');
     }
 
-    // Toggle notifications
-    function toggleNotifications() {
-      document.getElementById('updatePanel').classList.toggle('show');
-      if (document.getElementById('updatePanel').classList.contains('show')) {
-        hasUnreadUpdates = false;
-        document.getElementById('notification-dot').style.display = 'none';
-        hideProfileCard();
-        hideChatUserList();
-      }
+    function toggleChatUserList() {
+  // Hide other popups first
+  hideProfileCard();
+  hideNotifications();
+  
+  if (isMobile) {
+    // For mobile, show full screen user list
+    const fullScreenList = document.getElementById('fullScreenUserList');
+    fullScreenList.classList.toggle('show');
+    
+    // Load users if showing
+    if (fullScreenList.classList.contains('show')) {
+      loadChatUsers();
     }
+  } else {
+    // For desktop, show regular user list
+    const chatUserList = document.getElementById('chatUserList');
+    chatUserList.classList.toggle('show');
+    
+    // Load users if showing
+    if (chatUserList.classList.contains('show')) {
+      loadChatUsers();
+    }
+  }
+}
 
     function hideNotifications() {
       document.getElementById('updatePanel').classList.remove('show');
@@ -2046,58 +2065,57 @@
 
     // Open chat with a user
     function openChatWith(user) {
-      activeChatUser = user;
-      
-      if (isMobile) {
-        // Hide user list and show full screen chat
-        document.getElementById("fullScreenUserList").classList.remove('show');
-        document.getElementById("fullChatWith").innerHTML = `<i class="fas fa-user"></i> Chat with ${user.username}`;
-        document.getElementById("fullChatUserName").textContent = user.username;
-        document.getElementById("fullScreenChat").classList.add('show');
-        document.getElementById("fullChatMessages").innerHTML = '';
-        document.getElementById("fullChatInput").value = '';
-        
-        // Scroll to bottom of chat
-        setTimeout(() => {
-          const chatBox = document.getElementById("fullChatMessages");
-          chatBox.scrollTop = chatBox.scrollHeight;
-        }, 100);
-      } else {
-        // Desktop behavior remains the same
-        document.getElementById("chatWith").innerHTML = `<i class="fas fa-user"></i> Chat with ${user.username}`;
-        document.getElementById("chatBox").classList.add('show');
-        document.getElementById("chatMessages").innerHTML = '';
-        document.getElementById("chatInput").value = '';
-      }
+  activeChatUser = user;
+  
+  if (isMobile) {
+    // Hide user list and show full screen chat
+    document.getElementById("fullScreenUserList").classList.remove('show');
+    document.getElementById("fullChatWith").innerHTML = `<i class="fas fa-user"></i> Chat with ${user.username}`;
+    document.getElementById("fullChatUserName").textContent = user.username;
+    document.getElementById("fullScreenChat").classList.add('show');
+    document.getElementById("fullChatMessages").innerHTML = '';
+    document.getElementById("fullChatInput").value = '';
+    
+    // Scroll to bottom of chat
+    setTimeout(() => {
+      const chatBox = document.getElementById("fullChatMessages");
+      chatBox.scrollTop = chatBox.scrollHeight;
+    }, 100);
+  } else {
+    // Desktop behavior
+    document.getElementById("chatWith").innerHTML = `<i class="fas fa-user"></i> Chat with ${user.username}`;
+    document.getElementById("chatBox").classList.add('show');
+    document.getElementById("chatMessages").innerHTML = '';
+    document.getElementById("chatInput").value = '';
+  }
 
-      // Remove notification badge
-      const el = userElements[user.userId];
-      if (el) {
-        const badge = el.querySelector(".msg-count");
-        if (badge) badge.remove();
-      }
+  // Remove notification badge
+  const el = userElements[user.userId];
+  if (el) {
+    const badge = el.querySelector(".msg-count");
+    if (badge) badge.remove();
+  }
 
-      // Update unread status
-      unreadSenders.delete(user.userId);
-      showMessageNotificationDot();
-      
-      // Load messages
-      renderMessages();
-      
-      // Mark messages as seen
-      if (socket) {
-        const unseenMessages = allMessages.filter(m => 
-          m.from === user.userId && 
-          m.to === userId && 
-          !m.seen
-        );
-        
-        unseenMessages.forEach(msg => {
-          socket.emit("markAsSeen", { messageId: msg.id });
-        });
-      }
-    }
-
+  // Update unread status
+  unreadSenders.delete(user.userId);
+  showMessageNotificationDot();
+  
+  // Load messages
+  renderMessages();
+  
+  // Mark messages as seen
+  if (socket) {
+    const unseenMessages = allMessages.filter(m => 
+      m.from === user.userId && 
+      m.to === userId && 
+      !m.seen
+    );
+    
+    unseenMessages.forEach(msg => {
+      socket.emit("markAsSeen", { messageId: msg.id });
+    });
+  }
+}
     // Show all messages between active users
     function renderMessages() {
       const box = isMobile ? document.getElementById("fullChatMessages") : document.getElementById("chatMessages");
