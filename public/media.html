@@ -2,187 +2,359 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Media Gallery</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Media Gallery - Balaji Action Buildwell Pvt. Ltd.</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
   <style>
-    body {
-      font-family: Arial, sans-serif;
+    * {
       margin: 0;
       padding: 0;
+      box-sizing: border-box;
     }
 
-    .top-image {
-      width: 100%;
-      height: auto;
+    body {
+      font-family: 'Arial', sans-serif;
+      margin: 0;
+      padding: 0;
+      color: #333;
+      background-color: #f5f5f5;
     }
 
-    .gallery-container {
-      padding: 20px;
-    }
-
-    .folder {
-      margin-bottom: 40px;
-      border: 1px solid #ccc;
-      padding: 15px;
-      border-radius: 10px;
-      background-color: #f9f9f9;
-    }
-
-    .folder-title {
-      font-size: 20px;
-      font-weight: bold;
-      margin-bottom: 15px;
-      color: #2c3e50;
-    }
-
-    .folder-images {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 15px;
-    }
-
-    .folder-images img {
-      width: 200px;
-      height: 150px;
-      object-fit: cover;
-      border: 2px solid #ddd;
-      border-radius: 8px;
-      transition: transform 0.3s ease;
-    }
-
-    .folder-images img:hover {
-      transform: scale(1.05);
-      border-color: #333;
-    }
-       /* Navbar Styling */
+    /* Navbar Styling */
     .navbar {
       display: flex;
       justify-content: space-between;
       align-items: center;
       background-color: #002147;
-      padding: 10px 20px;
+      padding: 15px 20px;
       color: white;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      flex-wrap: wrap;
     }
 
     .navbar img {
       height: 50px;
+      width: auto;
     }
 
     .nav-links {
       display: flex;
       gap: 20px;
       align-items: center;
+      flex-wrap: wrap;
     }
 
     .nav-links a {
       color: white;
       text-decoration: none;
       font-weight: bold;
+      padding: 5px 0;
+      transition: all 0.3s ease;
     }
 
     .nav-links a:hover {
-      text-decoration: underline;
+      color: #ff8800;
     }
 
-    .login-btn {
-      background-color: #ff8800;
-      padding: 8px 16px;
-      color: white;
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
-      font-weight: bold;
-    }
-
-    /* Slideshow */
-    .slideshow-container {
-      position: relative;
-      max-width: 100%;
-      height: 400px;
-      overflow: hidden;
-    }
-
-    .slide {
+    /* Mobile menu toggle */
+    .menu-toggle {
       display: none;
-      width: 100%;
-      height: 100%;
+      cursor: pointer;
+      font-size: 24px;
     }
 
-    .slide img {
+    /* Banner Image */
+    .top-image {
       width: 100%;
-      height: 100%;
+      height: auto;
+      max-height: 400px;
       object-fit: cover;
     }
 
-    /* Navigation buttons */
-    .prev, .next {
-      cursor: pointer;
-      position: absolute;
-      top: 50%;
-      transform: translateY(-50%);
-      padding: 12px;
-      color: white;
-      font-size: 24px;
-      font-weight: bold;
-      background-color: rgba(0, 0, 0, 0.4);
-      border-radius: 50%;
-      user-select: none;
+    /* Gallery Container */
+    .gallery-container {
+      padding: 30px 20px;
+      max-width: 1200px;
+      margin: 0 auto;
     }
 
-    .prev {
-      left: 20px;
-    }
-
-    .next {
-      right: 20px;
-    }
-
-    /* About Section */
-    .about-section {
-      padding: 30px 40px;
-      background-color: #f5f5f5;
-      text-align: justify;
-      line-height: 1.6;
-    }
-
-    .about-section h2 {
+    .section-title {
       text-align: center;
+      margin: 30px 0;
       color: #002147;
+      font-size: 2rem;
+      position: relative;
+      padding-bottom: 15px;
+    }
+
+    .section-title:after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 80px;
+      height: 3px;
+      background-color: #ff8800;
+    }
+
+    /* Gallery Folders */
+    .folder {
+      margin-bottom: 40px;
+      border: 1px solid #ddd;
+      padding: 20px;
+      border-radius: 10px;
+      background-color: white;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+    }
+
+    .folder-title {
+      font-size: 1.5rem;
+      font-weight: bold;
+      margin-bottom: 20px;
+      color: #002147;
+      padding-bottom: 10px;
+      border-bottom: 2px solid #eee;
+    }
+
+    .folder-images {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 20px;
+    }
+
+    .gallery-item {
+      position: relative;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+      transition: all 0.3s ease;
+      aspect-ratio: 4/3;
+    }
+
+    .gallery-item:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+    }
+
+    .gallery-item img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transition: transform 0.5s ease;
+    }
+
+    .gallery-item:hover img {
+      transform: scale(1.1);
+    }
+
+    .gallery-caption {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: rgba(0, 33, 71, 0.8);
+      color: white;
+      padding: 10px;
+      text-align: center;
+      font-size: 0.9rem;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+
+    .gallery-item:hover .gallery-caption {
+      opacity: 1;
+    }
+
+    /* Lightbox Modal */
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 1000;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0,0,0,0.9);
+      overflow: auto;
+    }
+
+    .modal-content {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      height: 100%;
+      padding: 20px;
+    }
+
+    .modal-img {
+      max-width: 90%;
+      max-height: 80vh;
+      object-fit: contain;
+    }
+
+    .close {
+      position: absolute;
+      top: 20px;
+      right: 30px;
+      color: white;
+      font-size: 35px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .caption-text {
+      color: white;
+      text-align: center;
+      margin-top: 15px;
+      font-size: 1.2rem;
+    }
+
+    /* Footer */
+    footer {
+      text-align: center;
+      padding: 20px;
+      background-color: #002147;
+      color: #fff;
+      font-size: 14px;
+    }
+
+    /* Responsive Styles */
+    @media (max-width: 1024px) {
+      .folder-images {
+        grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+      }
+    }
+
+    @media (max-width: 768px) {
+      .navbar {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+      
+      .nav-links {
+        display: none;
+        width: 100%;
+        flex-direction: column;
+        gap: 15px;
+        padding-top: 15px;
+      }
+      
+      .nav-links.active {
+        display: flex;
+      }
+      
+      .menu-toggle {
+        display: block;
+        position: absolute;
+        right: 20px;
+        top: 15px;
+      }
+      
+      .gallery-container {
+        padding: 20px 15px;
+      }
+      
+      .folder {
+        padding: 15px;
+      }
+      
+      .folder-images {
+        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+        gap: 15px;
+      }
+      
+      .section-title {
+        font-size: 1.8rem;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .navbar {
+        padding: 10px;
+      }
+      
+      .navbar img {
+        height: 40px;
+      }
+      
+      .section-title {
+        font-size: 1.5rem;
+        margin: 20px 0;
+      }
+      
+      .folder-images {
+        grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+        gap: 10px;
+      }
+      
+      .folder-title {
+        font-size: 1.3rem;
+      }
     }
   </style>
 </head>
 <body>
 
-
-   <!-- Navbar -->
+  <!-- Navbar -->
   <div class="navbar">
     <a href="index.html"><img src="assets/logo.png" alt="Logo"></a>
-    <div class="nav-links">  
-	 <a href="About.html">Home</a>
+    <div class="menu-toggle">☰</div>
+    <div class="nav-links">
+      <a href="About.html">Home</a>
       <a href="about-us.html">About Us</a>
       <a href="products.html">Products</a>
       <a href="media.html">Media Gallery</a>
       <a href="contactus.html">Contact Us</a>
-</a>
     </div>
   </div>
+
   <!-- Top Banner -->
   <img src="assets/media.jpg" alt="Media Gallery Banner" class="top-image">
 
   <!-- Main Gallery Section -->
   <div class="gallery-container">
+    <h2 class="section-title">Media Gallery</h2>
 
     <!-- Folder 1 -->
     <div class="folder">
       <div class="folder-title">Factory Photos</div>
       <div class="folder-images">
-        <img src="assets/factory1.png" alt="Factory 1">
-        <img src="assets/factory2.jpg" alt="Factory 2">
-        <img src="assets/factory3.jpg" alt="Factory 3">
-        <img src="assets/factory4.png" alt="Factory 1">
-        <img src="assets/factory5.jpg" alt="Factory 3">
-        <img src="assets/factory6.jpg" alt="Factory 3">
-        <img src="assets/factory7.jpg" alt="Factory 3">
-        <img src="assets/factory8.jpg" alt="Factory 3">
+        <div class="gallery-item" onclick="openModal('assets/factory1.png', 'Factory Image 1')">
+          <img src="assets/factory1.png" alt="Factory 1">
+          <div class="gallery-caption">Factory Image 1</div>
+        </div>
+        <div class="gallery-item" onclick="openModal('assets/factory2.jpg', 'Factory Image 2')">
+          <img src="assets/factory2.jpg" alt="Factory 2">
+          <div class="gallery-caption">Factory Image 2</div>
+        </div>
+        <div class="gallery-item" onclick="openModal('assets/factory3.jpg', 'Factory Image 3')">
+          <img src="assets/factory3.jpg" alt="Factory 3">
+          <div class="gallery-caption">Factory Image 3</div>
+        </div>
+        <div class="gallery-item" onclick="openModal('assets/factory4.png', 'Factory Image 4')">
+          <img src="assets/factory4.png" alt="Factory 4">
+          <div class="gallery-caption">Factory Image 4</div>
+        </div>
+        <div class="gallery-item" onclick="openModal('assets/factory5.jpg', 'Factory Image 5')">
+          <img src="assets/factory5.jpg" alt="Factory 5">
+          <div class="gallery-caption">Factory Image 5</div>
+        </div>
+        <div class="gallery-item" onclick="openModal('assets/factory6.jpg', 'Factory Image 6')">
+          <img src="assets/factory6.jpg" alt="Factory 6">
+          <div class="gallery-caption">Factory Image 6</div>
+        </div>
+        <div class="gallery-item" onclick="openModal('assets/factory7.jpg', 'Factory Image 7')">
+          <img src="assets/factory7.jpg" alt="Factory 7">
+          <div class="gallery-caption">Factory Image 7</div>
+        </div>
+        <div class="gallery-item" onclick="openModal('assets/factory8.jpg', 'Factory Image 8')">
+          <img src="assets/factory8.jpg" alt="Factory 8">
+          <div class="gallery-caption">Factory Image 8</div>
+        </div>
       </div>
     </div>
 
@@ -190,9 +362,18 @@
     <div class="folder">
       <div class="folder-title">Product Launch Events</div>
       <div class="folder-images">
-        <img src="assets/event1.jpg" alt="Event 1">
-        <img src="assets/event2.jpg" alt="Event 2">
-        <img src="assets/event3.jpg" alt="Event 3">
+        <div class="gallery-item" onclick="openModal('assets/event1.jpg', 'Product Launch Event 1')">
+          <img src="assets/event1.jpg" alt="Event 1">
+          <div class="gallery-caption">Product Launch Event 1</div>
+        </div>
+        <div class="gallery-item" onclick="openModal('assets/event2.jpg', 'Product Launch Event 2')">
+          <img src="assets/event2.jpg" alt="Event 2">
+          <div class="gallery-caption">Product Launch Event 2</div>
+        </div>
+        <div class="gallery-item" onclick="openModal('assets/event3.jpg', 'Product Launch Event 3')">
+          <img src="assets/event3.jpg" alt="Event 3">
+          <div class="gallery-caption">Product Launch Event 3</div>
+        </div>
       </div>
     </div>
 
@@ -200,23 +381,74 @@
     <div class="folder">
       <div class="folder-title">Certifications & Awards</div>
       <div class="folder-images">
-        <img src="assets/award1.jpg" alt="Award 1">
-        <img src="assets/award2.jpg" alt="Award 2">
-        <img src="assets/award3.jpg" alt="Award 3">
+        <div class="gallery-item" onclick="openModal('assets/award1.jpg', 'Award 1')">
+          <img src="assets/award1.jpg" alt="Award 1">
+          <div class="gallery-caption">Award 1</div>
+        </div>
+        <div class="gallery-item" onclick="openModal('assets/award2.jpg', 'Award 2')">
+          <img src="assets/award2.jpg" alt="Award 2">
+          <div class="gallery-caption">Award 2</div>
+        </div>
+        <div class="gallery-item" onclick="openModal('assets/award3.jpg', 'Award 3')">
+          <img src="assets/award3.jpg" alt="Award 3">
+          <div class="gallery-caption">Award 3</div>
+        </div>
       </div>
     </div>
-
   </div>
-<!-- Footer -->
-<footer style="text-align: center; padding: 15px; background-color: #222; color: #eee; font-family: Arial, sans-serif; font-size: 14px;">
-  &copy; Atharva Creation
-</footer>
 
-<style>
-  @keyframes marquee {
-    0% { transform: translateX(0); }
-    100% { transform: translateX(-50%); }
-  }
-</style>
+  <!-- Lightbox Modal -->
+  <div id="imageModal" class="modal">
+    <span class="close" onclick="closeModal()">&times;</span>
+    <div class="modal-content">
+      <img id="modalImage" class="modal-img">
+      <div id="caption" class="caption-text"></div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer>
+    &copy; 2023 Balaji Action Buildwell Pvt. Ltd. All Rights Reserved | Designed by Atharva Creation
+  </footer>
+
+  <script>
+    // Mobile menu toggle functionality
+    const menuToggle = document.querySelector('.menu-toggle');
+    const navLinks = document.querySelector('.nav-links');
+    
+    menuToggle.addEventListener('click', () => {
+      navLinks.classList.toggle('active');
+    });
+
+    // Lightbox functionality
+    function openModal(src, caption) {
+      const modal = document.getElementById('imageModal');
+      const modalImg = document.getElementById('modalImage');
+      const captionText = document.getElementById('caption');
+      
+      modal.style.display = "block";
+      modalImg.src = src;
+      captionText.innerHTML = caption;
+      
+      // Close modal when clicking outside image
+      modal.onclick = function(event) {
+        if (event.target === modal) {
+          closeModal();
+        }
+      }
+    }
+
+    function closeModal() {
+      document.getElementById('imageModal').style.display = "none";
+    }
+
+    // Close modal with ESC key
+    document.addEventListener('keydown', function(event) {
+      if (event.key === 'Escape') {
+        closeModal();
+      }
+    });
+  </script>
+
 </body>
 </html>
