@@ -18,22 +18,26 @@
       background-color: #002147;
       padding: 10px 20px;
       color: white;
+      flex-wrap: wrap;
     }
 
     .navbar img {
       height: 50px;
+      width: auto;
     }
 
     .nav-links {
       display: flex;
-      gap: 20px;
+      gap: 15px;
       align-items: center;
+      flex-wrap: wrap;
     }
 
     .nav-links a {
       color: white;
       text-decoration: none;
       font-weight: bold;
+      padding: 5px 0;
     }
 
     .nav-links a:hover {
@@ -50,23 +54,32 @@
       font-weight: bold;
     }
 
+    /* Mobile menu toggle */
+    .menu-toggle {
+      display: none;
+      cursor: pointer;
+      font-size: 24px;
+    }
+
     /* Slideshow */
     .slideshow-container {
       position: relative;
       max-width: 100%;
-      height: 400px;
+      height: auto;
+      min-height: 300px;
       overflow: hidden;
     }
 
     .slide {
       display: none;
       width: 100%;
-      height: 100%;
+      height: auto;
     }
 
     .slide img {
       width: 100%;
-      height: 100%;
+      height: auto;
+      max-height: 500px;
       object-fit: cover;
     }
 
@@ -86,16 +99,16 @@
     }
 
     .prev {
-      left: 20px;
+      left: 10px;
     }
 
     .next {
-      right: 20px;
+      right: 10px;
     }
 
     /* About Section */
     .about-section {
-      padding: 30px 40px;
+      padding: 20px;
       background-color: #f5f5f5;
       text-align: justify;
       line-height: 1.6;
@@ -104,6 +117,153 @@
     .about-section h2 {
       text-align: center;
       color: #002147;
+      margin-top: 0;
+    }
+
+    /* Chairman Section */
+    .chairman-section {
+      display: flex;
+      gap: 20px;
+      padding: 20px;
+      background-color: #ffffff;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .chairman-image-container {
+      flex: 1;
+      min-width: 280px;
+      text-align: center;
+      margin: 0 auto;
+    }
+
+    .chairman-image {
+      display: inline-block;
+      padding: 10px;
+      background: #f9f9f9;
+      border: 1px solid #ccc;
+      border-radius: 10px;
+      box-shadow: 8px 8px 15px rgba(0, 0, 0, 0.2);
+      transition: transform 0.3s ease;
+      max-width: 100%;
+    }
+
+    .chairman-message {
+      flex: 2;
+      min-width: 300px;
+      text-align: justify;
+    }
+
+    /* Clients Section */
+    .clients-section {
+      padding: 20px;
+      background-color: #f4f4f4;
+    }
+
+    .clients-section h2 {
+      text-align: center;
+      margin-bottom: 20px;
+      font-family: Arial, sans-serif;
+    }
+
+    .marquee-container {
+      overflow: hidden;
+      white-space: nowrap;
+      width: 100%;
+    }
+
+    .marquee-track {
+      display: inline-block;
+      animation: marquee 20s linear infinite;
+    }
+
+    .marquee-track img {
+      width: 100px;
+      height: 60px;
+      object-fit: contain;
+      margin-right: 15px;
+      border-radius: 8px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+
+    /* Footer */
+    footer {
+      text-align: center;
+      padding: 15px;
+      background-color: #222;
+      color: #eee;
+      font-family: Arial, sans-serif;
+      font-size: 14px;
+    }
+
+    @keyframes marquee {
+      0% { transform: translateX(0); }
+      100% { transform: translateX(-50%); }
+    }
+
+    /* Responsive adjustments */
+    @media (max-width: 768px) {
+      .navbar {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+      
+      .nav-links {
+        display: none;
+        width: 100%;
+        flex-direction: column;
+        gap: 10px;
+        padding-top: 10px;
+      }
+      
+      .nav-links.active {
+        display: flex;
+      }
+      
+      .menu-toggle {
+        display: block;
+        position: absolute;
+        right: 20px;
+        top: 15px;
+      }
+      
+      .slide img {
+        height: 300px;
+      }
+      
+      .chairman-image-container, .chairman-message {
+        flex: 100%;
+      }
+      
+      .marquee-track img {
+        width: 80px;
+        height: 50px;
+        margin-right: 10px;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .slideshow-container {
+        min-height: 200px;
+      }
+      
+      .slide img {
+        height: 200px;
+      }
+      
+      .prev, .next {
+        font-size: 18px;
+        padding: 8px;
+      }
+      
+      .about-section, .chairman-section {
+        padding: 15px;
+      }
+      
+      .marquee-track img {
+        width: 70px;
+        height: 40px;
+      }
     }
   </style>
 </head>
@@ -112,14 +272,13 @@
   <!-- Navbar -->
   <div class="navbar">
     <a href="index.html"><img src="assets/logo.png" alt="Logo"></a>
+    <div class="menu-toggle">☰</div>
     <div class="nav-links">
       <a href="About.html">Home</a>
       <a href="about-us.html">About Us</a>
       <a href="products.html">Products</a>
       <a href="media.html">Media Gallery</a>
       <a href="contactus.html">Contact Us</a>
-  
-</a>
     </div>
   </div>
 
@@ -130,7 +289,6 @@
     <div class="slide"><img src="assets/banner3.jpg" alt="Slide 3"></div>
     <div class="slide"><img src="assets/banner4.jpg" alt="Slide 4"></div>
 
-
     <!-- Navigation arrows -->
     <a class="prev" onclick="plusSlides(-1)">❮</a>
     <a class="next" onclick="plusSlides(1)">❯</a>
@@ -140,142 +298,82 @@
   <div class="about-section">
     <h2>About Balaji Action Buildwell Private Limited</h2>
     <p>
-      Balaji Action Buildwell Private Limited, operating under the brand name Action TESA, is a prominent manufacturer in India’s panel industry. Established in 2009, the company has its state-of-the-art manufacturing facility in Sitarganj, Uttarakhand. Known for its wide array of engineered wood products like Plain Particle Boards, MDF Boards, and Decorative Wall Panels, Action TESA has marked several industry-first milestones. It was the first in India to install a thin MDF/HDF plant, introduce DOME Technology, and manufacture True HDF-Based Laminate Wooden Flooring. Additionally, it pioneered the launch of UV High Gloss Panels in the Indian market.
-      The Sitarganj plant is equipped with advanced German technology, notably the 7th generation Contiroll from Seimpelkamp GmbH & Co., making Action TESA the largest MDF manufacturer in India, with an annual capacity of 400,000 cubic meters. The company’s product portfolio includes Pre-laminated Particle Boards, High Gloss Acrylic Boards, UV Coated Boards, HDHMR Boards, and more—serving diverse needs in furniture and interior design.
+      Balaji Action Buildwell Private Limited, operating under the brand name Action TESA, is a prominent manufacturer in India's panel industry. Established in 2009, the company has its state-of-the-art manufacturing facility in Sitarganj, Uttarakhand. Known for its wide array of engineered wood products like Plain Particle Boards, MDF Boards, and Decorative Wall Panels, Action TESA has marked several industry-first milestones. It was the first in India to install a thin MDF/HDF plant, introduce DOME Technology, and manufacture True HDF-Based Laminate Wooden Flooring. Additionally, it pioneered the launch of UV High Gloss Panels in the Indian market.
+      The Sitarganj plant is equipped with advanced German technology, notably the 7th generation Contiroll from Seimpelkamp GmbH & Co., making Action TESA the largest MDF manufacturer in India, with an annual capacity of 400,000 cubic meters. The company's product portfolio includes Pre-laminated Particle Boards, High Gloss Acrylic Boards, UV Coated Boards, HDHMR Boards, and more—serving diverse needs in furniture and interior design.
    
       Action TESA is deeply committed to sustainability. It runs large-scale plantation drives, distributes high-yield eucalyptus saplings to farmers at subsidized rates, and offers technical guidance, promoting environmental conservation and farmer welfare. This helps increase green cover, enhances carbon sequestration, and ensures a sustainable raw material supply chain.
    
       As of 2024, the company employs around 2,240 individuals and has been recognized as a Great Place to Work, emphasizing its dedication to employee satisfaction and a positive work culture. In conclusion, Balaji Action Buildwell Private Limited, through Action TESA, continues to lead the Indian panel industry with innovation, sustainability, and world-class manufacturing excellence.
     </p>
   </div>
-<!-- Chairman Message Section -->
-<div class="chairman-section" style="display: flex; gap: 40px; padding: 40px; background-color: #ffffff; flex-wrap: wrap; align-items: center;">
-  
-  <!-- Left: Chairman Image and Title with 3D effect -->
-  <div style="flex: 1; min-width: 280px; text-align: center;">
-    <div style="
-      display: inline-block;
-      padding: 10px;
-      background: #f9f9f9;
-      border: 1px solid #ccc;
-      border-radius: 10px;
-      box-shadow: 8px 8px 15px rgba(0, 0, 0, 0.2);
-      transform: perspective(800px) rotateY(-2deg);
-      transition: transform 0.3s ease;
-    ">
-      <img src="assets/chairman.png" alt="Chairman" style="width: 100%; max-width: 300px; border-radius: 8px;"/>
+
+  <!-- Chairman Message Section -->
+  <div class="chairman-section">
+    <!-- Left: Chairman Image and Title with 3D effect -->
+    <div class="chairman-image-container">
+      <div class="chairman-image">
+        <img src="assets/chairman.png" alt="Chairman" style="width: 100%; max-width: 300px; border-radius: 8px;"/>
+      </div>
+      <h3>Mr. N.K. Aggarwal</h3>
+      <p style="font-weight: bold; color: #555;">(Chairman)</p>
     </div>
-    <h3 style="margin: 15px 0 5px;">Mr. N.K. Aggarwal</h3>
-    <p style="font-weight: bold; color: #555;">(Chairman)</p>
-  </div>
 
-  <!-- Right: Message Text -->
-  <div style="flex: 2; min-width: 300px; text-align: justify;">
-    <p>
-      <strong>Dear Friends,</strong><br><br>
-      It gives me a sense of pride to speak to you. My heart fills up with joy when I see the rapid strides made by our company in the last few years with the active and passionate involvement of all stakeholders. In spite of subdued economic conditions, we could outpace ourselves mainly due to our value-based and innovative marketing strategies focused towards inclusive growth. We owe this success to our highly motivated team of employees and quality trade partners.
-    </p>
-    <p>
-      India, due to its population and demographic assets, presents huge opportunities and therefore I always believe that we have miles to go to realize our vision. There is a renewed hope of a new resurgent India in the making. The spirit embodied in “Sabka Saath, Sabka Vikas” holds a promise & an opportunity to collectively script a new destiny for our nation.
-    </p>
-    <p>
-      Each step taken towards our journey is a milestone which should fuel us to reach greater heights—and this we can only do together as a team with a shared vision. Come, let’s be a part of the new TESA story with true Indian values. Let’s make “Made in India – For the World” tag a matter of pride.
-    </p>
-    <p>
-      Wishing you great success & looking forward to hear from you.
-    </p>
-  </div>
-</div>
-
-<!-- Our Clients Marquee Section -->
-<div style="padding: 30px 40px; background-color: #f4f4f4;">
-  <h2 style="text-align: center; margin-bottom: 20px; font-family: Arial, sans-serif;">Our Clients</h2>
-
-  <div class="marquee-container" style="overflow: hidden; white-space: nowrap;">
-
-    <div class="marquee-track" style="
-      display: inline-block;
-      animation: marquee 20s linear infinite;
-    ">
-      <img src="assets/1.jpg" alt="Client 1" style="width: 120px; height: 80px; object-fit: cover; margin-right: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
-      <img src="assets/2.jpg" alt="Client 2" style="width: 120px; height: 80px; object-fit: cover; margin-right: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
-      <img src="assets/3.jpg" alt="Client 3" style="width: 120px; height: 80px; object-fit: cover; margin-right: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
-      <img src="assets/4.jpg" alt="Client 4" style="width: 120px; height: 80px; object-fit: cover; margin-right: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
-      <img src="assets/5.jpg" alt="Client 5" style="width: 120px; height: 80px; object-fit: cover; margin-right: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
-
-      <!-- Repeat images for smooth loop -->
-      <img src="assets/1.jpg" alt="Client 1" style="width: 120px; height: 80px; object-fit: cover; margin-right: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
-      <img src="assets/2.jpg" alt="Client 2" style="width: 120px; height: 80px; object-fit: cover; margin-right: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
-      <img src="assets/3.jpg" alt="Client 3" style="width: 120px; height: 80px; object-fit: cover; margin-right: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
-      <img src="assets/4.jpg" alt="Client 4" style="width: 120px; height: 80px; object-fit: cover; margin-right: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
-      <img src="assets/5.jpg" alt="Client 5" style="width: 120px; height: 80px; object-fit: cover; margin-right: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
-      <img src="assets/6.jpg" alt="Client 6" style="width: 120px; height: 80px; object-fit: cover; margin-right: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
-      <img src="assets/7.jpg" alt="Client 7" style="width: 120px; height: 80px; object-fit: cover; margin-right: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
+    <!-- Right: Message Text -->
+    <div class="chairman-message">
+      <p>
+        <strong>Dear Friends,</strong><br><br>
+        It gives me a sense of pride to speak to you. My heart fills up with joy when I see the rapid strides made by our company in the last few years with the active and passionate involvement of all stakeholders. In spite of subdued economic conditions, we could outpace ourselves mainly due to our value-based and innovative marketing strategies focused towards inclusive growth. We owe this success to our highly motivated team of employees and quality trade partners.
+      </p>
+      <p>
+        India, due to its population and demographic assets, presents huge opportunities and therefore I always believe that we have miles to go to realize our vision. There is a renewed hope of a new resurgent India in the making. The spirit embodied in "Sabka Saath, Sabka Vikas" holds a promise & an opportunity to collectively script a new destiny for our nation.
+      </p>
+      <p>
+        Each step taken towards our journey is a milestone which should fuel us to reach greater heights—and this we can only do together as a team with a shared vision. Come, let's be a part of the new TESA story with true Indian values. Let's make "Made in India – For the World" tag a matter of pride.
+      </p>
+      <p>
+        Wishing you great success & looking forward to hear from you.
+      </p>
     </div>
   </div>
-</div>
 
-<style>
-  @keyframes marquee {
-    0% { transform: translateX(0); }
-    100% { transform: translateX(-50%); }
-  }
-</style>
-<!-- Footer -->
-<footer style="text-align: center; padding: 15px; background-color: #222; color: #eee; font-family: Arial, sans-serif; font-size: 14px;">
-  &copy; Atharva Creation
-</footer>
+  <!-- Our Clients Marquee Section -->
+  <div class="clients-section">
+    <h2>Our Clients</h2>
 
-<style>
-  @keyframes marquee {
-    0% { transform: translateX(0); }
-    100% { transform: translateX(-50%); }
-  }
-</style>
-<script>
-  const track = document.querySelector('.clients-track');
-  const prevBtn = document.getElementById('clients-prev');
-  const nextBtn = document.getElementById('clients-next');
+    <div class="marquee-container">
+      <div class="marquee-track">
+        <img src="assets/1.jpg" alt="Client 1">
+        <img src="assets/2.jpg" alt="Client 2">
+        <img src="assets/3.jpg" alt="Client 3">
+        <img src="assets/4.jpg" alt="Client 4">
+        <img src="assets/5.jpg" alt="Client 5">
+        <!-- Repeat images for smooth loop -->
+        <img src="assets/1.jpg" alt="Client 1">
+        <img src="assets/2.jpg" alt="Client 2">
+        <img src="assets/3.jpg" alt="Client 3">
+        <img src="assets/4.jpg" alt="Client 4">
+        <img src="assets/5.jpg" alt="Client 5">
+        <img src="assets/6.jpg" alt="Client 6">
+        <img src="assets/7.jpg" alt="Client 7">
+      </div>
+    </div>
+  </div>
 
-  const slideWidth = 135; // image width + margin-right (120 + 15)
-  const visibleSlides = 6; // Number of visible images approx.
-  let position = 0;
-
-  // Max slide left: total slides - visibleSlides
-  const maxPosition = -(slideWidth * (track.children.length - visibleSlides));
-
-  function updateSlider() {
-    track.style.transform = `translateX(${position}px)`;
-  }
-
-  nextBtn.addEventListener('click', () => {
-    position -= slideWidth;
-    if (position < maxPosition) {
-      position = 0;
-    }
-    updateSlider();
-  });
-
-  prevBtn.addEventListener('click', () => {
-    position += slideWidth;
-    if (position > 0) {
-      position = maxPosition;
-    }
-    updateSlider();
-  });
-
-  // Auto slide every 3 seconds
-  setInterval(() => {
-    position -= slideWidth;
-    if (position < maxPosition) {
-      position = 0;
-    }
-    updateSlider();
-  }, 3000);
-</script>
-
+  <!-- Footer -->
+  <footer>
+    &copy; Atharva Creation
+  </footer>
 
   <script>
+    // Mobile menu toggle
+    const menuToggle = document.querySelector('.menu-toggle');
+    const navLinks = document.querySelector('.nav-links');
+    
+    menuToggle.addEventListener('click', () => {
+      navLinks.classList.toggle('active');
+    });
+
+    // Slideshow functionality
     let slideIndex = 0;
     let slides = document.getElementsByClassName("slide");
 
