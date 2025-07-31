@@ -479,50 +479,54 @@
 
     /* Table Container */
     .table-container {
-      width: 100%;
-      max-height: calc(100vh - 250px);
-      overflow: auto;
-      border-radius: 8px;
-      background: var(--light);
-      backdrop-filter: blur(5px);
-      border: 1px solid var(--glass-border);
-      box-shadow: var(--shadow);
-    }
+  width: 100%;
+  max-height: calc(100vh - 250px);
+  overflow: auto;
+  border-radius: 8px;
+  background: var(--light);
+  backdrop-filter: blur(5px);
+  border: 1px solid black; /* Changed to black */
+  box-shadow: var(--shadow);
+}
 
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      color: var(--dark);
-      font-size: 0.8rem;
-    }
 
-    th, td {
-      padding: 0.6rem;
-      text-align: left;
-      border-bottom: 1px solid var(--glass-border);
-    }
+table {
+  width: 100%;
+  border-collapse: collapse;
+  color: var(--dark);
+  font-size: 0.8rem;
+  border: 1px solid black; /* Added black border to table */
+}
 
-    th {
-      position: sticky;
-      top: 0;
-      background: var(--light);
-      font-weight: 600;
-      z-index: 10;
-    }
+th, td {
+  padding: 0.6rem;
+  text-align: left;
+  border-bottom: 1px solid black; /* Changed to black */
+  border-right: 1px solid black; /* Added right border */
+}
 
-    tr:hover {
-      background: rgba(0, 0, 0, 0.02);
-    }
+th {
+  position: sticky;
+  top: 0;
+  background: var(--light);
+  font-weight: 600;
+  z-index: 10;
+  border-top: 1px solid black; /* Added top border for header */
+}
+
+    td:first-child, th:first-child {
+  border-left: 1px solid black;
+}
 
     /* Special table styles */
     .shift-schedule-freeze th.freeze-col,
-    .shift-schedule-freeze td.freeze-col {
-      position: sticky;
-      left: 0;
-      background: var(--light);
-      z-index: 5;
-    }
-
+.shift-schedule-freeze td.freeze-col {
+  position: sticky;
+  left: 0;
+  background: var(--light);
+  z-index: 5;
+  border-right: 1px solid black; /* Added right border for freeze column */
+}
     /* Team Modal */
     .modal-overlay {
       position: fixed;
