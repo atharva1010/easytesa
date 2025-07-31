@@ -1159,13 +1159,13 @@ th {
     <div class="header-controls">
       <div id="notification-icon" class="header-icon" onclick="toggleNotifications()">
         <i class="fas fa-bell"></i>
-        <span id="notification-dot" class="notification-badge" style="display: none;"></span>
+        <span id="notificationCountBadge" class="unread-count" style="display: none;">0</span>
       </div>
       
-<div id="message-icon" class="header-icon" onclick="toggleChatUserList()">
-  <i class="fas fa-comment-dots"></i>
-  <span id="messageCountBadge" class="unread-count" style="display: none;">0</span>
-</div>
+      <div id="message-icon" class="header-icon" onclick="toggleChatUserList()">
+        <i class="fas fa-comment-dots"></i>
+        <span id="messageCountBadge" class="unread-count" style="display: none;">0</span>
+      </div>
       
       <img id="profileImage" src="assets/profile.png" class="profile-img" onclick="toggleProfileCard()">
     </div>
@@ -1373,1114 +1373,1133 @@ th {
   <div id="toast" class="toast"></div>
 
   <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
-  <script>// Global variables 
-// Global variables
-let originalData = [];
-let currentUser = null;
-let currentCategory = '';
-let allMessages = [];
-let activeChatUser = null;
-const userId = localStorage.getItem("userId");
-const userElements = {};
-const unreadSenders = new Set();
-let notifySound = null;
-let isMobile = false;
-let socket = null;
-let onlineUsers = new Set();
-let selectedMessage = null;
-let hasUnreadUpdates = false;
-let currentPage = 1;
-let isLoadingMessages = false;
-let hasMoreMessages = true;
+  <script>
+    // Global variables 
+    let originalData = [];
+    let currentUser = null;
+    let currentCategory = '';
+    let allMessages = [];
+    let activeChatUser = null;
+    const userId = localStorage.getItem("userId");
+    const userElements = {};
+    const unreadSenders = new Set();
+    let notifySound = null;
+    let isMobile = false;
+    let socket = null;
+    let onlineUsers = new Set();
+    let selectedMessage = null;
+    let hasUnreadUpdates = false;
+    let currentPage = 1;
+    let isLoadingMessages = false;
+    let hasMoreMessages = true;
+    let unreadUpdatesCount = 0;
 
-function checkAuth() {
-  const token = localStorage.getItem('token');
-  if (!token) {
-    window.location.href = 'index.html';
-    return;
-  }
-  initApp();
-}
-
-// Initialize the app
-function initApp() {
-  checkMobile();
-  setupEventListeners();
-  loadUserProfile();
-  
-  // Initialize notification sound
-  notifySound = new Audio("assets/notification.mp3");
-  notifySound.load();
-  
-  if (userId) {
-    // Initialize socket connection only if user is logged in
-    socket = io();
-    socket.emit("join", userId);
-    setupSocketListeners();
-    
-    // Load last active chat if exists
-    loadLastActiveChat();
-  }
-  
-  initNotifications();
-}
-    async function loadLastActiveChat() {
-  const lastActiveChatId = localStorage.getItem('lastActiveChat');
-  if (lastActiveChatId) {
-    try {
-      // Load user data
-      const userResponse = await fetch(`/api/users`);
-      const users = await userResponse.json();
-      const chatUser = users.find(u => u.userId === lastActiveChatId);
-      
-      if (chatUser) {
-        // Load chat history
-        const messagesResponse = await fetch(`/api/chat-history/${userId}/${lastActiveChatId}`);
-        const { messages } = await messagesResponse.json();
-        
-        allMessages = messages || [];
-        openChatWith(chatUser);
-      }
-    } catch (error) {
-      console.error("Failed to load last active chat:", error);
-    }
-  }
-}
-    
-// Check if device is mobile
-function checkMobile() {
-  isMobile = window.matchMedia("(max-width: 768px)").matches || 
-            window.matchMedia("(max-height: 500px)").matches;
-  
-  if (isMobile) {
-    document.getElementById('bottomNav').style.display = 'flex';
-    document.getElementById('topButtons').style.display = 'none';
-    document.querySelector('footer').style.display = 'none';
-  } else {
-    document.getElementById('bottomNav').style.display = 'none';
-    document.getElementById('topButtons').style.display = 'grid';
-    document.querySelector('footer').style.display = 'block';
-  }
-}
-
-// Setup event listeners
-function setupEventListeners() {
-  // Window resize handler
-  window.addEventListener('resize', checkMobile);
-
-  // Click outside handlers
-  window.addEventListener('click', function(e) {
-    if (!document.getElementById('profileImage').contains(e.target) && 
-        !document.getElementById('profileCard').contains(e.target)) {
-      hideProfileCard();
-    }
-    
-    if (!document.getElementById('notification-icon').contains(e.target) && 
-        !document.getElementById('updatePanel').contains(e.target)) {
-      hideNotifications();
-    }
-    
-    if (!document.getElementById('message-icon').contains(e.target) && 
-        !document.getElementById('chatUserList').contains(e.target) &&
-        !document.getElementById('chatBox').contains(e.target) &&
-        !document.getElementById('fullScreenChat').contains(e.target) &&
-        !document.getElementById('fullScreenUserList').contains(e.target)) {
-      hideChatUserList();
-    }
-
-    if (!e.target.closest('.message-content') && !e.target.closest('.context-menu')) {
-      document.getElementById('contextMenu').style.display = 'none';
-    }
-  });
-
-  // Active nav item highlighting
-  document.querySelectorAll('.nav-item').forEach(item => {
-    item.addEventListener('click', function() {
-      document.querySelectorAll('.nav-item').forEach(nav => nav.classList.remove('active'));
-      this.classList.add('active');
-    });
-  });
-
-  // Infinite scroll for chat messages
-  const chatContainer = isMobile ? 
-    document.getElementById('fullChatMessages') : 
-    document.getElementById('chatMessages');
-  
-  if (chatContainer) {
-    chatContainer.addEventListener('scroll', function() {
-      if (this.scrollTop < 100 && !isLoadingMessages && hasMoreMessages && activeChatUser) {
-        loadMoreMessages();
-      }
-    });
-  }
-}
-
-    // Load more messages for infinite scroll
-async function loadMoreMessages() {
-  if (isLoadingMessages || !hasMoreMessages || !activeChatUser) return;
-  
-  isLoadingMessages = true;
-  showLoadingIndicator();
-  
-  try {
-    const response = await fetch(
-      `/api/chat-history/${userId}/${activeChatUser.userId}?page=${currentPage + 1}`
-    );
-    
-    if (response.ok) {
-      const { messages, pages } = await response.json();
-      if (messages && messages.length > 0) {
-        // Prepend older messages
-        allMessages = [...messages, ...allMessages];
-        currentPage++;
-        
-        // Store scroll position
-        const chatContainer = isMobile ? 
-          document.getElementById('fullChatMessages') : 
-          document.getElementById('chatMessages');
-        const scrollPos = chatContainer.scrollHeight - chatContainer.scrollTop;
-        
-        renderMessages(true); // Pass true to indicate we're prepending
-        
-        // Restore scroll position after render
-        setTimeout(() => {
-          chatContainer.scrollTop = chatContainer.scrollHeight - scrollPos;
-        }, 0);
-      }
-      hasMoreMessages = currentPage < pages;
-    }
-  } catch (error) {
-    console.error("Error loading more messages:", error);
-    showToast("Failed to load older messages");
-  } finally {
-    isLoadingMessages = false;
-    hideLoadingIndicator();
-  }
-}
-    function showLoadingIndicator() {
-  const loadingDiv = document.createElement('div');
-  loadingDiv.className = 'loading-messages';
-  loadingDiv.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Loading older messages...';
-  
-  const chatContainer = isMobile ? 
-    document.getElementById('fullChatMessages') : 
-    document.getElementById('chatMessages');
-  
-  chatContainer.prepend(loadingDiv);
-}
-
-function hideLoadingIndicator() {
-  const loadingDiv = document.querySelector('.loading-messages');
-  if (loadingDiv) {
-    loadingDiv.remove();
-  }
-}
-    
-function setupSocketListeners() {
-  // Load messages from server
-  socket.on("loadMessages", (messages) => {
-    allMessages = messages;
-
-    const incoming = messages.filter(m => m.to === userId && !m.seen);
-    if (incoming.length > 0) {
-      incoming.forEach(m => {
-        unreadSenders.add(m.from);
-      });
-      updateTotalUnreadCount();
-      loadChatUsers();
-    }
-
-    if (activeChatUser) renderMessages();
-  });
-
-  // New message received
-  socket.on("chatMessage", (data) => {
-    allMessages.push(data);
-
-    if (!activeChatUser || (data.from !== activeChatUser.userId && data.to !== activeChatUser.userId)) {
-      unreadSenders.add(data.from);
-      updateTotalUnreadCount();
-      loadChatUsers();
-
-      // Show Desktop Notification
-      showDesktopNotification(`New Message from ${data.from}`, data.message);
-
-// Play notification sound
-      playNotificationSound();
-      return;
-    }
-
-    // Else, in active chat
-    appendMessage(data);
-  });
-
-  // Online users update
-  socket.on("onlineUsers", (users) => {
-    onlineUsers = new Set(users);
-    updateOnlineStatusIndicators();
-  });
-
-  // Message seen confirmation
-  socket.on("messageSeen", (data) => {
-    updateMessageSeenStatus(data.messageId);
-  });
-
-  // Message edited confirmation
-  socket.on("messageEdited", (data) => {
-    const msgIndex = allMessages.findIndex(m => m.id === data.messageId);
-    if (msgIndex !== -1) {
-      allMessages[msgIndex].message = data.newMessage;
-      allMessages[msgIndex].edited = true;
-      renderMessages();
-    }
-  });
-
-  // Message deleted confirmation
-  socket.on("messageDeleted", (data) => {
-    allMessages = allMessages.filter(m => m.id !== data.messageId);
-    renderMessages();
-  });
-}
-    
-// Count unread messages from a specific sender
-function countUnreadMessages(senderId) {
-  return allMessages.filter(m => 
-    m.from === senderId && 
-    m.to === userId && 
-    !m.seen
-  ).length;
-}
-
-// Update total unread count in header
-function updateTotalUnreadCount() {
-  const totalUnread = Array.from(unreadSenders).reduce((total, senderId) => {
-    return total + countUnreadMessages(senderId);
-  }, 0);
-
-  const badge = document.getElementById("messageCountBadge");
-  if (totalUnread > 0) {
-    badge.style.display = "flex";
-    badge.textContent = totalUnread > 9 ? "9+" : totalUnread;
-  } else {
-    badge.style.display = "none";
-  }
-}
-
-// Initialize notification permission
-function initNotifications() {
-  if ("Notification" in window) {
-    Notification.requestPermission();
-  }
-}
-
-// Play notification sound
-function playNotificationSound() {
-  if (notifySound) {
-    try {
-      notifySound.currentTime = 0; // Rewind to start
-      notifySound.play().catch(e => console.warn("Audio play failed:", e));
-    } catch (e) {
-      console.warn("Error playing notification sound:", e);
-    }
-  }
-}
-
-// Toggle sidebar
-function toggleSidebar() {
-  document.getElementById('sidebar').classList.toggle('show');
-  document.getElementById('mainContent').classList.toggle('expanded');
-}
-
-function hideSidebar() {
-  document.getElementById('sidebar').classList.remove('show');
-  document.getElementById('mainContent').classList.remove('expanded');
-}
-
-// Toggle profile card
-function toggleProfileCard() {
-  const profileCard = document.getElementById('profileCard');
-  profileCard.classList.toggle('show');
-}
-
-function hideProfileCard() {
-  document.getElementById('profileCard').classList.remove('show');
-}
-
-// Toggle notifications
-function toggleNotifications() {
-  document.getElementById('updatePanel').classList.toggle('show');
-  if (document.getElementById('updatePanel').classList.contains('show')) {
-    hasUnreadUpdates = false;
-    document.getElementById('notification-dot').style.display = 'none';
-    hideProfileCard();
-    hideChatUserList();
-  }
-}
-
-function hideNotifications() {
-  document.getElementById('updatePanel').classList.remove('show');
-}
-
-// Toggle chat user list
-function toggleChatUserList() {
-  if (isMobile) {
-    document.getElementById('fullScreenUserList').classList.toggle('show');
-  } else {
-    document.getElementById('chatUserList').classList.toggle('show');
-  }
-  
-  // Hide other popups when showing chat list
-  if (document.getElementById('chatUserList').classList.contains('show') || 
-      document.getElementById('fullScreenUserList').classList.contains('show')) {
-    hideProfileCard();
-    hideNotifications();
-  }
-  
-  // Load users if not already loaded
-  if (document.getElementById('chatUserList').classList.contains('show') || 
-      document.getElementById('fullScreenUserList').classList.contains('show')) {
-    loadChatUsers();
-  }
-}
-
-function hideChatUserList() {
-  document.getElementById('chatUserList').classList.remove('show');
-  document.getElementById('fullScreenUserList').classList.remove('show');
-}
-
-// Close full screen user list
-function closeFullScreenUserList() {
-  document.getElementById('fullScreenUserList').classList.remove('show');
-}
-
-// Load chat users
-function loadChatUsers() {
-  fetch("/api/users")
-    .then(res => res.json())
-    .then(users => {
-      const container = isMobile ? document.getElementById("fullUserListContainer") : document.getElementById("userListContainer");
-      container.innerHTML = '';
-
-      if (users.length === 0) {
-        container.innerHTML = '<p>No users available.</p>';
+    function checkAuth() {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        window.location.href = 'index.html';
         return;
       }
-
-      users.filter(u => u.userId !== userId).forEach(user => {
-        const unreadCount = countUnreadMessages(user.userId);
-        const div = document.createElement("div");
-        div.className = "chat-user-item";
-        div.innerHTML = `
-          <div style="position:relative;">
-            <img src="${user.profilePic || 'assets/profile.png'}" class="chat-user-avatar">
-            <div class="online-dot" id="online-${user.userId}" style="display:${onlineUsers.has(user.userId) ? 'block' : 'none'}"></div>
-          </div>
-          <div class="chat-user-info">
-            <div class="chat-user-name">${user.username} 
-              ${unreadCount > 0 ? `<span class="user-unread-count">${unreadCount > 9 ? '9+' : unreadCount}</span>` : ''}
-            </div>
-            <div class="chat-user-status">${user.department}</div>
-          </div>
-        `;
-        div.onclick = () => openChatWith(user);
-        container.appendChild(div);
-        userElements[user.userId] = div;
-      });
-    })
-    .catch(error => {
-      console.error("Error loading chat users:", error);
-      const container = isMobile ? document.getElementById("fullUserListContainer") : document.getElementById("userListContainer");
-      container.innerHTML = '<p>Error loading users. Please try again.</p>';
-    });
-}
-
-// Update online status indicators
-function updateOnlineStatusIndicators() {
-  Object.keys(userElements).forEach(userId => {
-    const dot = document.getElementById(`online-${userId}`);
-    if (dot) {
-      dot.style.display = onlineUsers.has(userId) ? 'block' : 'none';
+      initApp();
     }
-  });
-}
 
-// Load user profile
-function loadUserProfile() {
-  const token = localStorage.getItem('token');
-  
-  fetch('/api/me', {
-    headers: { Authorization: `Bearer ${token}` }
-  })
-    .then(res => res.json())
-    .then(data => {
-      if (!data.success || !data.user) {
-        console.log("Invalid token - redirecting to login");
-        return logout(true);
-      }
-
-      currentUser = data.user;
-      const profileImage = document.getElementById('profileImage');
+    // Initialize the app
+    function initApp() {
+      checkMobile();
+      setupEventListeners();
+      loadUserProfile();
       
-      // Set profile image
-      const profilePic = currentUser.profilePic && currentUser.profilePic.startsWith('http')
-        ? currentUser.profilePic
-        : 'assets/profile.png';
+      // Initialize notification sound
+      notifySound = new Audio("assets/notification.mp3");
+      notifySound.load();
+      
+      if (userId) {
+        // Initialize socket connection only if user is logged in
+        socket = io();
+        socket.emit("join", userId);
+        setupSocketListeners();
         
-      profileImage.src = profilePic;
-
-      // Update profile card
-      document.getElementById('profile-name').textContent = currentUser.username;
-      document.getElementById('profile-id').textContent = currentUser.userId;
-      document.getElementById('profile-email').textContent = currentUser.email;
-      document.getElementById('profile-mobile').textContent = currentUser.mobile;
-      document.getElementById('profile-dept').textContent = currentUser.department;
-      document.getElementById('profile-designation').textContent = currentUser.designation;
-      document.getElementById('profile-role').textContent = currentUser.role;
-
-      // Load initial data
-      loadTable('WOOD PO');
-      loadUpdates();
-    })
-    .catch(error => {
-      console.error("Failed to fetch user:", error);
-      logout(true);
-    });
-}
-
-// Load updates
-function loadUpdates() {
-  fetch("/api/updates")
-    .then(res => res.json())
-    .then(data => {
-      const updates = data.updates || data;
-      if (updates.length > 0) {
-        hasUnreadUpdates = true;
-        document.getElementById('notification-dot').style.display = 'block';
-        const updatesList = document.getElementById('updatesList');
-        updatesList.innerHTML = '';
-
-        updates.forEach((update) => {
-          const div = document.createElement('div');
-          div.style.cursor = 'pointer';
-          div.style.marginBottom = '1rem';
-          div.style.paddingBottom = '1rem';
-          div.style.borderBottom = '1px solid var(--glass-border)';
-
-          const date = new Date(update.createdAt).toLocaleDateString();
-          const message = update.message || "(No message)";
-          const imageHTML = update.image
-            ? `<img src="${update.image}" style="width:100%; max-height:150px; object-fit:contain; margin-top:0.5rem; border-radius:8px;">`
-            : '';
-
-          div.innerHTML = `
-            <div style="display:flex; align-items:center; gap:0.5rem; margin-bottom:0.3rem;">
-              <i class="fas fa-bullhorn" style="color:var(--primary);"></i>
-              <strong>${date}</strong>
-            </div>
-            <div>${message}</div>
-            ${imageHTML}
-          `;
-
-          div.addEventListener('click', () => showUpdateDetail(update));
-          updatesList.appendChild(div);
-        });
+        // Load last active chat if exists
+        loadLastActiveChat();
       }
-    });
-}
+      
+      initNotifications();
+    }
 
-// Show update detail
-function showUpdateDetail(update) {
-  const date = new Date(update.createdAt).toLocaleString();
-  const message = update.message || "(No message)";
-  const imageHTML = update.image
-    ? `<img src="${update.image}" style="width:100%; max-height:300px; object-fit:contain; margin-top:1rem; border-radius:8px;">`
-    : '';
-
-  const html = `
-    <div style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(30, 41, 59, 0.98); border-radius: 12px; padding: 1.5rem; max-width: 90%; width: 500px; box-shadow: 0 15px 30px rgba(0,0,0,0.3); z-index: 2100; border: 1px solid var(--glass-border);">
-      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
-        <h3 style="color:var(--primary);"><i class="fas fa-bullhorn"></i> Update Detail</h3>
-        <button onclick="this.parentElement.parentElement.remove()" style="background:none; border:none; color:var(--gray); font-size:1.2rem; cursor:pointer;">
-          <i class="fas fa-times"></i>
-        </button>
-      </div>
-      <p><strong>Date:</strong> ${date}</p>
-      <p style="margin:1rem 0;">${message}</p>
-      ${imageHTML}
-    </div>
-  `;
-
-  const container = document.createElement('div');
-  container.innerHTML = html;
-  document.body.appendChild(container);
-}
-
-// Logout function
-function logout(forceRedirect = false) {
-  localStorage.clear();
-  window.location.href = 'index.html';
-}
-
-// Load table data
-function loadTable(category) {
-  currentCategory = category;
-  fetch(`/api/excel-data/${category}`)
-    .then(res => res.json())
-    .then(res => {
-      if (res.success) {
-        originalData = res.data;
-        renderTable(res.data);
-
-        const filter = document.getElementById("materialFilter");
-        if (category === 'WOOD PO') {
-          const materialSet = new Set(res.data.slice(1).map(row => row[3]));
-          filter.innerHTML = '<option value="">All Materials</option>' + [...materialSet].map(m => `<option>${m}</option>`).join('');
-          filter.style.display = 'block';
-        } else {
-          filter.style.display = 'none';
+    async function loadLastActiveChat() {
+      const lastActiveChatId = localStorage.getItem('lastActiveChat');
+      if (lastActiveChatId) {
+        try {
+          // Load user data
+          const userResponse = await fetch(`/api/users`);
+          const users = await userResponse.json();
+          const chatUser = users.find(u => u.userId === lastActiveChatId);
+          
+          if (chatUser) {
+            // Load chat history
+            const messagesResponse = await fetch(`/api/chat-history/${userId}/${lastActiveChatId}`);
+            const { messages } = await messagesResponse.json();
+            
+            allMessages = messages || [];
+            openChatWith(chatUser);
+          }
+        } catch (error) {
+          console.error("Failed to load last active chat:", error);
         }
       }
-    });
-}
-
-// Render table
-function renderTable(data) {
-  const thead = document.querySelector("#dataTable thead");
-  const tbody = document.querySelector("#dataTable tbody");
-  thead.innerHTML = "";
-  tbody.innerHTML = "";
-
-  if (data.length === 0) return;
-
-  const table = document.getElementById("dataTable");
-  table.className = currentCategory === 'SHIFT SCHEDULE' ? 'shift-schedule-freeze' : '';
-
-  // Create header row
-  const headerRow = document.createElement("tr");
-  data[0].forEach((col, index) => {
-    const th = document.createElement("th");
-    th.textContent = col;
-    if (currentCategory === 'SHIFT SCHEDULE' && index < 5) {
-      th.classList.add('freeze-col');
     }
-    headerRow.appendChild(th);
-  });
-  thead.appendChild(headerRow);
-
-  // Create data rows
-  data.slice(1).forEach((row, rowIndex) => {
-    const tr = document.createElement("tr");
-
-    const rowText = row.map(cell => String(cell).toUpperCase()).join(" ");
-    if (currentCategory === 'WOOD PO') {
-      if (rowText.includes("RAMPUR")) tr.style.background = "#00ff40";
-      else if (rowText.includes("SITAPUR")) tr.style.background = "#ff00ff";
-      else if (rowText.includes("OTHER")) tr.style.background = "#00ffff";
-    }
-
-    row.forEach((cell, colIndex) => {
-      const td = document.createElement("td");
-      const value = typeof cell === 'object' ? (cell.text || '') : String(cell);
-
-      if (currentCategory === 'WOOD PO' && colIndex === 0) {
-        td.innerHTML = `<button onclick="copyText('${value}', 'PO Copied')" style="background:var(--primary); color:white; border:none; padding:0.3rem 0.6rem; border-radius:4px; cursor:pointer;">${value}</button>`;
-      } else if (currentCategory === 'ID PASSWORD' && colIndex === 1) {
-        td.innerHTML = `<button onclick="copyText('${value}', 'Password Copied')" style="background:var(--success); color:white; border:none; padding:0.3rem 0.6rem; border-radius:4px; cursor:pointer;">${isMobile ? value : '******'}</button>`;
+    
+    // Check if device is mobile
+    function checkMobile() {
+      isMobile = window.matchMedia("(max-width: 768px)").matches || 
+                window.matchMedia("(max-height: 500px)").matches;
+      
+      if (isMobile) {
+        document.getElementById('bottomNav').style.display = 'flex';
+        document.getElementById('topButtons').style.display = 'none';
+        document.querySelector('footer').style.display = 'none';
       } else {
-        td.textContent = value;
+        document.getElementById('bottomNav').style.display = 'none';
+        document.getElementById('topButtons').style.display = 'grid';
+        document.querySelector('footer').style.display = 'block';
       }
+    }
 
-      if (currentCategory === 'SHIFT SCHEDULE') {
-        if (rowIndex < 2 || colIndex < 5) td.style.background = 'rgba(173, 216, 230, 0.3)';
-        if (value === 'R') td.style.background = 'green';
-        else if (value === 'L') td.style.background = 'red';
-        else if (value === 'G') td.style.background = 'yellow';
+    // Setup event listeners
+    function setupEventListeners() {
+      // Window resize handler
+      window.addEventListener('resize', checkMobile);
+
+      // Click outside handlers
+      window.addEventListener('click', function(e) {
+        if (!document.getElementById('profileImage').contains(e.target) && 
+            !document.getElementById('profileCard').contains(e.target)) {
+          hideProfileCard();
+        }
+        
+        if (!document.getElementById('notification-icon').contains(e.target) && 
+            !document.getElementById('updatePanel').contains(e.target)) {
+          hideNotifications();
+        }
+        
+        if (!document.getElementById('message-icon').contains(e.target) && 
+            !document.getElementById('chatUserList').contains(e.target) &&
+            !document.getElementById('chatBox').contains(e.target) &&
+            !document.getElementById('fullScreenChat').contains(e.target) &&
+            !document.getElementById('fullScreenUserList').contains(e.target)) {
+          hideChatUserList();
+        }
+
+        if (!e.target.closest('.message-content') && !e.target.closest('.context-menu')) {
+          document.getElementById('contextMenu').style.display = 'none';
+        }
+      });
+
+      // Active nav item highlighting
+      document.querySelectorAll('.nav-item').forEach(item => {
+        item.addEventListener('click', function() {
+          document.querySelectorAll('.nav-item').forEach(nav => nav.classList.remove('active'));
+          this.classList.add('active');
+        });
+      });
+
+      // Infinite scroll for chat messages
+      const chatContainer = isMobile ? 
+        document.getElementById('fullChatMessages') : 
+        document.getElementById('chatMessages');
+      
+      if (chatContainer) {
+        chatContainer.addEventListener('scroll', function() {
+          if (this.scrollTop < 100 && !isLoadingMessages && hasMoreMessages && activeChatUser) {
+            loadMoreMessages();
+          }
+        });
       }
+    }
 
-      if (currentCategory === 'SHIFT SCHEDULE' && colIndex < 5) {
-        td.classList.add('freeze-col');
+    // Load more messages for infinite scroll
+    async function loadMoreMessages() {
+      if (isLoadingMessages || !hasMoreMessages || !activeChatUser) return;
+      
+      isLoadingMessages = true;
+      showLoadingIndicator();
+      
+      try {
+        const response = await fetch(
+          `/api/chat-history/${userId}/${activeChatUser.userId}?page=${currentPage + 1}`
+        );
+        
+        if (response.ok) {
+          const { messages, pages } = await response.json();
+          if (messages && messages.length > 0) {
+            // Prepend older messages
+            allMessages = [...messages, ...allMessages];
+            currentPage++;
+            
+            // Store scroll position
+            const chatContainer = isMobile ? 
+              document.getElementById('fullChatMessages') : 
+              document.getElementById('chatMessages');
+            const scrollPos = chatContainer.scrollHeight - chatContainer.scrollTop;
+            
+            renderMessages(true); // Pass true to indicate we're prepending
+            
+            // Restore scroll position after render
+            setTimeout(() => {
+              chatContainer.scrollTop = box.scrollHeight - oldScrollHeight + oldScrollTop;
+            }, 0);
+          }
+          hasMoreMessages = currentPage < pages;
+        }
+      } catch (error) {
+        console.error("Error loading more messages:", error);
+        showToast("Failed to load older messages");
+      } finally {
+        isLoadingMessages = false;
+        hideLoadingIndicator();
       }
+    }
 
-      tr.appendChild(td);
-    });
+    function showLoadingIndicator() {
+      const loadingDiv = document.createElement('div');
+      loadingDiv.className = 'loading-messages';
+      loadingDiv.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Loading older messages...';
+      
+      const chatContainer = isMobile ? 
+        document.getElementById('fullChatMessages') : 
+        document.getElementById('chatMessages');
+      
+      chatContainer.prepend(loadingDiv);
+    }
 
-    tbody.appendChild(tr);
-  });
-}
-
-// Copy text to clipboard
-function copyText(text, message) {
-  navigator.clipboard.writeText(text).then(() => {
-    showToast(message);
-  }).catch(err => {
-    console.error("Copy failed", err);
-  });
-}
-
-// Show toast notification
-function showToast(message) {
-  const toast = document.getElementById('toast');
-  toast.textContent = message;
-  toast.style.display = 'block';
-  
-  setTimeout(() => {
-    toast.style.animation = 'fadeOut 0.3s ease';
-    setTimeout(() => {
-      toast.style.display = 'none';
-      toast.style.animation = 'fadeIn 0.3s ease';
-    }, 300);
-  }, 2000);
-}
-
-// Apply filters to table
-function applyFilters() {
-  let filtered = [...originalData];
-  const searchVal = document.getElementById("searchBox").value.toLowerCase();
-  const materialVal = document.getElementById("materialFilter").value;
-
-  if (searchVal) {
-    filtered = filtered.filter(row => row.some(cell => String(cell).toLowerCase().includes(searchVal)));
-  }
-  if (materialVal) {
-    filtered = filtered.filter(row => row[3] === materialVal);
-  }
-
-  renderTable([originalData[0], ...filtered]);
-}
-
-// Show team modal
-function showTeam() {
-  document.getElementById('teamModal').classList.add('show');
-  fetch('/api/users')
-    .then(res => res.json())
-    .then(users => {
-      const container = document.getElementById('teamContainer');
-      container.innerHTML = users.map(user => `
-        <div class="user-card">
-          <img src="${user.profilePic || 'assets/profile.png'}" class="user-avatar">
-          <div class="user-name">${user.username}</div>
-          <div class="user-detail"><strong>ID:</strong> ${user.userId}</div>
-          <div class="user-detail"><strong>Dept:</strong> ${user.department}</div>
-          <div class="user-detail"><strong>Role:</strong> ${user.designation}</div>
-          <div class="user-detail"><strong>Email:</strong> ${user.email || '-'}</div>
-        </div>
-      `).join('');
-    });
-}
-
-// Hide team modal
-function hideTeam() {
-  document.getElementById('teamModal').classList.remove('show');
-}
-
-// Open register form in iframe
-function openRegister(type) {
-  const iframe = document.getElementById("registerIframe");
-  const iframeContainer = document.getElementById("iframeContainer");
-  const tableSection = document.getElementById("tableSection");
-  const topButtons = document.getElementById("topButtons");
-
-  let page = "";
-  switch(type) {
-    case 'wood': page = "wood-bill-register.html"; break;
-    case 'methanol': page = "methanol-register.html"; break;
-    case 'longbody': page = "longbody-register.html"; break;
-    case 'shift': page = "shift-register.html"; break;
-    case 'download': page = "Download.html"; break;
-    case 'sop': page = "SOP.html"; break;  
-    case 'stickerGenrator': page = "StickerGenrator.html"; break;
-    case 'about': page = "About.html"; break;   
-  }
-
-  iframe.src = page;
-  iframeContainer.style.display = "block";
-  tableSection.style.display = "none";
-  topButtons.style.display = "none";
-  hideSidebar();
-}
-
-// Show desktop notification
-function showDesktopNotification(title, body) {
-  if ("Notification" in window && Notification.permission === "granted") {
-    new Notification(title, {
-      body: body,
-      icon: "/assets/profile.png"
-    });
-  }
-}
-
-// Open chat with a user
-function openChatWith(user) {
-  activeChatUser = user;
-  localStorage.setItem('lastActiveChat', user.userId);
-  
-  if (isMobile) {
-    // Show full screen chat on mobile
-    const fullChatWith = document.getElementById("fullChatWith");
-    const fullChatUserName = document.getElementById("fullChatUserName");
-    
-    if (fullChatWith && fullChatUserName) {
-      fullChatWith.innerHTML = `<i class="fas fa-user"></i> Chat with ${user.username}`;
-      fullChatUserName.textContent = user.username;
+    function hideLoadingIndicator() {
+      const loadingDiv = document.querySelector('.loading-messages');
+      if (loadingDiv) {
+        loadingDiv.remove();
+      }
     }
     
-    const fullScreenChat = document.getElementById("fullScreenChat");
-    if (fullScreenChat) {
-      fullScreenChat.classList.add('show');
-      document.getElementById("fullChatMessages").innerHTML = '';
-      document.getElementById("fullChatInput").value = '';
-    }
-  } else {
-    // Show regular chat box on desktop
-    const chatWith = document.getElementById("chatWith");
-    if (chatWith) {
-      chatWith.innerHTML = `<i class="fas fa-user"></i> Chat with ${user.username}`;
-    }
-    
-    const chatBox = document.getElementById("chatBox");
-    if (chatBox) {
-      chatBox.classList.add('show');
-      document.getElementById("chatMessages").innerHTML = '';
-      document.getElementById("chatInput").value = '';
-    }
-  }
+    function setupSocketListeners() {
+      // Load messages from server
+      socket.on("loadMessages", (messages) => {
+        allMessages = messages;
 
-  const el = userElements[user.userId];
-  if (el) {
-    const badge = el.querySelector(".msg-count");
-    if (badge) badge.remove();
-  }
+        const incoming = messages.filter(m => m.to === userId && !m.seen);
+        if (incoming.length > 0) {
+          incoming.forEach(m => {
+            unreadSenders.add(m.from);
+          });
+          updateTotalUnreadCount();
+          loadChatUsers();
+        }
 
-  unreadSenders.delete(user.userId);
-  updateTotalUnreadCount();
-  
-  // Reset pagination
-  currentPage = 1;
-  hasMoreMessages = true;
-  
-  renderMessages();
-}
+        if (activeChatUser) renderMessages();
+      });
 
-// Show all messages between active users
-function renderMessages(isPrepend = false) {
-  const box = isMobile ? document.getElementById("fullChatMessages") : document.getElementById("chatMessages");
-  
-  // Don't clear if we're prepending older messages
-  if (!isPrepend) {
-    box.innerHTML = "";
-  }
+      // New message received
+      socket.on("chatMessage", (data) => {
+        allMessages.push(data);
 
-  const msgs = allMessages.filter(m =>
-    (m.from === userId && m.to === activeChatUser.userId) ||
-    (m.to === userId && m.from === activeChatUser.userId)
-  );
+        if (!activeChatUser || (data.from !== activeChatUser.userId && data.to !== activeChatUser.userId)) {
+          unreadSenders.add(data.from);
+          updateTotalUnreadCount();
+          loadChatUsers();
 
-  // If prepending, we need to maintain scroll position
-  if (isPrepend) {
-    const oldScrollHeight = box.scrollHeight;
-    const oldScrollTop = box.scrollTop;
-    
-    // Create document fragment for better performance
-    const fragment = document.createDocumentFragment();
-    
-    msgs.slice(0, -box.children.length).forEach(m => {
-      fragment.appendChild(createMessageElement(m));
-    });
-    
-    box.insertBefore(fragment, box.firstChild);
-    
-    // Restore scroll position
-    box.scrollTop = box.scrollHeight - oldScrollHeight + oldScrollTop;
-  } else {
-    // Normal render
-    msgs.forEach(m => {
-      box.appendChild(createMessageElement(m));
-    });
-    
-    // Scroll to bottom
-    box.scrollTop = box.scrollHeight;
-  }
-  
-  // Mark messages as seen
-  if (socket && activeChatUser) {
-    const unseenMessages = msgs.filter(m => m.to === userId && !m.seen);
-    if (unseenMessages.length > 0) {
-      socket.emit("markAsSeen", { 
-        messageIds: unseenMessages.map(m => m.id),
-        senderId: activeChatUser.userId
+          // Show Desktop Notification
+          showDesktopNotification(`New Message from ${data.from}`, data.message);
+
+          // Play notification sound
+          playNotificationSound();
+          return;
+        }
+
+        // Else, in active chat
+        appendMessage(data);
+      });
+
+      // Online users update
+      socket.on("onlineUsers", (users) => {
+        onlineUsers = new Set(users);
+        updateOnlineStatusIndicators();
+      });
+
+      // Message seen confirmation
+      socket.on("messageSeen", (data) => {
+        updateMessageSeenStatus(data.messageId);
+      });
+
+      // Message edited confirmation
+      socket.on("messageEdited", (data) => {
+        const msgIndex = allMessages.findIndex(m => m.id === data.messageId);
+        if (msgIndex !== -1) {
+          allMessages[msgIndex].message = data.newMessage;
+          allMessages[msgIndex].edited = true;
+          renderMessages();
+        }
+      });
+
+      // Message deleted confirmation
+      socket.on("messageDeleted", (data) => {
+        allMessages = allMessages.filter(m => m.id !== data.messageId);
+        renderMessages();
       });
     }
-  }
-}
-function createMessageElement(msg) {
-  const isMe = msg.from === userId;
-  
-  const messageDiv = document.createElement("div");
-  messageDiv.className = `message message-${isMe ? 'outgoing' : 'incoming'}`;
-  
-  const senderDiv = document.createElement("div");
-  senderDiv.className = "message-sender";
-  senderDiv.textContent = isMe ? "You" : msg.from;
-  
-  const contentDiv = document.createElement("div");
-  contentDiv.className = "message-content";
-  contentDiv.textContent = msg.message;
-  
-  if (msg.edited) {
-    const editedSpan = document.createElement("span");
-    editedSpan.textContent = " (edited)";
-    editedSpan.style.fontSize = "0.7rem";
-    editedSpan.style.color = "var(--gray)";
-    contentDiv.appendChild(editedSpan);
-  }
-  
-  // Add timestamp
-  const timeDiv = document.createElement("div");
-  timeDiv.className = "message-time";
-  const sentTime = new Date(msg.timestamp || Date.now());
-  timeDiv.textContent = sentTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-  
-  messageDiv.appendChild(senderDiv);
-  messageDiv.appendChild(contentDiv);
-  messageDiv.appendChild(timeDiv);
-  
-  // Add seen status for outgoing messages
-  if (isMe && msg.seen) {
-    const seenDiv = document.createElement("div");
-    seenDiv.className = "message-seen";
-    seenDiv.textContent = "Seen " + new Date(msg.seenTimestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    messageDiv.appendChild(seenDiv);
-  }
-  
-  // Add context menu for messages (only for outgoing and not seen messages)
-  if (isMe && !msg.seen) {
-    contentDiv.oncontextmenu = (e) => {
-      e.preventDefault();
-      showContextMenu(e, msg);
-      return false;
-    };
     
-    contentDiv.addEventListener('touchstart', (e) => {
-      if (e.touches.length === 1) {
-        const touch = e.touches[0];
-        const touchHoldTimer = setTimeout(() => {
-          showContextMenu(touch, msg);
-        }, 800); // 800ms hold
-        contentDiv.addEventListener('touchend', () => clearTimeout(touchHoldTimer), { once: true });
+    // Count unread messages from a specific sender
+    function countUnreadMessages(senderId) {
+      return allMessages.filter(m => 
+        m.from === senderId && 
+        m.to === userId && 
+        !m.seen
+      ).length;
+    }
+
+    // Update total unread count in header
+    function updateTotalUnreadCount() {
+      const totalUnread = Array.from(unreadSenders).reduce((total, senderId) => {
+        return total + countUnreadMessages(senderId);
+      }, 0);
+
+      const badge = document.getElementById("messageCountBadge");
+      if (totalUnread > 0) {
+        badge.style.display = "flex";
+        badge.textContent = totalUnread > 9 ? "9+" : totalUnread;
+      } else {
+        badge.style.display = "none";
       }
-    });
-  }
-  
-  return messageDiv;
-}
+    }
 
-// Add one message to the box
-function appendMessage(msg) {
-  const box = isMobile ? document.getElementById("fullChatMessages") : document.getElementById("chatMessages");
-  const isMe = msg.from === userId;
-  
-  const messageDiv = document.createElement("div");
-  messageDiv.className = `message message-${isMe ? 'outgoing' : 'incoming'}`;
-  
-  const senderDiv = document.createElement("div");
-  senderDiv.className = "message-sender";
-  senderDiv.textContent = isMe ? "You" : msg.from;
-  
-  const contentDiv = document.createElement("div");
-  contentDiv.className = "message-content";
-  contentDiv.textContent = msg.message;
-  
-  if (msg.edited) {
-    const editedSpan = document.createElement("span");
-    editedSpan.textContent = " (edited)";
-    editedSpan.style.fontSize = "0.7rem";
-    editedSpan.style.color = "var(--gray)";
-    contentDiv.appendChild(editedSpan);
-  }
-  
-  // Add timestamp
-  const timeDiv = document.createElement("div");
-  timeDiv.className = "message-time";
-  const sentTime = new Date(msg.timestamp || Date.now());
-  timeDiv.textContent = sentTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-  
-  messageDiv.appendChild(senderDiv);
-  messageDiv.appendChild(contentDiv);
-  messageDiv.appendChild(timeDiv);
-  
-  // Add seen status for outgoing messages
-  if (isMe && msg.seen) {
-    const seenDiv = document.createElement("div");
-    seenDiv.className = "message-seen";
-    seenDiv.textContent = "Seen " + new Date(msg.seenTimestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    messageDiv.appendChild(seenDiv);
-  }
-  
-  // Add context menu for messages (only for outgoing and not seen messages)
-  if (isMe && !msg.seen) {
-    contentDiv.oncontextmenu = (e) => {
-      e.preventDefault();
-      showContextMenu(e, msg);
-      return false;
-    };
-    
-    contentDiv.addEventListener('touchstart', (e) => {
-      if (e.touches.length === 1) {
-        const touch = e.touches[0];
-        const touchHoldTimer = setTimeout(() => {
-          showContextMenu(touch, msg);
-        }, 800); // 800ms hold
-        contentDiv.addEventListener('touchend', () => clearTimeout(touchHoldTimer), { once: true });
+    // Update notification unread count
+    function updateNotificationUnreadCount(count) {
+      unreadUpdatesCount = count;
+      const badge = document.getElementById("notificationCountBadge");
+      if (unreadUpdatesCount > 0) {
+        badge.style.display = "flex";
+        badge.textContent = unreadUpdatesCount > 9 ? "9+" : unreadUpdatesCount;
+      } else {
+        badge.style.display = "none";
       }
-    });
-  }
-  
-  box.appendChild(messageDiv);
-  box.scrollTop = box.scrollHeight;
-}
+    }
 
-// Show context menu for message actions
-function showContextMenu(e, msg) {
-  selectedMessage = msg;
-  const menu = document.getElementById('contextMenu');
-  menu.style.display = 'block';
-  
-  // Position menu near the click/touch
-  const x = e.clientX || e.pageX;
-  const y = e.clientY || e.pageY;
-  
-  menu.style.left = `${x}px`;
-  menu.style.top = `${y}px`;
-}
+    // Initialize notification permission
+    function initNotifications() {
+      if ("Notification" in window) {
+        Notification.requestPermission();
+      }
+    }
 
-// Edit selected message
-function editSelectedMessage() {
-  if (!selectedMessage) return;
-  
-  const newMessage = prompt("Edit your message:", selectedMessage.message);
-  if (newMessage && newMessage !== selectedMessage.message) {
-    // Update message in local array
-    const msgIndex = allMessages.findIndex(m => m.id === selectedMessage.id);
-    if (msgIndex !== -1) {
-      allMessages[msgIndex].message = newMessage;
-      allMessages[msgIndex].edited = true;
+    // Play notification sound
+    function playNotificationSound() {
+      if (notifySound) {
+        try {
+          notifySound.currentTime = 0; // Rewind to start
+          notifySound.play().catch(e => console.warn("Audio play failed:", e));
+        } catch (e) {
+          console.warn("Error playing notification sound:", e);
+        }
+      }
+    }
+
+    // Toggle sidebar
+    function toggleSidebar() {
+      document.getElementById('sidebar').classList.toggle('show');
+      document.getElementById('mainContent').classList.toggle('expanded');
+    }
+
+    function hideSidebar() {
+      document.getElementById('sidebar').classList.remove('show');
+      document.getElementById('mainContent').classList.remove('expanded');
+    }
+
+    // Toggle profile card
+    function toggleProfileCard() {
+      const profileCard = document.getElementById('profileCard');
+      profileCard.classList.toggle('show');
+    }
+
+    function hideProfileCard() {
+      document.getElementById('profileCard').classList.remove('show');
+    }
+
+    // Toggle notifications
+    function toggleNotifications() {
+      const panel = document.getElementById('updatePanel');
+      panel.classList.toggle('show');
       
-      // Emit update to server
-      if (socket) {
-        socket.emit("editMessage", { 
-          messageId: selectedMessage.id, 
-          newMessage: newMessage 
+      if (panel.classList.contains('show')) {
+        // When opening notifications, reset the unread count
+        updateNotificationUnreadCount(0);
+        hideProfileCard();
+        hideChatUserList();
+      }
+    }
+
+    function hideNotifications() {
+      document.getElementById('updatePanel').classList.remove('show');
+    }
+
+    // Toggle chat user list
+    function toggleChatUserList() {
+      if (isMobile) {
+        document.getElementById('fullScreenUserList').classList.toggle('show');
+      } else {
+        document.getElementById('chatUserList').classList.toggle('show');
+      }
+      
+      // Hide other popups when showing chat list
+      if (document.getElementById('chatUserList').classList.contains('show') || 
+          document.getElementById('fullScreenUserList').classList.contains('show')) {
+        hideProfileCard();
+        hideNotifications();
+      }
+      
+      // Load users if not already loaded
+      if (document.getElementById('chatUserList').classList.contains('show') || 
+          document.getElementById('fullScreenUserList').classList.contains('show')) {
+        loadChatUsers();
+      }
+    }
+
+    function hideChatUserList() {
+      document.getElementById('chatUserList').classList.remove('show');
+      document.getElementById('fullScreenUserList').classList.remove('show');
+    }
+
+    // Close full screen user list
+    function closeFullScreenUserList() {
+      document.getElementById('fullScreenUserList').classList.remove('show');
+    }
+
+    // Load chat users
+    function loadChatUsers() {
+      fetch("/api/users")
+        .then(res => res.json())
+        .then(users => {
+          const container = isMobile ? document.getElementById("fullUserListContainer") : document.getElementById("userListContainer");
+          container.innerHTML = '';
+
+          if (users.length === 0) {
+            container.innerHTML = '<p>No users available.</p>';
+            return;
+          }
+
+          users.filter(u => u.userId !== userId).forEach(user => {
+            const unreadCount = countUnreadMessages(user.userId);
+            const div = document.createElement("div");
+            div.className = "chat-user-item";
+            div.innerHTML = `
+              <div style="position:relative;">
+                <img src="${user.profilePic || 'assets/profile.png'}" class="chat-user-avatar">
+                <div class="online-dot" id="online-${user.userId}" style="display:${onlineUsers.has(user.userId) ? 'block' : 'none'}"></div>
+              </div>
+              <div class="chat-user-info">
+                <div class="chat-user-name">${user.username} 
+                  ${unreadCount > 0 ? `<span class="user-unread-count">${unreadCount > 9 ? '9+' : unreadCount}</span>` : ''}
+                </div>
+                <div class="chat-user-status">${user.department}</div>
+              </div>
+            `;
+            div.onclick = () => openChatWith(user);
+            container.appendChild(div);
+            userElements[user.userId] = div;
+          });
+        })
+        .catch(error => {
+          console.error("Error loading chat users:", error);
+          const container = isMobile ? document.getElementById("fullUserListContainer") : document.getElementById("userListContainer");
+          container.innerHTML = '<p>Error loading users. Please try again.</p>';
+        });
+    }
+
+    // Update online status indicators
+    function updateOnlineStatusIndicators() {
+      Object.keys(userElements).forEach(userId => {
+        const dot = document.getElementById(`online-${userId}`);
+        if (dot) {
+          dot.style.display = onlineUsers.has(userId) ? 'block' : 'none';
+        }
+      });
+    }
+
+    // Load user profile
+    function loadUserProfile() {
+      const token = localStorage.getItem('token');
+      
+      fetch('/api/me', {
+        headers: { Authorization: `Bearer ${token}` }
+      })
+        .then(res => res.json())
+        .then(data => {
+          if (!data.success || !data.user) {
+            console.log("Invalid token - redirecting to login");
+            return logout(true);
+          }
+
+          currentUser = data.user;
+          const profileImage = document.getElementById('profileImage');
+          
+          // Set profile image
+          const profilePic = currentUser.profilePic && currentUser.profilePic.startsWith('http')
+            ? currentUser.profilePic
+            : 'assets/profile.png';
+            
+          profileImage.src = profilePic;
+
+          // Update profile card
+          document.getElementById('profile-name').textContent = currentUser.username;
+          document.getElementById('profile-id').textContent = currentUser.userId;
+          document.getElementById('profile-email').textContent = currentUser.email;
+          document.getElementById('profile-mobile').textContent = currentUser.mobile;
+          document.getElementById('profile-dept').textContent = currentUser.department;
+          document.getElementById('profile-designation').textContent = currentUser.designation;
+          document.getElementById('profile-role').textContent = currentUser.role;
+
+          // Load initial data
+          loadTable('WOOD PO');
+          loadUpdates();
+        })
+        .catch(error => {
+          console.error("Failed to fetch user:", error);
+          logout(true);
+        });
+    }
+
+    // Load updates
+    function loadUpdates() {
+      fetch("/api/updates")
+        .then(res => res.json())
+        .then(data => {
+          const updates = data.updates || data;
+          if (updates.length > 0) {
+            // Count unread updates (assuming all are unread initially)
+            updateNotificationUnreadCount(updates.length);
+            
+            const updatesList = document.getElementById('updatesList');
+            updatesList.innerHTML = '';
+
+            updates.forEach((update) => {
+              const div = document.createElement('div');
+              div.style.cursor = 'pointer';
+              div.style.marginBottom = '1rem';
+              div.style.paddingBottom = '1rem';
+              div.style.borderBottom = '1px solid var(--glass-border)';
+
+              const date = new Date(update.createdAt).toLocaleDateString();
+              const message = update.message || "(No message)";
+              const imageHTML = update.image
+                ? `<img src="${update.image}" style="width:100%; max-height:150px; object-fit:contain; margin-top:0.5rem; border-radius:8px;">`
+                : '';
+
+              div.innerHTML = `
+                <div style="display:flex; align-items:center; gap:0.5rem; margin-bottom:0.3rem;">
+                  <i class="fas fa-bullhorn" style="color:var(--primary);"></i>
+                  <strong>${date}</strong>
+                </div>
+                <div>${message}</div>
+                ${imageHTML}
+              `;
+
+              div.addEventListener('click', () => showUpdateDetail(update));
+              updatesList.appendChild(div);
+            });
+          }
+        });
+    }
+
+    // Show update detail
+    function showUpdateDetail(update) {
+      const date = new Date(update.createdAt).toLocaleString();
+      const message = update.message || "(No message)";
+      const imageHTML = update.image
+        ? `<img src="${update.image}" style="width:100%; max-height:300px; object-fit:contain; margin-top:1rem; border-radius:8px;">`
+        : '';
+
+      const html = `
+        <div style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(30, 41, 59, 0.98); border-radius: 12px; padding: 1.5rem; max-width: 90%; width: 500px; box-shadow: 0 15px 30px rgba(0,0,0,0.3); z-index: 2100; border: 1px solid var(--glass-border);">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+            <h3 style="color:var(--primary);"><i class="fas fa-bullhorn"></i> Update Detail</h3>
+            <button onclick="this.parentElement.parentElement.remove()" style="background:none; border:none; color:var(--gray); font-size:1.2rem; cursor:pointer;">
+              <i class="fas fa-times"></i>
+            </button>
+          </div>
+          <p><strong>Date:</strong> ${date}</p>
+          <p style="margin:1rem 0;">${message}</p>
+          ${imageHTML}
+        </div>
+      `;
+
+      const container = document.createElement('div');
+      container.innerHTML = html;
+      document.body.appendChild(container);
+    }
+
+    // Logout function
+    function logout(forceRedirect = false) {
+      localStorage.clear();
+      window.location.href = 'index.html';
+    }
+
+    // Load table data
+    function loadTable(category) {
+      currentCategory = category;
+      fetch(`/api/excel-data/${category}`)
+        .then(res => res.json())
+        .then(res => {
+          if (res.success) {
+            originalData = res.data;
+            renderTable(res.data);
+
+            const filter = document.getElementById("materialFilter");
+            if (category === 'WOOD PO') {
+              const materialSet = new Set(res.data.slice(1).map(row => row[3]));
+              filter.innerHTML = '<option value="">All Materials</option>' + [...materialSet].map(m => `<option>${m}</option>`).join('');
+              filter.style.display = 'block';
+            } else {
+              filter.style.display = 'none';
+            }
+          }
+        });
+    }
+
+    // Render table
+    function renderTable(data) {
+      const thead = document.querySelector("#dataTable thead");
+      const tbody = document.querySelector("#dataTable tbody");
+      thead.innerHTML = "";
+      tbody.innerHTML = "";
+
+      if (data.length === 0) return;
+
+      const table = document.getElementById("dataTable");
+      table.className = currentCategory === 'SHIFT SCHEDULE' ? 'shift-schedule-freeze' : '';
+
+      // Create header row
+      const headerRow = document.createElement("tr");
+      data[0].forEach((col, index) => {
+        const th = document.createElement("th");
+        th.textContent = col;
+        if (currentCategory === 'SHIFT SCHEDULE' && index < 5) {
+          th.classList.add('freeze-col');
+        }
+        headerRow.appendChild(th);
+      });
+      thead.appendChild(headerRow);
+
+      // Create data rows
+      data.slice(1).forEach((row, rowIndex) => {
+        const tr = document.createElement("tr");
+
+        const rowText = row.map(cell => String(cell).toUpperCase()).join(" ");
+        if (currentCategory === 'WOOD PO') {
+          if (rowText.includes("RAMPUR")) tr.style.background = "#00ff40";
+          else if (rowText.includes("SITAPUR")) tr.style.background = "#ff00ff";
+          else if (rowText.includes("OTHER")) tr.style.background = "#00ffff";
+        }
+
+        row.forEach((cell, colIndex) => {
+          const td = document.createElement("td");
+          const value = typeof cell === 'object' ? (cell.text || '') : String(cell);
+
+          if (currentCategory === 'WOOD PO' && colIndex === 0) {
+            td.innerHTML = `<button onclick="copyText('${value}', 'PO Copied')" style="background:var(--primary); color:white; border:none; padding:0.3rem 0.6rem; border-radius:4px; cursor:pointer;">${value}</button>`;
+          } else if (currentCategory === 'ID PASSWORD' && colIndex === 1) {
+            td.innerHTML = `<button onclick="copyText('${value}', 'Password Copied')" style="background:var(--success); color:white; border:none; padding:0.3rem 0.6rem; border-radius:4px; cursor:pointer;">${isMobile ? value : '******'}</button>`;
+          } else {
+            td.textContent = value;
+          }
+
+          if (currentCategory === 'SHIFT SCHEDULE') {
+            if (rowIndex < 2 || colIndex < 5) td.style.background = 'rgba(173, 216, 230, 0.3)';
+            if (value === 'R') td.style.background = 'green';
+            else if (value === 'L') td.style.background = 'red';
+            else if (value === 'G') td.style.background = 'yellow';
+          }
+
+          if (currentCategory === 'SHIFT SCHEDULE' && colIndex < 5) {
+            td.classList.add('freeze-col');
+          }
+
+          tr.appendChild(td);
+        });
+
+        tbody.appendChild(tr);
+      });
+    }
+
+    // Copy text to clipboard
+    function copyText(text, message) {
+      navigator.clipboard.writeText(text).then(() => {
+        showToast(message);
+      }).catch(err => {
+        console.error("Copy failed", err);
+      });
+    }
+
+    // Show toast notification
+    function showToast(message) {
+      const toast = document.getElementById('toast');
+      toast.textContent = message;
+      toast.style.display = 'block';
+      
+      setTimeout(() => {
+        toast.style.animation = 'fadeOut 0.3s ease';
+        setTimeout(() => {
+          toast.style.display = 'none';
+          toast.style.animation = 'fadeIn 0.3s ease';
+        }, 300);
+      }, 2000);
+    }
+
+    // Apply filters to table
+    function applyFilters() {
+      let filtered = [...originalData];
+      const searchVal = document.getElementById("searchBox").value.toLowerCase();
+      const materialVal = document.getElementById("materialFilter").value;
+
+      if (searchVal) {
+        filtered = filtered.filter(row => row.some(cell => String(cell).toLowerCase().includes(searchVal)));
+      }
+      if (materialVal) {
+        filtered = filtered.filter(row => row[3] === materialVal);
+      }
+
+      renderTable([originalData[0], ...filtered]);
+    }
+
+    // Show team modal
+    function showTeam() {
+      document.getElementById('teamModal').classList.add('show');
+      fetch('/api/users')
+        .then(res => res.json())
+        .then(users => {
+          const container = document.getElementById('teamContainer');
+          container.innerHTML = users.map(user => `
+            <div class="user-card">
+              <img src="${user.profilePic || 'assets/profile.png'}" class="user-avatar">
+              <div class="user-name">${user.username}</div>
+              <div class="user-detail"><strong>ID:</strong> ${user.userId}</div>
+              <div class="user-detail"><strong>Dept:</strong> ${user.department}</div>
+              <div class="user-detail"><strong>Role:</strong> ${user.designation}</div>
+              <div class="user-detail"><strong>Email:</strong> ${user.email || '-'}</div>
+            </div>
+          `).join('');
+        });
+    }
+
+    // Hide team modal
+    function hideTeam() {
+      document.getElementById('teamModal').classList.remove('show');
+    }
+
+    // Open register form in iframe
+    function openRegister(type) {
+      const iframe = document.getElementById("registerIframe");
+      const iframeContainer = document.getElementById("iframeContainer");
+      const tableSection = document.getElementById("tableSection");
+      const topButtons = document.getElementById("topButtons");
+
+      let page = "";
+      switch(type) {
+        case 'wood': page = "wood-bill-register.html"; break;
+        case 'methanol': page = "methanol-register.html"; break;
+        case 'longbody': page = "longbody-register.html"; break;
+        case 'shift': page = "shift-register.html"; break;
+        case 'download': page = "Download.html"; break;
+        case 'sop': page = "SOP.html"; break;  
+        case 'stickerGenrator': page = "StickerGenrator.html"; break;
+        case 'about': page = "About.html"; break;   
+      }
+
+      iframe.src = page;
+      iframeContainer.style.display = "block";
+      tableSection.style.display = "none";
+      topButtons.style.display = "none";
+      hideSidebar();
+    }
+
+    // Show desktop notification
+    function showDesktopNotification(title, body) {
+      if ("Notification" in window && Notification.permission === "granted") {
+        new Notification(title, {
+          body: body,
+          icon: "/assets/profile.png"
+        });
+      }
+    }
+
+    // Open chat with a user
+    function openChatWith(user) {
+      activeChatUser = user;
+      localStorage.setItem('lastActiveChat', user.userId);
+      
+      if (isMobile) {
+        // Show full screen chat on mobile
+        const fullChatWith = document.getElementById("fullChatWith");
+        const fullChatUserName = document.getElementById("fullChatUserName");
+        
+        if (fullChatWith && fullChatUserName) {
+          fullChatWith.innerHTML = `<i class="fas fa-user"></i> Chat with ${user.username}`;
+          fullChatUserName.textContent = user.username;
+        }
+        
+        const fullScreenChat = document.getElementById("fullScreenChat");
+        if (fullScreenChat) {
+          fullScreenChat.classList.add('show');
+          document.getElementById("fullChatMessages").innerHTML = '';
+          document.getElementById("fullChatInput").value = '';
+        }
+      } else {
+        // Show regular chat box on desktop
+        const chatWith = document.getElementById("chatWith");
+        if (chatWith) {
+          chatWith.innerHTML = `<i class="fas fa-user"></i> Chat with ${user.username}`;
+        }
+        
+        const chatBox = document.getElementById("chatBox");
+        if (chatBox) {
+          chatBox.classList.add('show');
+          document.getElementById("chatMessages").innerHTML = '';
+          document.getElementById("chatInput").value = '';
+        }
+      }
+
+      const el = userElements[user.userId];
+      if (el) {
+        const badge = el.querySelector(".msg-count");
+        if (badge) badge.remove();
+      }
+
+      unreadSenders.delete(user.userId);
+      updateTotalUnreadCount();
+      
+      // Reset pagination
+      currentPage = 1;
+      hasMoreMessages = true;
+      
+      renderMessages();
+    }
+
+    // Show all messages between active users
+    function renderMessages(isPrepend = false) {
+      const box = isMobile ? document.getElementById("fullChatMessages") : document.getElementById("chatMessages");
+      
+      // Don't clear if we're prepending older messages
+      if (!isPrepend) {
+        box.innerHTML = "";
+      }
+
+      const msgs = allMessages.filter(m =>
+        (m.from === userId && m.to === activeChatUser.userId) ||
+        (m.to === userId && m.from === activeChatUser.userId)
+      );
+
+      // If prepending, we need to maintain scroll position
+      if (isPrepend) {
+        const oldScrollHeight = box.scrollHeight;
+        const oldScrollTop = box.scrollTop;
+        
+        // Create document fragment for better performance
+        const fragment = document.createDocumentFragment();
+        
+        msgs.slice(0, -box.children.length).forEach(m => {
+          fragment.appendChild(createMessageElement(m));
+        });
+        
+        box.insertBefore(fragment, box.firstChild);
+        
+        // Restore scroll position
+        box.scrollTop = box.scrollHeight - oldScrollHeight + oldScrollTop;
+      } else {
+        // Normal render
+        msgs.forEach(m => {
+          box.appendChild(createMessageElement(m));
+        });
+        
+        // Scroll to bottom
+        box.scrollTop = box.scrollHeight;
+      }
+      
+      // Mark messages as seen
+      if (socket && activeChatUser) {
+        const unseenMessages = msgs.filter(m => m.to === userId && !m.seen);
+        if (unseenMessages.length > 0) {
+          socket.emit("markAsSeen", { 
+            messageIds: unseenMessages.map(m => m.id),
+            senderId: activeChatUser.userId
+          });
+        }
+      }
+    }
+
+    function createMessageElement(msg) {
+      const isMe = msg.from === userId;
+      
+      const messageDiv = document.createElement("div");
+      messageDiv.className = `message message-${isMe ? 'outgoing' : 'incoming'}`;
+      
+      const senderDiv = document.createElement("div");
+      senderDiv.className = "message-sender";
+      senderDiv.textContent = isMe ? "You" : msg.from;
+      
+      const contentDiv = document.createElement("div");
+      contentDiv.className = "message-content";
+      contentDiv.textContent = msg.message;
+      
+      if (msg.edited) {
+        const editedSpan = document.createElement("span");
+        editedSpan.textContent = " (edited)";
+        editedSpan.style.fontSize = "0.7rem";
+        editedSpan.style.color = "var(--gray)";
+        contentDiv.appendChild(editedSpan);
+      }
+      
+      // Add timestamp
+      const timeDiv = document.createElement("div");
+      timeDiv.className = "message-time";
+      const sentTime = new Date(msg.timestamp || Date.now());
+      timeDiv.textContent = sentTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      
+      messageDiv.appendChild(senderDiv);
+      messageDiv.appendChild(contentDiv);
+      messageDiv.appendChild(timeDiv);
+      
+      // Add seen status for outgoing messages
+      if (isMe && msg.seen) {
+        const seenDiv = document.createElement("div");
+        seenDiv.className = "message-seen";
+        seenDiv.textContent = "Seen " + new Date(msg.seenTimestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        messageDiv.appendChild(seenDiv);
+      }
+      
+      // Add context menu for messages (only for outgoing and not seen messages)
+      if (isMe && !msg.seen) {
+        contentDiv.oncontextmenu = (e) => {
+          e.preventDefault();
+          showContextMenu(e, msg);
+          return false;
+        };
+        
+        contentDiv.addEventListener('touchstart', (e) => {
+          if (e.touches.length === 1) {
+            const touch = e.touches[0];
+            const touchHoldTimer = setTimeout(() => {
+              showContextMenu(touch, msg);
+            }, 800); // 800ms hold
+            contentDiv.addEventListener('touchend', () => clearTimeout(touchHoldTimer), { once: true });
+          }
         });
       }
       
-      // Re-render messages
-      renderMessages();
+      return messageDiv;
     }
-  }
-  
-  document.getElementById('contextMenu').style.display = 'none';
-}
 
-// Delete selected message
-function deleteSelectedMessage() {
-  if (!selectedMessage) return;
-  
-  if (confirm("Are you sure you want to delete this message?")) {
-    // Remove message from local array
-    allMessages = allMessages.filter(m => m.id !== selectedMessage.id);
-    
-    // Emit delete to server
-    if (socket) {
-      socket.emit("deleteMessage", { messageId: selectedMessage.id });
+    // Add one message to the box
+    function appendMessage(msg) {
+      const box = isMobile ? document.getElementById("fullChatMessages") : document.getElementById("chatMessages");
+      const isMe = msg.from === userId;
+      
+      const messageDiv = document.createElement("div");
+      messageDiv.className = `message message-${isMe ? 'outgoing' : 'incoming'}`;
+      
+      const senderDiv = document.createElement("div");
+      senderDiv.className = "message-sender";
+      senderDiv.textContent = isMe ? "You" : msg.from;
+      
+      const contentDiv = document.createElement("div");
+      contentDiv.className = "message-content";
+      contentDiv.textContent = msg.message;
+      
+      if (msg.edited) {
+        const editedSpan = document.createElement("span");
+        editedSpan.textContent = " (edited)";
+        editedSpan.style.fontSize = "0.7rem";
+        editedSpan.style.color = "var(--gray)";
+        contentDiv.appendChild(editedSpan);
+      }
+      
+      // Add timestamp
+      const timeDiv = document.createElement("div");
+      timeDiv.className = "message-time";
+      const sentTime = new Date(msg.timestamp || Date.now());
+      timeDiv.textContent = sentTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      
+      messageDiv.appendChild(senderDiv);
+      messageDiv.appendChild(contentDiv);
+      messageDiv.appendChild(timeDiv);
+      
+      // Add seen status for outgoing messages
+      if (isMe && msg.seen) {
+        const seenDiv = document.createElement("div");
+        seenDiv.className = "message-seen";
+        seenDiv.textContent = "Seen " + new Date(msg.seenTimestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        messageDiv.appendChild(seenDiv);
+      }
+      
+      // Add context menu for messages (only for outgoing and not seen messages)
+      if (isMe && !msg.seen) {
+        contentDiv.oncontextmenu = (e) => {
+          e.preventDefault();
+          showContextMenu(e, msg);
+          return false;
+        };
+        
+        contentDiv.addEventListener('touchstart', (e) => {
+          if (e.touches.length === 1) {
+            const touch = e.touches[0];
+            const touchHoldTimer = setTimeout(() => {
+              showContextMenu(touch, msg);
+            }, 800); // 800ms hold
+            contentDiv.addEventListener('touchend', () => clearTimeout(touchHoldTimer), { once: true });
+          }
+        });
+      }
+      
+      box.appendChild(messageDiv);
+      box.scrollTop = box.scrollHeight;
     }
-    
-    // Re-render messages
-    renderMessages();
-  }
-  
-  document.getElementById('contextMenu').style.display = 'none';
-}
 
-// Update message seen status
-function updateMessageSeenStatus(messageId) {
-  const msgIndex = allMessages.findIndex(m => m.id === messageId);
-  if (msgIndex !== -1) {
-    allMessages[msgIndex].seen = true;
-    allMessages[msgIndex].seenTimestamp = Date.now();
-    renderMessages();
-  }
-}
+    // Show context menu for message actions
+    function showContextMenu(e, msg) {
+      selectedMessage = msg;
+      const menu = document.getElementById('contextMenu');
+      menu.style.display = 'block';
+      
+      // Position menu near the click/touch
+      const x = e.clientX || e.pageX;
+      const y = e.clientY || e.pageY;
+      
+      menu.style.left = `${x}px`;
+      menu.style.top = `${y}px`;
+    }
 
-// Send message to server
-function sendMessage() {
-  const input = document.getElementById("chatInput");
-  const message = input.value.trim();
-  if (!message || !activeChatUser) return;
+    // Edit selected message
+    function editSelectedMessage() {
+      if (!selectedMessage) return;
+      
+      const newMessage = prompt("Edit your message:", selectedMessage.message);
+      if (newMessage && newMessage !== selectedMessage.message) {
+        // Update message in local array
+        const msgIndex = allMessages.findIndex(m => m.id === selectedMessage.id);
+        if (msgIndex !== -1) {
+          allMessages[msgIndex].message = newMessage;
+          allMessages[msgIndex].edited = true;
+          
+          // Emit update to server
+          if (socket) {
+            socket.emit("editMessage", { 
+              messageId: selectedMessage.id, 
+              newMessage: newMessage 
+            });
+          }
+          
+          // Re-render messages
+          renderMessages();
+        }
+      }
+      
+      document.getElementById('contextMenu').style.display = 'none';
+    }
 
-  const msg = {
-    id: Date.now().toString(),
-    from: userId,
-    to: activeChatUser.userId,
-    message,
-    timestamp: Date.now()
-  };
+    // Delete selected message
+    function deleteSelectedMessage() {
+      if (!selectedMessage) return;
+      
+      if (confirm("Are you sure you want to delete this message?")) {
+        // Remove message from local array
+        allMessages = allMessages.filter(m => m.id !== selectedMessage.id);
+        
+        // Emit delete to server
+        if (socket) {
+          socket.emit("deleteMessage", { messageId: selectedMessage.id });
+        }
+        
+        // Re-render messages
+        renderMessages();
+      }
+      
+      document.getElementById('contextMenu').style.display = 'none';
+    }
 
-  // Emit message through socket
-  socket.emit("chatMessage", msg);
-  
-  // Add message to local array
-  allMessages.push(msg);
-  
-  // Append message to chat
-  appendMessage(msg);
-  
-  // Clear input
-  input.value = "";
-}
+    // Update message seen status
+    function updateMessageSeenStatus(messageId) {
+      const msgIndex = allMessages.findIndex(m => m.id === messageId);
+      if (msgIndex !== -1) {
+        allMessages[msgIndex].seen = true;
+        allMessages[msgIndex].seenTimestamp = Date.now();
+        renderMessages();
+      }
+    }
 
-// Send message from full screen chat
-function sendFullScreenMessage() {
-  const input = document.getElementById("fullChatInput");
-  const message = input.value.trim();
-  if (!message || !activeChatUser) return;
+    // Send message to server
+    function sendMessage() {
+      const input = document.getElementById("chatInput");
+      const message = input.value.trim();
+      if (!message || !activeChatUser) return;
 
-  const msg = {
-    id: Date.now().toString(),
-    from: userId,
-    to: activeChatUser.userId,
-    message,
-    timestamp: Date.now()
-  };
+      const msg = {
+        id: Date.now().toString(),
+        from: userId,
+        to: activeChatUser.userId,
+        message,
+        timestamp: Date.now()
+      };
 
-  // Emit message through socket
-  socket.emit("chatMessage", msg);
-  
-  // Add message to local array
-  allMessages.push(msg);
-  
-  // Append message to chat
-  appendMessage(msg);
-  
-  // Clear input
-  input.value = "";
-}
+      // Emit message through socket
+      socket.emit("chatMessage", msg);
+      
+      // Add message to local array
+      allMessages.push(msg);
+      
+      // Append message to chat
+      appendMessage(msg);
+      
+      // Clear input
+      input.value = "";
+    }
 
-// Close chat window
-function closeChat() {
-  document.getElementById("chatBox").classList.remove('show');
-  activeChatUser = null;
-}
+    // Send message from full screen chat
+    function sendFullScreenMessage() {
+      const input = document.getElementById("fullChatInput");
+      const message = input.value.trim();
+      if (!message || !activeChatUser) return;
 
-// Close full screen chat
-function closeFullScreenChat() {
-  document.getElementById("fullScreenChat").classList.remove('show');
-  activeChatUser = null;
-}
+      const msg = {
+        id: Date.now().toString(),
+        from: userId,
+        to: activeChatUser.userId,
+        message,
+        timestamp: Date.now()
+      };
 
-// Go to home page
-function goHome() {
-  window.location.href = 'dashboard.html';
-}
+      // Emit message through socket
+      socket.emit("chatMessage", msg);
+      
+      // Add message to local array
+      allMessages.push(msg);
+      
+      // Append message to chat
+      appendMessage(msg);
+      
+      // Clear input
+      input.value = "";
+    }
+
+    // Close chat window
+    function closeChat() {
+      document.getElementById("chatBox").classList.remove('show');
+      activeChatUser = null;
+    }
+
+    // Close full screen chat
+    function closeFullScreenChat() {
+      document.getElementById("fullScreenChat").classList.remove('show');
+      activeChatUser = null;
+    }
+
+    // Go to home page
+    function goHome() {
+      window.location.href = 'dashboard.html';
+    }
   </script>
 </body>
 </html>
