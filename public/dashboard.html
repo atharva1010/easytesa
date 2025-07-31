@@ -1973,9 +1973,9 @@ function renderTable(data) {
 
     const rowText = row.map(cell => String(cell).toUpperCase()).join(" ");
     if (currentCategory === 'WOOD PO') {
-      if (rowText.includes("RAMPUR")) tr.style.background = "green";
-      else if (rowText.includes("SITAPUR")) tr.style.background = "red";
-      else if (rowText.includes("OTHER")) tr.style.background = "yellow";
+      if (rowText.includes("RAMPUR")) tr.style.background = "#00ff40";
+      else if (rowText.includes("SITAPUR")) tr.style.background = "#ff00ff";
+      else if (rowText.includes("OTHER")) tr.style.background = "#00ffff";
     }
 
     row.forEach((cell, colIndex) => {
