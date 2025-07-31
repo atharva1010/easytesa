@@ -1969,9 +1969,9 @@ function renderTable(data) {
 
     const rowText = row.map(cell => String(cell).toUpperCase()).join(" ");
     if (currentCategory === 'WOOD PO') {
-      if (rowText.includes("RAMPUR")) tr.style.background = "rgba(144, 238, 144, 0.2)";
-      else if (rowText.includes("SITAPUR")) tr.style.background = "rgba(255, 0, 255, 0.2)";
-      else if (rowText.includes("OTHER")) tr.style.background = "rgba(255, 255, 0, 0.2)";
+      if (rowText.includes("RAMPUR")) tr.style.background = "green";
+      else if (rowText.includes("SITAPUR")) tr.style.background = "red";
+      else if (rowText.includes("OTHER")) tr.style.background = "yellow";
     }
 
     row.forEach((cell, colIndex) => {
@@ -1988,9 +1988,9 @@ function renderTable(data) {
 
       if (currentCategory === 'SHIFT SCHEDULE') {
         if (rowIndex < 2 || colIndex < 5) td.style.background = 'rgba(173, 216, 230, 0.3)';
-        if (value === 'R') td.style.background = 'rgba(0, 100, 0, 0.3)';
-        else if (value === 'L') td.style.background = 'rgba(139, 0, 0, 0.3)';
-        else if (value === 'G') td.style.background = 'rgba(184, 134, 11, 0.3)';
+        if (value === 'R') td.style.background = 'green';
+        else if (value === 'L') td.style.background = 'red';
+        else if (value === 'G') td.style.background = 'yellow';
       }
 
       if (currentCategory === 'SHIFT SCHEDULE' && colIndex < 5) {
