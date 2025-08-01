@@ -436,8 +436,8 @@ app.post("/api/update-password", async (req, res) => {
   }
 });
 
-// Chat System Endpoints
-app.get("/api/unread-count/:userId", async (req, res) => {
+// Message Endpoints
+app.get("/api/messages/unread-count/:userId", async (req, res) => {
   try {
     const count = await Message.countDocuments({
       to: req.params.userId,
@@ -445,7 +445,70 @@ app.get("/api/unread-count/:userId", async (req, res) => {
     });
     res.json({ success: true, count });
   } catch (err) {
-    res.status(500).json({ success: false, message: "Server error" });
+    res.status(500).json({ success: false, message: "Failed to get unread count" });
+  }
+});
+
+app.post("/api/messages/mark-as-read", async (req, res) => {
+  try {
+    const { senderId, receiverId } = req.body;
+    
+    await Message.updateMany(
+      {
+        from: senderId,
+        to: receiverId,
+        seen: false
+      },
+      {
+        $set: { 
+          seen: true,
+          seenAt: new Date()
+        }
+      }
+    );
+
+    // Emit socket event to update UI in real-time
+    io.emit("messagesRead", { senderId, receiverId });
+
+    res.status(200).json({ success: true });
+  } catch (error) {
+    res.status(500).json({ error: "Failed to mark messages as read" });
+  }
+});
+
+// Notification Endpoints
+app.get("/api/notifications/unread-count/:userId", async (req, res) => {
+  try {
+    const count = await Notification.countDocuments({
+      recipient: req.params.userId,
+      read: false
+    });
+    res.json({ success: true, count });
+  } catch (error) {
+    res.status(500).json({ error: "Failed to get unread count" });
+  }
+});
+
+app.post("/api/notifications/mark-as-read", authMiddleware, async (req, res) => {
+  try {
+    const { userId } = req.body;
+    
+    await Notification.updateMany(
+      {
+        recipient: userId,
+        read: false
+      },
+      {
+        $set: { 
+          read: true,
+          readAt: new Date()
+        }
+      }
+    );
+
+    res.status(200).json({ success: true });
+  } catch (error) {
+    res.status(500).json({ error: "Failed to mark notifications as read" });
   }
 });
 
