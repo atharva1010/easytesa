@@ -1419,7 +1419,7 @@ function initApp() {
   notifySound.load();
   
   if (userId) {
-    // Initialize socket connection
+    // Initialize socket connection only if user is logged in
     socket = io();
     socket.emit("join", userId);
     setupSocketListeners();
@@ -1427,12 +1427,11 @@ function initApp() {
     // Load initial data
     loadUnreadCounts();
     loadLastActiveChat();
+    loadNotifications(); // Add this line
   }
   
   initNotifications();
-  loadTable('WOOD PO');
 }
-
 // Check if device is mobile
 function checkMobile() {
   isMobile = window.matchMedia("(max-width: 768px)").matches || 
