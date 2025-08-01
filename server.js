@@ -436,6 +436,28 @@ app.post("/api/update-password", async (req, res) => {
   }
 });
 
+app.get('/api/unread-counts/:userId', authMiddleware, async (req, res) => {
+  try {
+    const messageCount = await Message.countDocuments({
+      to: req.params.userId,
+      seen: false
+    });
+
+    const notificationCount = await Notification.countDocuments({
+      recipient: req.params.userId,
+      read: false
+    });
+
+    res.json({ 
+      success: true,
+      messageCount,
+      notificationCount
+    });
+  } catch (error) {
+    res.status(500).json({ error: "Failed to get unread counts" });
+  }
+});
+
 // Message Endpoints
 app.get("/api/messages/unread-count/:userId", async (req, res) => {
   try {
@@ -449,26 +471,37 @@ app.get("/api/messages/unread-count/:userId", async (req, res) => {
   }
 });
 
+
 app.post("/api/messages/mark-as-read", async (req, res) => {
+app.get('/api/unread-counts/:userId', authMiddleware, async (req, res) => {
   try {
-    const { senderId, receiverId } = req.body;
-    
-    await Message.updateMany(
-      {
-        from: senderId,
-        to: receiverId,
-        seen: false
-      },
-      {
-        $set: { 
-          seen: true,
-          seenAt: new Date()
-        }
-      }
-    );
+    const messageCount = await Message.countDocuments({
+      to: req.params.userId,
+      seen: false
+    });
+
+    const notificationCount = await Notification.countDocuments({
+      recipient: req.params.userId,
+      read: false
+    });
+
+    res.json({ 
+      success: true,
+      messageCount,
+      notificationCount
+    });
+  } catch (error) {
+    res.status(500).json({ error: "Failed to get unread counts" });
+  }
+});
+
 
     // Emit socket event to update UI in real-time
-    io.emit("messagesRead", { senderId, receiverId });
+        io.emit('messagesRead', { 
+      senderId, 
+      receiverId,
+      modifiedCount: result.modifiedCount 
+    });
 
     res.status(200).json({ success: true });
   } catch (error) {
@@ -489,13 +522,13 @@ app.get("/api/notifications/unread-count/:userId", async (req, res) => {
   }
 });
 
-app.post("/api/notifications/mark-as-read", authMiddleware, async (req, res) => {
+app.post('/api/notifications/mark-as-read', authMiddleware, async (req, res) => {
   try {
-    const { userId } = req.body;
+    const { notificationIds } = req.body;
     
-    await Notification.updateMany(
+    const result = await Notification.updateMany(
       {
-        recipient: userId,
+        _id: { $in: notificationIds },
         read: false
       },
       {
@@ -503,10 +536,12 @@ app.post("/api/notifications/mark-as-read", authMiddleware, async (req, res) => 
           read: true,
           readAt: new Date()
         }
-      }
-    );
+    });
 
-    res.status(200).json({ success: true });
+    res.status(200).json({ 
+      success: true,
+      modifiedCount: result.modifiedCount
+    });
   } catch (error) {
     res.status(500).json({ error: "Failed to mark notifications as read" });
   }
