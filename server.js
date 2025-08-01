@@ -31,7 +31,8 @@ const Message = require("./models/Message");
 const WoodBill = require('./models/WoodBill');
 const Methanol = require("./models/Methanol");
 const LongBodyReport = require('./models/LongBodyReport');
-const ShiftReport = require('./models/ShiftReport');
+const ShiftReport = require("./models/ShiftReport");
+const Notification = require("./models/Notification");
 
 // Routes
 const shiftReportRoutes = require("./routes/shiftReportRoutes");
@@ -39,14 +40,17 @@ const updateRoutes = require("./routes/updateRoutes");
 const shiftRoutes = require("./routes/shiftRoutes");
 const longBodyRoutes = require('./routes/longBody');
 
-// Mount Routes
-app.use("/api/shift-report", shiftRoutes);
-app.use("/api/updates", updateRoutes);
-app.use("/api/reports/shift", shiftReportRoutes);
-app.use("/api/long-body", longBodyRoutes);
+// Middleware
+app.use(cors());
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
+// Static files
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
-app.use(express.static(path.join(__dirname, 'public')));
+app.use('/bg', express.static(path.join(__dirname, 'bg')));
+app.use('/assets', express.static(path.join(__dirname, 'assets')));
 app.use('/Files', express.static(path.join(__dirname, 'Files')));
+app.use(express.static(path.join(__dirname, 'public')));
 
 // Multer Setup
 const storage = new CloudinaryStorage({
@@ -61,27 +65,16 @@ const storage = new CloudinaryStorage({
 const upload = multer({ storage });
 
 const bgStorage = multer.diskStorage({
-  destination: (req, file, cb) => cb(null, "bg/"),
+  destination: (req, file, cb) => cb(null, path.join(__dirname, 'bg')),
   filename: (req, file, cb) => cb(null, "background.jpg")
 });
 const uploadBackground = multer({ storage: bgStorage });
 
 const excelStorage = multer.diskStorage({
-  destination: (req, file, cb) => cb(null, "uploads/"),
+  destination: (req, file, cb) => cb(null, path.join(__dirname, 'uploads')),
   filename: (req, file, cb) => cb(null, Date.now() + ".xlsx")
 });
 const uploadExcel = multer({ storage: excelStorage });
-
-// Middleware
-app.use(cors());
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-
-app.use("/uploads", express.static(path.join(__dirname, "uploads")));
-app.use("/bg", express.static("bg"));
-app.use("/assets", express.static("assets"));
-app.use(express.static("public"));
-app.use(express.static(path.join(__dirname, "public")));
 
 // DB Connection
 mongoose.connect(process.env.MONGODB_URI || "mongodb://127.0.0.1:27017/bab_system", {
@@ -100,12 +93,10 @@ io.on("connection", (socket) => {
     onlineUsers[userId] = socket.id;
     socket.userId = userId;
     
-    // Load all messages for this user (both sent and received)
     const messages = await Message.find({
       $or: [{ from: userId }, { to: userId }]
     }).sort({ timestamp: 1 });
 
-    // Also emit online users list
     socket.emit("loadMessages", messages);
     io.emit("onlineUsers", Object.keys(onlineUsers));
   });
@@ -197,6 +188,12 @@ const authMiddleware = (req, res, next) => {
   }
 };
 
+// Mount Routes
+app.use("/api/shift-report", shiftRoutes);
+app.use("/api/updates", updateRoutes);
+app.use("/api/reports/shift", shiftReportRoutes);
+app.use("/api/long-body", longBodyRoutes);
+
 // User Management Endpoints
 app.post("/api/create-user", uploadUser.single("profilePic"), async (req, res) => {
   try {
@@ -267,21 +264,6 @@ app.get("/api/users", async (req, res) => {
   }
 });
 
-  // Get complete chat history between two users
-app.get("/api/chat-history/:user1/:user2", authMiddleware, async (req, res) => {
-  try {
-    const messages = await Message.find({
-      $or: [
-        { from: req.params.user1, to: req.params.user2 },
-        { from: req.params.user2, to: req.params.user1 }
-      ]
-    }).sort({ timestamp: 1 });
-    
-    res.json({ success: true, messages });
-  } catch (err) {
-    res.status(500).json({ success: false, message: "Failed to load chat history" });
-  }
-});
 // Auth Endpoints
 app.post("/api/login", async (req, res) => {
   const { userId, password } = req.body;
@@ -436,28 +418,6 @@ app.post("/api/update-password", async (req, res) => {
   }
 });
 
-app.get('/api/unread-counts/:userId', authMiddleware, async (req, res) => {
-  try {
-    const messageCount = await Message.countDocuments({
-      to: req.params.userId,
-      seen: false
-    });
-
-    const notificationCount = await Notification.countDocuments({
-      recipient: req.params.userId,
-      read: false
-    });
-
-    res.json({ 
-      success: true,
-      messageCount,
-      notificationCount
-    });
-  } catch (error) {
-    res.status(500).json({ error: "Failed to get unread counts" });
-  }
-});
-
 // Message Endpoints
 app.get("/api/messages/unread-count/:userId", async (req, res) => {
   try {
@@ -471,33 +431,31 @@ app.get("/api/messages/unread-count/:userId", async (req, res) => {
   }
 });
 
-
-app.post("/api/messages/mark-as-read", async (req, res) => {
-app.get('/api/unread-counts/:userId', authMiddleware, async (req, res) => {
+app.get("/api/messages/:userId1/:userId2", async (req, res) => {
   try {
-    const messageCount = await Message.countDocuments({
-      to: req.params.userId,
-      seen: false
-    });
-
-    const notificationCount = await Notification.countDocuments({
-      recipient: req.params.userId,
-      read: false
-    });
-
-    res.json({ 
-      success: true,
-      messageCount,
-      notificationCount
-    });
-  } catch (error) {
-    res.status(500).json({ error: "Failed to get unread counts" });
+    const messages = await Message.find({
+      $or: [
+        { from: req.params.userId1, to: req.params.userId2 },
+        { from: req.params.userId2, to: req.params.userId1 }
+      ]
+    }).sort({ timestamp: 1 });
+    
+    res.json({ success: true, messages });
+  } catch (err) {
+    res.status(500).json({ success: false, message: "Server error" });
   }
 });
 
+app.post("/api/messages/mark-as-read", async (req, res) => {
+  try {
+    const { messageIds, senderId, receiverId } = req.body;
+    
+    const result = await Message.updateMany(
+      { _id: { $in: messageIds } },
+      { $set: { seen: true, seenAt: new Date() } }
+    );
 
-    // Emit socket event to update UI in real-time
-        io.emit('messagesRead', { 
+    io.emit('messagesRead', { 
       senderId, 
       receiverId,
       modifiedCount: result.modifiedCount 
@@ -547,18 +505,25 @@ app.post('/api/notifications/mark-as-read', authMiddleware, async (req, res) => 
   }
 });
 
-app.get("/api/messages/:userId1/:userId2", async (req, res) => {
+app.get('/api/unread-counts/:userId', authMiddleware, async (req, res) => {
   try {
-    const messages = await Message.find({
-      $or: [
-        { from: req.params.userId1, to: req.params.userId2 },
-        { from: req.params.userId2, to: req.params.userId1 }
-      ]
-    }).sort({ timestamp: 1 });
-    
-    res.json({ success: true, messages });
-  } catch (err) {
-    res.status(500).json({ success: false, message: "Server error" });
+    const messageCount = await Message.countDocuments({
+      to: req.params.userId,
+      seen: false
+    });
+
+    const notificationCount = await Notification.countDocuments({
+      recipient: req.params.userId,
+      read: false
+    });
+
+    res.json({ 
+      success: true,
+      messageCount,
+      notificationCount
+    });
+  } catch (error) {
+    res.status(500).json({ error: "Failed to get unread counts" });
   }
 });
 
@@ -662,6 +627,11 @@ app.use((err, req, res, next) => {
     message: "Internal server error",
     error: process.env.NODE_ENV === "development" ? err.message : undefined
   });
+});
+
+// 404 Handler
+app.use((req, res) => {
+  res.status(404).json({ success: false, message: "Endpoint not found" });
 });
 
 // Start Server
