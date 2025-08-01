@@ -1604,9 +1604,15 @@ function setupSocketListeners() {
   });
 
   // Message seen confirmation
-  socket.on("messageSeen", (data) => {
-    updateMessageSeenStatus(data.messageId);
-  });
+socket.on("messageSeen", (data) => {
+  // Update the specific message
+  updateMessageSeenStatus(data.messageId);
+  
+  // Update the user list item
+  if (data.senderId) {
+    updateUserListItem(data.senderId);
+  }
+});
 
   // Message edited confirmation
   socket.on("messageEdited", (data) => {
@@ -1809,12 +1815,19 @@ function loadChatUsers() {
             <div class="online-dot" id="online-${user.userId}" style="display:${onlineUsers.has(user.userId) ? 'block' : 'none'}"></div>
           </div>
           <div class="chat-user-info">
-            <div class="chat-user-name">${user.username} 
-              ${unreadCount > 0 ? `<span class="user-unread-count">${unreadCount > 9 ? '9+' : unreadCount}</span>` : ''}
-            </div>
+            <div class="chat-user-name">${user.username}</div>
             <div class="chat-user-status">${user.department}</div>
           </div>
         `;
+        
+        // Only add unread count if there are unread messages
+        if (unreadCount > 0) {
+          const unreadBadge = document.createElement("span");
+          unreadBadge.className = "user-unread-count";
+          unreadBadge.textContent = unreadCount > 9 ? '9+' : unreadCount;
+          div.querySelector('.chat-user-info').appendChild(unreadBadge);
+        }
+        
         div.onclick = () => openChatWith(user);
         container.appendChild(div);
         userElements[user.userId] = div;
@@ -1826,8 +1839,7 @@ function loadChatUsers() {
       container.innerHTML = '<p>Error loading users. Please try again.</p>';
     });
 }
-
-// Update online status indicators
+    // Update online status indicators
 function updateOnlineStatusIndicators() {
   Object.keys(userElements).forEach(userId => {
     const dot = document.getElementById(`online-${userId}`);
@@ -1911,13 +1923,16 @@ function openChatWith(user) {
     document.getElementById("chatInput").value = '';
     document.getElementById("chatWith").innerHTML = `<i class="fas fa-user"></i> Chat with ${user.username}`;
   }
-
-  const el = userElements[user.userId];
-  if (el) {
-    const badge = el.querySelector(".msg-count");
-    if (badge) badge.remove();
+// Remove unread count from user list
+  const userElement = userElements[user.userId];
+  if (userElement) {
+    const unreadBadge = userElement.querySelector('.user-unread-count');
+    if (unreadBadge) {
+      unreadBadge.remove();
+    }
   }
 
+  // Remove from unread senders and update counts
   unreadSenders.delete(user.userId);
   updateTotalUnreadCount();
   currentPage = 1;
@@ -1927,7 +1942,18 @@ function openChatWith(user) {
   markMessagesAsRead(user.userId);
 }
 
-// Mark messages as read
+  // Mark messages as read
+function updateUserListItem(userId) {
+  const userElement = userElements[userId];
+  if (userElement) {
+    const unreadBadge = userElement.querySelector('.user-unread-count');
+    if (unreadBadge) {
+      unreadBadge.remove();
+    }
+  }
+}
+
+// Modified markMessagesAsRead function
 async function markMessagesAsRead(senderId) {
   try {
     const unseenMessages = allMessages.filter(m => 
@@ -1951,10 +1977,14 @@ async function markMessagesAsRead(senderId) {
       });
 
       if (response.ok) {
+        // Update local messages
         unseenMessages.forEach(msg => {
           msg.seen = true;
           msg.seenTimestamp = Date.now();
         });
+        
+        // Update UI
+        updateUserListItem(senderId);
         renderMessages();
         updateTotalUnreadCount();
       }
