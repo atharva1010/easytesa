@@ -2206,6 +2206,95 @@ function sendFullScreenMessage() {
   input.value = "";
 }
 
+    // Add this function to load notifications
+async function loadNotifications() {
+  try {
+    const response = await fetch('/api/updates');
+    const updates = await response.json();
+    
+    const updatesList = document.getElementById('updatesList');
+    updatesList.innerHTML = '';
+    
+    if (updates.length === 0) {
+      updatesList.innerHTML = '<p>No updates available.</p>';
+      return;
+    }
+    
+    updates.forEach(update => {
+      const updateItem = document.createElement('div');
+      updateItem.className = 'update-item';
+      updateItem.style.padding = '10px';
+      updateItem.style.borderBottom = '1px solid #eee';
+      updateItem.style.cursor = 'pointer';
+      
+      const date = new Date(update.createdAt).toLocaleString();
+      updateItem.innerHTML = `
+        <div style="font-weight:bold;">${update.title || 'Update'}</div>
+        <div style="font-size:0.8em; color:#666;">${date}</div>
+        <div style="margin-top:5px;">${update.message}</div>
+        ${update.image ? `<img src="${update.image}" style="max-width:100%; margin-top:5px;">` : ''}
+      `;
+      
+      updateItem.addEventListener('click', () => {
+        showUpdateDetail(update);
+      });
+      
+      updatesList.appendChild(updateItem);
+    });
+    
+    // Update unread count
+    updateNotificationUnreadCount(updates.length);
+    
+  } catch (error) {
+    console.error('Error loading notifications:', error);
+    document.getElementById('updatesList').innerHTML = '<p>Error loading updates. Please try again.</p>';
+  }
+}
+
+// Add this function to show update details
+function showUpdateDetail(update) {
+  const modal = document.createElement('div');
+  modal.style.position = 'fixed';
+  modal.style.top = '0';
+  modal.style.left = '0';
+  modal.style.right = '0';
+  modal.style.bottom = '0';
+  modal.style.backgroundColor = 'rgba(0,0,0,0.7)';
+  modal.style.zIndex = '1000';
+  modal.style.display = 'flex';
+  modal.style.justifyContent = 'center';
+  modal.style.alignItems = 'center';
+  
+  const content = document.createElement('div');
+  content.style.backgroundColor = 'white';
+  content.style.padding = '20px';
+  content.style.borderRadius = '8px';
+  content.style.maxWidth = '80%';
+  content.style.maxHeight = '80%';
+  content.style.overflow = 'auto';
+  
+  const date = new Date(update.createdAt).toLocaleString();
+  content.innerHTML = `
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+      <h3 style="margin:0;">${update.title || 'Update Details'}</h3>
+      <button onclick="this.parentElement.parentElement.parentElement.remove()" style="background:none; border:none; font-size:1.2em; cursor:pointer;">×</button>
+    </div>
+    <div style="color:#666; margin-bottom:10px;">${date}</div>
+    <div style="margin-bottom:10px;">${update.message}</div>
+    ${update.image ? `<img src="${update.image}" style="max-width:100%; margin-top:10px;">` : ''}
+  `;
+  
+  modal.appendChild(content);
+  document.body.appendChild(modal);
+  
+  // Close modal when clicking outside
+  modal.addEventListener('click', (e) => {
+    if (e.target === modal) {
+      modal.remove();
+    }
+  });
+}
+    
 // Append single message to chat
 function appendMessage(msg) {
   const box = isMobile ? document.getElementById("fullChatMessages") : document.getElementById("chatMessages");
