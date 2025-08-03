@@ -2,2192 +2,834 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Admin Panel</title>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-      <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Admin Dashboard</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
-    html, body {
-      margin: 0;
-      padding: 0;
-      height: 100%;
-      font-family: Arial, sans-serif;
+    /* Add admin-specific styles here */
+    .admin-only {
+      display: none;
     }
     
-    body {
-      display: flex;
-      flex-direction: column;
-      background-image: url("/bg/background.jpg");
-      background-size: cover;
-      background-repeat: no-repeat;
-      background-position: center;
-      color: #000;
-    }
-
-    header {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      padding: 10px 20px;
-      background: rgba(0, 0, 0, 0.7);
-      color: white;
-      position: relative;
-    }
-
-    .header-title {
-      text-align: center;
-      flex-grow: 1;
-    }
-
-    .left { display: flex; align-items: center; }
-    .logo { height: 40px; margin-right: 10px; }
-
-    .right {
-      display: flex;
-      align-items: center;
-      position: absolute;
-      right: 20px;
-    }
-
-    .right button {
-      margin-left: 10px;
-      padding: 8px 15px;
-      border: none;
-      border-radius: 5px;
-      font-weight: bold;
-      cursor: pointer;
-    }
-
-    .update-btn { background-color: #28a745; color: white; }
-    .logout-btn { background-color: #dc3545; color: white; }
-
-    .main {
-      display: flex;
-      flex: 1;
-    }
-
-    .sidebar {
-      width: 250px;
-      background-color: rgba(0, 0, 0, 0.6);
-      color: white;
-      padding: 20px;
-      height: calc(100vh - 60px);
-    }
-
-    .sidebar h3 {
-      margin-top: 20px;
-      border-bottom: 1px solid #ccc;
-      padding-bottom: 5px;
-      font-size: 16px;
-    }
-
-    .sidebar button {
-      display: block;
-      width: 100%;
-      background: #007799;
-      color: white;
-      border: none;
-      padding: 10px;
-      margin: 8px 0;
-      border-radius: 5px;
-      cursor: pointer;
-      text-align: left;
-    }
-
-    .sidebar button:hover {
-      background: #0099bb;
-    }
-
-    .content {
-      flex: 1;
-      padding: 20px;
-      overflow-y: auto;
-      width: 100%;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-    }
-
-    .content-blank {
-      color: rgba(255, 255, 255, 0.7);
-      font-size: 1.5rem;
-    }
-
-    section {
-      background: rgba(255, 255, 255, 0.9);
-      margin: 0 auto;
-      padding: 20px;
-      border-radius: 10px;
-      width: 100%;
-      max-width: 1000px;
-      display: none;
-      box-sizing: border-box;
-    }
-
-    form input, form select, form button {
-      display: block;
-      margin: 10px 0;
-      padding: 10px;
-      width: 100%;
-      max-width: 400px;
-    }
-
-    .table-style {
-      width: 100%;
-      border-collapse: collapse;
-      margin-bottom: 30px;
-    }
-
-    .table-style th,
-    .table-style td {
-      border: 1px solid #999;
-      padding: 10px;
-      text-align: center;
-    }
-
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 10px;
-    }
-
-    th, td {
-      border: 1px solid #ccc;
-      padding: 8px;
-      text-align: left;
-      background: #fff;
-    }
-
-    #profileCard {
-      display: none;
-      position: absolute;
-      right: 20px;
-      top: 60px;
-      background: rgb(9, 216, 223);
+    .admin-controls {
+      background-color: #f8f9fa;
+      border-radius: 8px;
       padding: 15px;
-      border-radius: 5px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.2);
-      z-index: 100;
-      color: rgb(1, 6, 7);
-      width: 200px;
+      margin-bottom: 20px;
+      border: 1px solid #dee2e6;
     }
-
-    #profileImage {
-      width: 40px;
-      height: 40px;
-      border-radius: 50%;
+    
+    .admin-btn {
+      background: linear-gradient(135deg, #dc3545, #c82333);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      padding: 0.7rem 1rem;
+      margin-right: 10px;
       cursor: pointer;
-      object-fit: cover;
-      margin-left: 10px;
+      transition: all 0.3s ease;
     }
-
-    footer {
-  text-align: center;
-  padding: 10px;
-  background: #222;
-  color: white;
-  width: 100%;
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  z-index: 100;
-}
-
-    /* Responsive table */
+    
+    .admin-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+    
+    .admin-btn.primary {
+      background: linear-gradient(135deg, #28a745, #218838);
+    }
+    
+    .admin-btn.warning {
+      background: linear-gradient(135deg, #ffc107, #e0a800);
+    }
+    
+    .admin-form {
+      display: none;
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      margin-top: 20px;
+    }
+    
+    .form-group {
+      margin-bottom: 15px;
+    }
+    
+    .form-group label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: 500;
+    }
+    
+    .form-control {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #ced4da;
+      border-radius: 4px;
+    }
+    
+    .form-actions {
+      margin-top: 20px;
+      text-align: right;
+    }
+    
+    .user-actions {
+      display: flex;
+      gap: 5px;
+    }
+    
+    .action-btn {
+      padding: 5px 10px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 12px;
+    }
+    
+    .edit-btn {
+      background-color: #17a2b8;
+      color: white;
+    }
+    
+    .delete-btn {
+      background-color: #dc3545;
+      color: white;
+    }
+    
+    .status-btn {
+      background-color: #28a745;
+      color: white;
+    }
+    
+    /* Add this to your existing media queries */
     @media (max-width: 768px) {
-      table {
-        display: block;
-        overflow-x: auto;
-        white-space: nowrap;
-      }
-      
-      .right {
-        position: static;
-        margin-top: 10px;
-      }
-      
-      header {
+      .admin-controls {
         flex-direction: column;
       }
-    }
-
-    /* Shift Report Specific Styles */
-    .filters {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-      margin-bottom: 20px;
-      padding: 15px;
-      background: #f5f5f5;
-      border-radius: 5px;
-    }
-
-    .filters label {
-      display: flex;
-      flex-direction: column;
-      gap: 5px;
-    }
-
-    .filters input, .filters select {
-      padding: 8px;
-      border: 1px solid #ddd;
-      border-radius: 4px;
-    }
-
-    .actions {
-      display: flex;
-      gap: 10px;
-      margin-bottom: 20px;
-    }
-
-    .actions button {
-      padding: 8px 15px;
-      border: none;
-      border-radius: 4px;
-      background: #007799;
-      color: white;
-      cursor: pointer;
-    }
-
-    .actions button:hover {
-      opacity: 0.9;
-    }
-
-    
-  /* Add these styles to your existing CSS */
-  html {
-    overflow: hidden;
-    height: 100%;
-  }
-  
-  body {
-    overflow: hidden;
-    height: 100%;
-  }
-  
-  .main {
-    display: flex;
-    flex: 1;
-    overflow: hidden;
-  }
-  
-  .content {
-    flex: 1;
-    padding: 20px;
-    overflow-y: auto;
-    width: 100%;
-    display: flex;
-    justify-content: center;
-    align-items: flex-start;
-  }
-  
-  section {
-    background: rgba(24, 211, 224, 0.9);
-    margin: 0 auto;
-    padding: 20px;
-    border-radius: 10px;
-    width: 100%;
-    max-width: 1000px;
-    display: none;
-    box-sizing: border-box;
-    max-height: calc(100vh - 160px);
-    overflow-y: auto;
-  }
-  
-  /* Add smooth scrolling behavior */
-  html {
-    scroll-behavior: smooth;
-  }
-
-
-    /* Long Body Report Styles */
-    .long-body-filter-box {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-      margin-bottom: 20px;
-      padding: 15px;
-      background: #f5f5f5;
-      border-radius: 5px;
-    }
-
-    .long-body-filter-box label {
-      display: flex;
-      flex-direction: column;
-      gap: 5px;
-    }
-
-    .long-body-filter-box input, 
-    .long-body-filter-box select {
-      padding: 8px;
-      border: 1px solid #ddd;
-      border-radius: 4px;
-    }
-
-    .long-body-actions {
-      display: flex;
-      gap: 10px;
-      margin-bottom: 20px;
-    }
-
-    .long-body-actions button {
-      padding: 8px 15px;
-      border: none;
-      border-radius: 4px;
-      background: #007799;
-      color: white;
-      cursor: pointer;
-    }
-
-    .long-body-actions button:hover {
-      opacity: 0.9;
-    }
-
-    #longBodyReportTable {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 10px;
-    }
-
-    #longBodyReportTable th, 
-    #longBodyReportTable td {
-      border: 1px solid #ccc;
-      padding: 8px;
-      text-align: center;
-      background: #fff;
-    }
-
-    /* Wood Bill Report Styles */
-    .wood-bill-filter-box {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-      margin-bottom: 20px;
-      padding: 15px;
-      background: #f5f5f5;
-      border-radius: 5px;
-    }
-
-    .wood-bill-filter-box label {
-      display: flex;
-      flex-direction: column;
-      gap: 5px;
-    }
-
-    .wood-bill-filter-box input, 
-    .wood-bill-filter-box select {
-      padding: 8px;
-      border: 1px solid #ddd;
-      border-radius: 4px;
-    }
-
-    .wood-bill-actions {
-      display: flex;
-      gap: 10px;
-      margin-bottom: 20px;
-    }
-
-    .wood-bill-actions button {
-      padding: 8px 15px;
-      border: none;
-      border-radius: 4px;
-      background: #007799;
-      color: white;
-      cursor: pointer;
-    }
-
-    .wood-bill-actions button:hover {
-      opacity: 0.9;
-    }
-
-    #woodBillReportTable {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 10px;
-    }
-
-    #woodBillReportTable th, 
-    #woodBillReportTable td {
-      border: 1px solid #ccc;
-      padding: 8px;
-      text-align: center;
-      background: #fff;
-    }
-
-    /* Print-specific styles */
-    @media print {
-      body * {
-        visibility: hidden;
-      }
-      #dailyShiftReport, #dailyShiftReport * {
-        visibility: visible;
-      }
-      #dailyShiftReport {
-        position: absolute;
-        left: 0;
-        top: 0;
+      
+      .admin-btn {
+        margin-bottom: 10px;
         width: 100%;
-        background: white;
-        padding: 0;
-        margin: 0;
-      }
-      .filters, .actions {
-        display: none !important;
-      }
-      
-      /* Print layout for shift reports */
-      .print-page {
-        page-break-after: always;
-        height: 297mm;
-        width: 210mm;
-        padding: 15mm;
-        box-sizing: border-box;
-      }
-      
-      .print-shift-report {
-        height: 50%;
-        margin-bottom: 10mm;
-      }
-      
-      .print-company-header {
-        text-align: center;
-        margin-bottom: 5mm;
-        border-bottom: 1px solid #000;
-        padding-bottom: 2mm;
-      }
-      
-      .print-company-name {
-        font-size: 16pt;
-        font-weight: bold;
-      }
-      
-      .print-company-address {
-        font-size: 10pt;
-      }
-      
-      .print-report-title {
-        text-align: center;
-        font-size: 14pt;
-        margin: 5mm 0;
-        font-weight: bold;
-      }
-      
-      .print-report-details {
-        display: flex;
-        justify-content: space-between;
-        margin-bottom: 3mm;
-        font-size: 10pt;
-      }
-      
-      .print-table {
-        width: 100%;
-        border-collapse: collapse;
-        font-size: 10pt;
-        margin-bottom: 3mm;
-      }
-      
-      .print-table th, 
-      .print-table td {
-        border: 1px solid #000;
-        padding: 2mm;
-        text-align: center;
-      }
-      
-      .print-total-row {
-        font-weight: bold;
       }
     }
-
-    /* Token Management Styles */
-        .card-section {
-            display: none;
-            margin-top: 20px;
-            padding: 20px;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-            background-color: #f9f9f9;
-        }
-        .status-active {
-            color: green;
-            font-weight: bold;
-        }
-        .status-inactive {
-            color: red;
-            font-weight: bold;
-        }
-        .status-lost {
-            color: orange;
-            font-weight: bold;
-        }
-        .management-btn {
-            margin: 5px;
-            min-width: 200px;
-        }
-        .view-btn {
-            margin: 5px;
-            min-width: 150px;
-        }
-        #totalQuantity {
-            font-size: 1.5rem;
-            font-weight: bold;
-            color: #0d6efd;
-        }
-
   </style>
 </head>
-<body>
-
-<header>
-  <div class="left">
-    <img src="assets/logo.png" class="logo">
-    <div class="header-title">BALAJI ACTION BUILDEWELL PRIVATE LIMITED</div>
-  </div>
-  <div class="right">
-    <img id="profileImage" src="assets/profile.png" onclick="toggleProfile()">
-    <div id="profileCard"></div>
-    <button class="update-btn" onclick="toggleSection('postUpdate')">Post Update</button>
-    <button class="logout-btn" onclick="logout()">Logout</button>
-  </div>
-</header>
-
-<div class="main">
-  <div class="sidebar">
-    <h3>User Management</h3>
-    <button onclick="toggleSection('createUser')">➕ Create User</button>
-    <button onclick="toggleSection('showUsers')">👥 Show All Users</button>
-
- <h3>Token Card Management</h3>
-<button onclick="toggleSection('tokenManagement')">🪙 Manage Token Cards</button>
-
-    <h3>Upload Section</h3>
-    <button onclick="toggleSection('uploadBackground')">🖼️ Upload Background</button>
-    <button onclick="toggleSection('excelUpload')">📊 Upload Excel</button>
-    
-    <h3>All Reports</h3>
-    <button onclick="toggleSection('dailyShiftReport')">📅 Daily Shift Report</button>
-    <button onclick="toggleSection('methanolWeightReport')">⚖️ Methanol Weight Report</button>
-    <button onclick="toggleSection('longBodyWeightReport')">📊 Long Body Weight Report</button>
-    <button onclick="toggleSection('woodBillReport')">🌲 Wood Bill Submit</button>
-  </div>
-
-  <div class="content">
-    <!-- Blank state initially -->
-    <div class="content-blank" id="blankContent">
-      easyGate Admin Page View "Do any activity carefully".
+<body onload="checkAuth()">
+  <!-- Add admin controls to header -->
+  <header>
+    <div class="logo-container">
+      <button id="hamburger" class="header-icon" onclick="toggleSidebar()">
+        <i class="fas fa-bars"></i>
+      </button>
+      <img src="assets/logo.png" alt="Logo" class="logo" onclick="goHome()">
+      <span class="company-name">BALAJI ACTION BUILDEWELL - ADMIN</span>
     </div>
     
-    <!-- Post Update Section -->
-    <section id="postUpdate">
-      <h3>📢 Post an Update</h3>
-      <form id="updateForm">
-        <input type="text" id="updateTitle" placeholder="Enter update title" required>
-        <textarea id="updateMessage" placeholder="Write your message..." required style="width:100%; min-height:150px; padding:10px; margin-bottom:10px;"></textarea>
-        <input type="file" id="updateImage" accept="image/*">
-        <button type="button" onclick="submitUpdate()">Submit</button>
-        <button type="button" onclick="hideAllSections()">Cancel</button>
-      </form>
-    </section>
-
-    <!-- Create User -->
-    <section id="createUser">
-      <h3>Create New User</h3>
-      <form id="userForm" enctype="multipart/form-data">
-        <input type="hidden" name="userIdUpdate" id="userIdUpdate" value="">
-        <input type="text" name="username" placeholder="Username" required>
-        <input type="text" name="userId" placeholder="User ID" required>
-        <input type="text" name="department" placeholder="Department" required>
-        <input type="text" name="designation" placeholder="Designation" required>
-        <input type="text" name="mobile" placeholder="Mobile No." required>
-        <input type="email" name="email" placeholder="Email" required>
-        <select name="role" required>
-          <option value="user">User</option>
-          <option value="admin">Admin</option>
-        </select>
-        <input type="password" name="password" placeholder="Password">
-        <input type="file" name="profilePic" accept="image/*">
-        <button type="submit">Save</button>
-      </form>
-      <p id="msg"></p>
-    </section>
-
-    <!-- Show Users -->
-    <section id="showUsers">
-      <h3>All Users</h3>
-      <table id="usersTable">
-        <thead>
-          <tr>
-            <th>Username</th>
-            <th>User ID</th>
-            <th>Department</th>
-            <th>Designation</th>
-            <th>Mobile</th>
-            <th>Email</th>
-            <th>Role</th>
-            <th>Profile Pic</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody></tbody>
-      </table>
-    </section>
-
-    <!-- Upload Background -->
-    <section id="uploadBackground">
-      <h3>Upload Background</h3>
-      <form id="backgroundForm" enctype="multipart/form-data">
-        <input type="file" name="background" required />
-        <button type="submit">Upload Background</button>
-      </form>
-    </section>
-
-    <!-- Upload Excel -->
-    <section id="excelUpload">
-      <h3>Upload Excel File</h3>
-      <form id="excelForm" enctype="multipart/form-data">
-        <select name="category" required>
-          <option value="">Select Category</option>
-          <option value="WOOD PO">WOOD PO</option>
-          <option value="CONTACTS">CONTACTS</option>
-          <option value="ID PASSWORD">ID PASSWORD</option>
-          <option value="SHIFT SCHEDULE">SHIFT SCHEDULE</option>
-          <option value="T-CODE">T-CODE</option>
-        </select>
-        <input type="file" name="excelFile" accept=".xlsx" required>
-        <button type="submit">Upload</button>
-      </form>
-      <p id="excelMsg"></p>
-    </section>
-
-        <!-- Token Mangement-->
-    <section id="tokenManagement">
-    <div class="container mt-4">
-        <h1 class="text-center mb-4">🪙 Token Card Management System</h1>
-        
-        <!-- Plant Selection -->
-        <div class="row mb-4">
-            <div class="col-md-6 offset-md-3">
-                <label for="plantSelect" class="form-label">Select Plant:</label>
-                <select class="form-select" id="plantSelect">
-                    <option value="">-- Select Plant --</option>
-                    <option value="C2">C2</option>
-                    <option value="C3">C3</option>
-                    <option value="C34A">C34A</option>
-                </select>
-            </div>
-        </div>
-        
-        <!-- Main Content (shown after plant selection) -->
-        <div id="mainContent" style="display: none;">
-            <!-- Management Buttons -->
-            <div class="row mb-4">
-                <div class="col-12 text-center">
-                    <button class="btn btn-primary management-btn" onclick="showSection('tokenCardSection')">Token Card</button>
-                    <button class="btn btn-info management-btn" disabled>
-                        Total Token Card Quantity: <span id="totalQuantity">0</span>
-                    </button>
-                    <button class="btn btn-warning management-btn" onclick="showSection('inactiveTokenSection')">Inactive/Error Token Card</button>
-                    <button class="btn btn-danger management-btn" onclick="showSection('lossTokenSection')">Loss Token Card</button>
-                    <button class="btn btn-success management-btn" onclick="showSection('activatedTokenSection')">Activated Error Tokens</button>
-                </div>
-            </div>
-            
-            <!-- View Data Buttons -->
-            <div class="row mb-4">
-                <div class="col-12 text-center">
-                    <button class="btn btn-outline-primary view-btn" onclick="viewTokenQuantity()">Token Card Quantity</button>
-                    <button class="btn btn-outline-secondary view-btn" onclick="viewTotalTokens()">Total Token Card with Number</button>
-                    <button class="btn btn-outline-warning view-btn" onclick="viewInactiveTokens()">Inactive Token Cards</button>
-                    <button class="btn btn-outline-danger view-btn" onclick="viewLostTokens()">Lost Token Card</button>
-                    <button class="btn btn-outline-success view-btn" onclick="viewActivatedTokens()">Activated Token Card</button>
-                </div>
-            </div>
-            
-            <!-- Token Card Section -->
-            <div id="tokenCardSection" class="card-section">
-                <h3>Token Card Management</h3>
-                <div class="mb-3">
-                    <button class="btn btn-sm btn-primary" onclick="addNewTokenRow()">Add New Token</button>
-                </div>
-                <table id="tokenCardTable" class="table table-striped table-bordered">
-                    <thead>
-                        <tr>
-                            <th>Token Card Number</th>
-                            <th>Status</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <!-- Rows will be added dynamically -->
-                    </tbody>
-                </table>
-                <div class="text-end mt-3">
-                    <button class="btn btn-success" onclick="saveTokenCards()">Save All Changes</button>
-                </div>
-            </div>
-            
-            <!-- Inactive/Error Token Section -->
-            <div id="inactiveTokenSection" class="card-section">
-                <h3>Inactive/Error Token Cards</h3>
-                <table id="inactiveTokenTable" class="table table-striped table-bordered">
-                    <thead>
-                        <tr>
-                            <th>Token Card Number</th>
-                            <th>Problem Description</th>
-                            <th>Reported Date</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <!-- Rows will be added dynamically -->
-                    </tbody>
-                </table>
-                <div class="text-end mt-3">
-                    <button class="btn btn-success" onclick="saveInactiveTokens()">Save All Changes</button>
-                </div>
-            </div>
-            
-            <!-- Loss Token Section -->
-            <div id="lossTokenSection" class="card-section">
-                <h3>Loss Token Cards</h3>
-                <table id="lossTokenTable" class="table table-striped table-bordered">
-    <thead>
-        <tr>
-            <th>Token Card Number</th>
-            <th>Status</th>
-            <th>Reported Date</th>
-            <th>Reported By</th> <!-- New Column -->
-            <th>Actions</th>
-        </tr>
-    </thead>
-    <tbody>
-        <!-- Rows will be added dynamically -->
-    </tbody>
-</table>
-            
-            <!-- Activated Tokens Section -->
-            <div id="activatedTokenSection" class="card-section">
-                <h3>Activated Error Tokens</h3>
-                <div class="mb-3">
-                    <button class="btn btn-sm btn-primary" onclick="addNewActivatedTokenRow()">Add Activated Token</button>
-                </div>
-                <table id="activatedTokenTable" class="table table-striped table-bordered">
-                    <thead>
-                        <tr>
-                            <th>Token Card Number</th>
-                            <th>Activated Date</th>
-                            <th>Notes</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <!-- Rows will be added dynamically -->
-                    </tbody>
-                </table>
-                <div class="text-end mt-3">
-                    <button class="btn btn-success" onclick="saveActivatedTokens()">Save All Changes</button>
-                </div>
-            </div>
-        </div>
+    <div class="header-controls">
+      <div id="admin-notification-icon" class="header-icon" onclick="toggleAdminNotifications()">
+        <i class="fas fa-cog"></i>
+      </div>
+      <div id="notification-icon" class="header-icon" onclick="toggleNotifications()">
+        <i class="fas fa-bell"></i>
+        <span id="notificationCountBadge" class="unread-count" style="display: none;">0</span>
+      </div>
+      <div id="message-icon" class="header-icon" onclick="toggleChatUserList()">
+        <i class="fas fa-comment-dots"></i>
+        <span id="messageCountBadge" class="unread-count" style="display: none;">0</span>
+      </div>
+      <img id="profileImage" src="assets/profile.png" class="profile-img" onclick="toggleProfileCard()">
     </div>
+  </header>
 
-    <!-- Modals -->
-    <div class="modal fade" id="viewDataModal" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-lg">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="viewDataModalTitle">Data View</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body" id="viewDataModalBody">
-                    <!-- Content will be loaded dynamically -->
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                </div>
-            </div>
-        </div>
+  <!-- Admin Notification Panel -->
+  <div id="adminNotificationPanel" class="notification-panel">
+    <h4 style="margin-bottom: 1rem;"><i class="fas fa-cog"></i> Admin Controls</h4>
+    <div class="admin-controls">
+      <button class="admin-btn primary" onclick="showUserManagement()">
+        <i class="fas fa-users"></i> Manage Users
+      </button>
+      <button class="admin-btn" onclick="showDataManagement()">
+        <i class="fas fa-database"></i> Manage Data
+      </button>
+      <button class="admin-btn warning" onclick="showSystemSettings()">
+        <i class="fas fa-cogs"></i> System Settings
+      </button>
+      <button class="admin-btn" onclick="showAuditLogs()">
+        <i class="fas fa-clipboard-list"></i> Audit Logs
+      </button>
     </div>
-</section>
+  </div>
 
-<!-- Daily Shift Report Section -->
-    <section id="dailyShiftReport">
-      <h2>✨ VIEW SHIFT REPORT ✨</h2>
-      
-      <div class="filters">
-        <div>
-          <label>From Date:
-            <input type="date" id="fromDate">
-          </label>
+  <!-- Add admin sections to sidebar -->
+  <div class="sidebar" id="sidebar">
+    <div class="sidebar-section admin-only">
+      <h4>Admin Tools</h4>
+      <button class="sidebar-btn" onclick="showUserManagement()">
+        <i class="fas fa-users-cog"></i> User Management
+      </button>
+      <button class="sidebar-btn" onclick="showDataManagement()">
+        <i class="fas fa-database"></i> Data Management
+      </button>
+      <button class="sidebar-btn" onclick="showSystemSettings()">
+        <i class="fas fa-sliders-h"></i> System Settings
+      </button>
+    </div>
+    
+    <!-- Rest of your existing sidebar content -->
+  </div>
+
+  <!-- Main Content - Add admin sections -->
+  <div class="content" id="mainContent" onclick="hideSidebar()">
+    <!-- Admin Dashboard Section -->
+    <div id="adminDashboard" class="admin-only">
+      <h2><i class="fas fa-tachometer-alt"></i> Admin Dashboard</h2>
+      <div class="admin-stats">
+        <div class="stat-card">
+          <i class="fas fa-users"></i>
+          <h3 id="totalUsers">0</h3>
+          <p>Total Users</p>
         </div>
-        <div>
-          <label>To Date:
-            <input type="date" id="toDate">
-          </label>
+        <div class="stat-card">
+          <i class="fas fa-file-alt"></i>
+          <h3 id="totalRecords">0</h3>
+          <p>Total Records</p>
         </div>
-        <div>
-          <label>Plant:
-            <select id="filterPlant">
-              <option value="">ALL</option>
-              <option value="C34A">C34A</option>
-              <option value="C2">C2</option>
-              <option value="C3">C3</option>
-            </select>
-          </label>
-        </div>
-        <div>
-          <label>Shift:
-            <select id="filterShift">
-              <option value="">ALL</option>
-              <option value="A">A</option>
-              <option value="B">B</option>
-              <option value="C">C</option>
-            </select>
-          </label>
+        <div class="stat-card">
+          <i class="fas fa-clock"></i>
+          <h3 id="activeSessions">0</h3>
+          <p>Active Sessions</p>
         </div>
       </div>
       
-      <div class="actions">
-        <button onclick="fetchReports()">🔍 View Report</button>
-        <button onclick="exportShiftToExcel()">📤 Export Excel</button>
-        <button onclick="printShiftReports()">🖨️ Print</button>
+      <div class="admin-controls">
+        <button class="admin-btn primary" onclick="showUserManagement()">
+          <i class="fas fa-users"></i> Manage Users
+        </button>
+        <button class="admin-btn" onclick="showDataManagement()">
+          <i class="fas fa-database"></i> Manage Data
+        </button>
+        <button class="admin-btn warning" onclick="showSystemSettings()">
+          <i class="fas fa-cogs"></i> System Settings
+        </button>
+      </div>
+    </div>
+    
+    <!-- User Management Section -->
+    <div id="userManagement" class="admin-only" style="display:none;">
+      <h2><i class="fas fa-users-cog"></i> User Management</h2>
+      <div class="admin-controls">
+        <button class="admin-btn primary" onclick="showAddUserForm()">
+          <i class="fas fa-user-plus"></i> Add User
+        </button>
+        <button class="admin-btn" onclick="loadAllUsers()">
+          <i class="fas fa-sync-alt"></i> Refresh
+        </button>
+        <input type="text" id="userSearch" class="search-box" placeholder="Search users..." oninput="searchUsers()">
       </div>
       
-      <div id="reportContainer"></div>
-    </section>
-    
-    <!-- Methanol Weight Report Section -->
-    <section id="methanolWeightReport">
-      <h2>⚖️ METHANOL WEIGHT REPORT</h2>
-      
-      <div class="filter-box">
-        <label>
-          From Date
-          <input type="date" id="methanolFromDate">
-        </label>
-        <label>
-          To Date
-          <input type="date" id="methanolToDate">
-        </label>
-        <label>
-          Submitted By
-          <select id="methanolNameFilter">
-            <option value="">All</option>
+      <div id="addUserForm" class="admin-form">
+        <h3>Add New User</h3>
+        <div class="form-group">
+          <label for="newUsername">Username</label>
+          <input type="text" id="newUsername" class="form-control" required>
+        </div>
+        <div class="form-group">
+          <label for="newEmail">Email</label>
+          <input type="email" id="newEmail" class="form-control" required>
+        </div>
+        <div class="form-group">
+          <label for="newPassword">Password</label>
+          <input type="password" id="newPassword" class="form-control" required>
+        </div>
+        <div class="form-group">
+          <label for="newRole">Role</label>
+          <select id="newRole" class="form-control">
+            <option value="user">User</option>
+            <option value="admin">Admin</option>
+            <option value="manager">Manager</option>
           </select>
-        </label>
-        <button onclick="fetchMethanolReports()" class="view-report-btn">🔍 View Report</button>
-        <button onclick="exportMethanolToExcel()">📤 Export to Excel</button>
+        </div>
+        <div class="form-group">
+          <label for="newDepartment">Department</label>
+          <input type="text" id="newDepartment" class="form-control">
+        </div>
+        <div class="form-actions">
+          <button class="admin-btn" onclick="hideAddUserForm()">Cancel</button>
+          <button class="admin-btn primary" onclick="addNewUser()">Save User</button>
+        </div>
       </div>
-
-      <table id="methanolReportTable">
-        <thead>
-          <tr>
-            <th>S.NO</th>
-            <th>DATE</th>
-            <th>VEHICLE NO.</th>
-            <th>MATERIAL</th>
-            <th>OUTSIDE WEIGHT</th>
-            <th>100 MT WEIGHT</th>
-            <th>DIFFERENCE</th>
-            <th>SUBMITTED BY</th>
-          </tr>
-        </thead>
-        <tbody></tbody>
-      </table>
-    </section>
+      
+      <div class="table-container">
+        <table id="usersTable">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Username</th>
+              <th>Email</th>
+              <th>Role</th>
+              <th>Department</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="usersTableBody">
+            <!-- Users will be loaded here -->
+          </tbody>
+        </table>
+      </div>
+    </div>
     
-    <!-- Long Body Weight Report Section -->
-    <section id="longBodyWeightReport">
-      <h2>📊 LONG BODY WEIGHT REPORT</h2>
+    <!-- Data Management Section -->
+    <div id="dataManagement" class="admin-only" style="display:none;">
+      <h2><i class="fas fa-database"></i> Data Management</h2>
+      <div class="admin-controls">
+        <button class="admin-btn primary" onclick="showUploadForm()">
+          <i class="fas fa-upload"></i> Upload Data
+        </button>
+        <button class="admin-btn" onclick="exportAllData()">
+          <i class="fas fa-download"></i> Export All
+        </button>
+        <button class="admin-btn warning" onclick="showBackupRestore()">
+          <i class="fas fa-history"></i> Backup/Restore
+        </button>
+      </div>
       
-      <div class="long-body-filter-box">
-        <div>
-          <label>From Date:
-            <input type="date" id="longBodyFromDate">
-          </label>
+      <div id="uploadForm" class="admin-form">
+        <h3>Upload Data File</h3>
+        <div class="form-group">
+          <label for="dataCategory">Category</label>
+          <select id="dataCategory" class="form-control">
+            <option value="WOOD PO">WOOD PO</option>
+            <option value="CONTACTS">CONTACTS</option>
+            <option value="ID PASSWORD">ID PASSWORD</option>
+            <option value="SHIFT SCHEDULE">SHIFT SCHEDULE</option>
+            <option value="T-CODE">T-CODE</option>
+          </select>
         </div>
-        <div>
-          <label>To Date:
-            <input type="date" id="longBodyToDate">
-          </label>
+        <div class="form-group">
+          <label for="dataFile">Excel File</label>
+          <input type="file" id="dataFile" class="form-control" accept=".xlsx,.xls,.csv">
         </div>
-        <div>
-          <label>Vehicle No:
-            <input type="text" id="longBodyVehicleFilter" placeholder="Filter by vehicle">
-          </label>
-        </div>
-        <div>
-          <label>Submitted By:
-            <select id="longBodyNameFilter">
-              <option value="">All</option>
-            </select>
-          </label>
+        <div class="form-actions">
+          <button class="admin-btn" onclick="hideUploadForm()">Cancel</button>
+          <button class="admin-btn primary" onclick="uploadDataFile()">Upload</button>
         </div>
       </div>
       
-      <div class="long-body-actions">
-        <button onclick="fetchLongBodyReports()">🔍 View Report</button>
-        <button onclick="exportLongBodyToExcel()">📤 Export Excel</button>
-        <button onclick="printLongBodyReports()">🖨️ Print</button>
+      <div id="backupRestore" class="admin-form">
+        <h3>Backup & Restore</h3>
+        <div class="form-group">
+          <button class="admin-btn primary" onclick="createBackup()">
+            <i class="fas fa-save"></i> Create Backup
+          </button>
+        </div>
+        <div class="form-group">
+          <label for="restoreFile">Restore From Backup</label>
+          <input type="file" id="restoreFile" class="form-control" accept=".json,.sql,.backup">
+        </div>
+        <div class="form-actions">
+          <button class="admin-btn warning" onclick="restoreFromBackup()">
+            <i class="fas fa-history"></i> Restore
+          </button>
+        </div>
+      </div>
+    </div>
+    
+    <!-- System Settings Section -->
+    <div id="systemSettings" class="admin-only" style="display:none;">
+      <h2><i class="fas fa-cogs"></i> System Settings</h2>
+      <div class="admin-controls">
+        <button class="admin-btn primary" onclick="saveSystemSettings()">
+          <i class="fas fa-save"></i> Save Settings
+        </button>
       </div>
       
-      <table id="longBodyReportTable">
-        <thead>
-          <tr>
-            <th>S.NO</th>
-            <th>DATE</th>
-            <th>VEHICLE NO.</th>
-            <th>MATERIAL</th>
-            <th>OUTSIDE WEIGHT</th>
-            <th>80 MT OLD</th>
-            <th>80 MT NEW</th>
-            <th>DIFFERENCE (OLD - NEW)</th>
-            <th>SUBMITTED BY</th>
-          </tr>
-        </thead>
-        <tbody></tbody>
-      </table>
-    </section>
+      <div class="admin-form">
+        <div class="form-group">
+          <label for="systemName">System Name</label>
+          <input type="text" id="systemName" class="form-control" value="BALAJI ACTION BUILDEWELL">
+        </div>
+        <div class="form-group">
+          <label for="maintenanceMode">Maintenance Mode</label>
+          <select id="maintenanceMode" class="form-control">
+            <option value="false">Disabled</option>
+            <option value="true">Enabled</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="loginMethod">Login Method</label>
+          <select id="loginMethod" class="form-control">
+            <option value="email">Email</option>
+            <option value="username">Username</option>
+            <option value="both">Both</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="passwordPolicy">Password Policy</label>
+          <select id="passwordPolicy" class="form-control">
+            <option value="simple">Simple (6 chars min)</option>
+            <option value="medium">Medium (8 chars, 1 number)</option>
+            <option value="strong">Strong (10 chars, mixed case, special chars)</option>
+          </select>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Audit Logs Section -->
+    <div id="auditLogs" class="admin-only" style="display:none;">
+      <h2><i class="fas fa-clipboard-list"></i> Audit Logs</h2>
+      <div class="admin-controls">
+        <button class="admin-btn" onclick="refreshAuditLogs()">
+          <i class="fas fa-sync-alt"></i> Refresh
+        </button>
+        <input type="text" id="logSearch" class="search-box" placeholder="Search logs..." oninput="filterLogs()">
+      </div>
       
-    <!-- Wood Bill Submit Section -->
-<section id="woodBillReport">
-  <h2>🌲 WOOD BILL SUBMIT REPORT</h2>
-  
-  <!-- Filter Box -->
-  <div class="wood-bill-filter-box">
-    <div>
-      <label>From Date:
-        <input type="date" id="woodBillFromDate">
-      </label>
+      <div class="table-container">
+        <table id="auditLogsTable">
+          <thead>
+            <tr>
+              <th>Timestamp</th>
+              <th>User</th>
+              <th>Action</th>
+              <th>Details</th>
+              <th>IP Address</th>
+            </tr>
+          </thead>
+          <tbody id="auditLogsBody">
+            <!-- Logs will be loaded here -->
+          </tbody>
+        </table>
+      </div>
     </div>
-    <div>
-      <label>To Date:
-        <input type="date" id="woodBillToDate">
-      </label>
-    </div>
-    <div>
-      <label>Receiver:
-        <select id="woodBillReceiverFilter">
-          <option value="">All</option>
-        </select>
-      </label>
-    </div>
-    <div>
-      <label>Submitted By:
-        <select id="woodBillSubmittedByFilter">
-          <option value="">All</option>
-        </select>
-      </label>
-    </div>
-    <div>
-      <label>Plant:
-        <select id="woodBillPlantFilter">
-          <option value="">All</option>
-          <option value="C34A">C34A</option>
-          <option value="C2">C2</option>
-          <option value="C3">C3</option>
-        </select>
-      </label>
-    </div>
+    
+    <!-- Your existing content sections -->
   </div>
-  
-  <!-- Action Buttons -->
-  <div class="wood-bill-actions">
-    <button onclick="fetchWoodBillReports()">🔍 View Report</button>
-    <button onclick="exportWoodBillToExcel()">📤 Export Excel</button>
-    <button onclick="printWoodBillReports()">🖨️ Print</button>
-  </div>
-  
-  <!-- Table View -->
-  <table id="woodBillReportTable">
-    <thead>
-      <tr>
-        <th>S.NO</th>
-        <th>SAP DATE</th>
-        <th>BILL SUBMIT DATE</th>
-        <th>QUANTITY</th>
-        <th>SUBMIT TIME</th>
-        <th>RECEIVER NAME</th>
-        <th>SUBMITTED BY</th>
-        <th>PLANT</th>
-      </tr>
-    </thead>
-    <tbody></tbody>
-  </table>
-</section>
 
-<footer>
-  &copy; All rights reserved easyGate
-</footer>
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
-    <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
-<script>
-  function hideAllSections() {
-    const sections = document.querySelectorAll('.content section');
-    sections.forEach(section => {
-      section.style.display = 'none';
-    });
-    document.getElementById('blankContent').style.display = 'block';
-  }
-
-  function toggleSection(id) {
-    document.getElementById('blankContent').style.display = 'none';
-    const sections = document.querySelectorAll('.content section');
-    sections.forEach(section => {
-      section.style.display = 'none';
-      section.style.overflowY = 'hidden';
-    });
-    
-    const activeSection = document.getElementById(id);
-    activeSection.style.display = 'block';
-    
-    setTimeout(() => {
-      activeSection.style.overflowY = 'auto';
-      activeSection.scrollTop = 0;
-    }, 50);
-    
-    document.querySelector('.content').scrollTop = 0;
-
-    if (id === 'showUsers') fetchUsers();
-    if (id === 'dailyShiftReport') {
-      const today = new Date().toISOString().split('T')[0];
-      document.getElementById('fromDate').value = today;
-      document.getElementById('toDate').value = today;
-      fetchReports();
-    }
-    if (id === 'longBodyWeightReport') {
-      const today = new Date().toISOString().split('T')[0];
-      document.getElementById('longBodyFromDate').value = today;
-      document.getElementById('longBodyToDate').value = today;
-      fetchLongBodyReports();
-    }
-    if (id === 'methanolWeightReport') {
-      const today = new Date().toISOString().split('T')[0];
-      document.getElementById('methanolFromDate').value = today;
-      document.getElementById('methanolToDate').value = today;
-      fetchMethanolReports();
-    }
-    if (id === 'woodBillReport') {
-      const today = new Date().toISOString().split('T')[0];
-      document.getElementById('woodBillFromDate').value = today;
-      document.getElementById('woodBillToDate').value = today;
-      fetchWoodBillReports();
-    }
-  }
-
-  function logout() {
-    localStorage.clear();
-    window.location.href = 'index.html';
-  }
-
-  function toggleProfile() {
-    const card = document.getElementById("profileCard");
-    card.style.display = card.style.display === "block" ? "none" : "block";
-  }
-
-  async function fetchUsers() {
-  try {
-    const res = await fetch("/api/users");
-    const users = await res.json();
-    const tbody = document.querySelector("#usersTable tbody");
-    tbody.innerHTML = "";
-
-    users.forEach(u => {
-      const profilePicUrl = u.profilePic && u.profilePic.startsWith("http")
-        ? u.profilePic
-        : "assets/profile.png";
-
-      const row = document.createElement("tr");
-      row.innerHTML = `
-        <td>${u.username}</td>
-        <td>${u.userId}</td>
-        <td>${u.department}</td>
-        <td>${u.designation}</td>
-        <td>${u.mobile}</td>
-        <td>${u.email}</td>
-        <td>${u.role}</td>
-        <td>
-          <img src="${profilePicUrl}" width="40" height="40" 
-               style="border-radius:50%; object-fit:cover;">
-        </td>
-        <td>
-          <button onclick='editUser(${JSON.stringify(u)})'>Edit</button>
-          <button onclick="deleteUser('${u._id}')">Delete</button>
-        </td>`;
-      tbody.appendChild(row);
-    });
-  } catch (err) {
-    console.error("Fetch users error:", err);
-    alert("Failed to load users");
-  }
-}
-
-  async function deleteUser(userId) {
-    if (!confirm("Are you sure you want to delete this user?")) return;
-    try {
-      const res = await fetch(`/api/delete-user/${userId}`, { method: "DELETE" });
-      const result = await res.json();
-      alert(result.message);
-      if (result.success) fetchUsers();
-    } catch (err) {
-      console.error("Delete error:", err);
-      alert("Delete failed");
-    }
-  }
-
-  function editUser(user) {
-    toggleSection('createUser');
-    const form = document.getElementById("userForm");
-    form.reset();
-    form.username.value = user.username;
-    form.userId.value = user.userId;
-    form.userId.disabled = true;
-    document.getElementById("userIdUpdate").value = user._id;
-    form.department.value = user.department;
-    form.designation.value = user.designation;
-    form.mobile.value = user.mobile;
-    form.email.value = user.email;
-    form.role.value = user.role;
-    form.password.required = false;
-  }
-
-  document.getElementById("userForm").addEventListener("submit", async function (e) {
-    e.preventDefault();
-    try {
-      const formData = new FormData(this);
-      const res = await fetch("/api/create-user", {
-        method: "POST",
-        body: formData
-      });
-      const result = await res.json();
-      document.getElementById("msg").innerText = result.message;
-      if (result.success) this.reset();
-    } catch (err) {
-      console.error("Create user error:", err);
-      alert("Failed to create user");
-    }
-  });
-
-  document.getElementById("backgroundForm").addEventListener("submit", async function (e) {
-    e.preventDefault();
-    try {
-      const formData = new FormData(this);
-      const res = await fetch("/api/upload-background", {
-        method: "POST",
-        body: formData
-      });
-      const result = await res.json();
-      alert(result.message);
-    } catch (err) {
-      console.error("Upload background error:", err);
-      alert("Failed to upload background");
-    }
-  });
-
-  document.getElementById("excelForm").addEventListener("submit", async function (e) {
-  e.preventDefault();
-  try {
-    const formData = new FormData(this);
-
-    const token = localStorage.getItem("token"); // ✅ get token
-
-    const res = await fetch("/api/upload-excel", {
-      method: "POST",
-      body: formData,
-      headers: {
-        Authorization: `Bearer ${token}` // ✅ add token to headers
+  <!-- Add to your existing scripts -->
+  <script>
+    // Admin-specific functions
+    function checkAdminAccess() {
+      const role = localStorage.getItem('role');
+      if (role === 'admin') {
+        document.querySelectorAll('.admin-only').forEach(el => el.style.display = 'block');
+        document.getElementById('adminDashboard').style.display = 'block';
+        document.getElementById('admin-notification-icon').style.display = 'block';
+        loadAdminStats();
       }
-    });
-
-    const result = await res.json();
-    document.getElementById("excelMsg").innerText = result.message;
-    if (result.success) this.reset();
-  } catch (err) {
-    console.error("Upload excel error:", err);
-    alert("Failed to upload Excel");
-  }
-});
-
-
-  async function loadProfile() {
-    const token = localStorage.getItem("token");
-    if (!token) return logout();
-    try {
-      const res = await fetch("/api/me", {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      const result = await res.json();
-      if (!result.success) return logout();
-
-      const user = result.user;
-      const profileImg = document.getElementById("profileImage");
-      profileImg.src = user.profilePic || "assets/profile.png";
-      document.getElementById("profileCard").innerHTML = `
-        <strong>${user.username}</strong><br>
-        <small>${user.role}</small><hr>
-        <p><strong>User ID:</strong> ${user.userId}</p>
-        <p><strong>Email:</strong> ${user.email}</p>
-        <p><strong>Mobile:</strong> ${user.mobile}</p>
-        <p><strong>Dept:</strong> ${user.department}</p>
-        <p><strong>Desig:</strong> ${user.designation}</p>`;
-    } catch (err) {
-      console.error("Profile error:", err);
-      logout();
     }
-  }
-
-  async function submitUpdate() {
-    const title = document.getElementById("updateTitle").value.trim();
-    const message = document.getElementById("updateMessage").value.trim();
-    const imageFile = document.getElementById("updateImage").files[0];
-    if (!title || !message) return alert("Please fill in both title and message");
-
-    try {
-      const formData = new FormData();
-      formData.append("title", title);
-      formData.append("message", message);
-      if (imageFile) formData.append("image", imageFile);
-
-      const res = await fetch("/api/updates", {
-        method: "POST",
-        body: formData
-      });
-
-      const data = await res.json();
-      alert(data.message || "Update posted.");
-      document.getElementById("updateTitle").value = "";
-      document.getElementById("updateMessage").value = "";
-      document.getElementById("updateImage").value = "";
-      hideAllSections();
-    } catch (err) {
-      console.error("Update post error:", err);
-      alert("Failed to post update");
+    
+    function loadAdminStats() {
+      fetch('/api/admin/stats')
+        .then(res => res.json())
+        .then(data => {
+          if (data.success) {
+            document.getElementById('totalUsers').textContent = data.totalUsers;
+            document.getElementById('totalRecords').textContent = data.totalRecords;
+            document.getElementById('activeSessions').textContent = data.activeSessions;
+          }
+        });
     }
-  }
-
-  async function fetchReports() {
-    const fromDate = document.getElementById("fromDate").value;
-    const toDate = document.getElementById("toDate").value;
-    const plant = document.getElementById("filterPlant").value;
-    const shift = document.getElementById("filterShift").value;
-
-    try {
-      const res = await fetch("/api/reports/shift");
-      const data = await res.json();
-
-      const filtered = data.filter(r => {
-        const reportDate = new Date(r.date);
-        if (fromDate && reportDate < new Date(fromDate)) return false;
-        if (toDate && reportDate > new Date(toDate)) return false;
-        if (plant && r.plant !== plant) return false;
-        if (shift && r.shift !== shift) return false;
-        return true;
+    
+    function showUserManagement() {
+      hideAllAdminSections();
+      document.getElementById('userManagement').style.display = 'block';
+      loadAllUsers();
+    }
+    
+    function showDataManagement() {
+      hideAllAdminSections();
+      document.getElementById('dataManagement').style.display = 'block';
+    }
+    
+    function showSystemSettings() {
+      hideAllAdminSections();
+      document.getElementById('systemSettings').style.display = 'block';
+      loadSystemSettings();
+    }
+    
+    function showAuditLogs() {
+      hideAllAdminSections();
+      document.getElementById('auditLogs').style.display = 'block';
+      loadAuditLogs();
+    }
+    
+    function hideAllAdminSections() {
+      document.querySelectorAll('.admin-only > div').forEach(el => {
+        if (el.id !== 'adminDashboard') el.style.display = 'none';
       });
-
-      const container = document.getElementById("reportContainer");
-      container.innerHTML = "";
-
-      filtered.forEach(report => {
-        const totalSAP = (report.woodSAP || 0) + (report.storeSAP || 0) + (report.dispatchSAP || 0);
-        const totalToken = (report.inStockTokens || 0) + (report.issuedTokens || 0);
-
-        const html = `
-          <table class="table-style">
-            <thead>
-              <tr>
-                <th colspan="5" style="text-align:left; background:#555; color:white;">
-                  Date: ${report.date || "-"} | Plant: ${report.plant || "-"} | Shift: ${report.shift || "-"} | Shift Person: ${report.shiftPerson || "-"}
-                </th>
-              </tr>
-              <tr>
-                <th>Material</th>
-                <th>Received Bills by Security</th>
-                <th>SAP Done</th>
-                <th>Pending</th>
-                <th>Remarks</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr><td>WOOD</td><td>${report.woodReceived || 0}</td><td>${report.woodSAP || 0}</td><td>${report.woodPending || 0}</td><td></td></tr>
-              <tr><td>STORE</td><td>${report.storeReceived || 0}</td><td>${report.storeSAP || 0}</td><td>${report.storePending || 0}</td><td></td></tr>
-              <tr><td>DISPATCH</td><td>${report.dispatchReceived || 0}</td><td>${report.dispatchSAP || 0}</td><td>${report.dispatchPending || 0}</td><td></td></tr>
-              <tr><td><strong>Total SAP Done</strong></td><td colspan="4">${totalSAP}</td></tr>
-              <tr><td>In Stock Token Card</td><td colspan="4">${report.inStockTokens || 0}</td></tr>
-              <tr><td>Issued Token Card</td><td colspan="4">${report.issuedTokens || 0}</td></tr>
-              <tr><td>Total Token Card</td><td colspan="4">${totalToken}</td></tr>
-              <tr><td><strong>Loss/Damage Token</strong></td><td colspan="4">${report.lossTokens || 0}</td></tr>
-              <tr><td>Remarks</td><td colspan="4">${report.remarks || ''}</td></tr>
-            </tbody>
-          </table>`;
-        
-        container.innerHTML += html;
-      });
-
-      const printContainer = document.createElement("div");
-      printContainer.id = "printContainer";
-      printContainer.style.display = "none";
-      document.body.appendChild(printContainer);
-
-      let printHTML = '';
-      let shiftCount = 0;
+    }
+    
+    function showAddUserForm() {
+      document.getElementById('addUserForm').style.display = 'block';
+    }
+    
+    function hideAddUserForm() {
+      document.getElementById('addUserForm').style.display = 'none';
+    }
+    
+    function showUploadForm() {
+      document.getElementById('uploadForm').style.display = 'block';
+      document.getElementById('backupRestore').style.display = 'none';
+    }
+    
+    function hideUploadForm() {
+      document.getElementById('uploadForm').style.display = 'none';
+    }
+    
+    function showBackupRestore() {
+      document.getElementById('backupRestore').style.display = 'block';
+      document.getElementById('uploadForm').style.display = 'none';
+    }
+    
+    function loadAllUsers() {
+      fetch('/api/admin/users')
+        .then(res => res.json())
+        .then(data => {
+          if (data.success) {
+            const tbody = document.getElementById('usersTableBody');
+            tbody.innerHTML = '';
+            
+            data.users.forEach(user => {
+              const tr = document.createElement('tr');
+              tr.innerHTML = `
+                <td>${user.userId}</td>
+                <td>${user.username}</td>
+                <td>${user.email || '-'}</td>
+                <td>${user.role}</td>
+                <td>${user.department || '-'}</td>
+                <td>
+                  <button class="status-btn action-btn" onclick="toggleUserStatus('${user.userId}', ${user.active})">
+                    ${user.active ? 'Active' : 'Inactive'}
+                  </button>
+                </td>
+                <td class="user-actions">
+                  <button class="edit-btn action-btn" onclick="editUser('${user.userId}')">
+                    <i class="fas fa-edit"></i>
+                  </button>
+                  <button class="delete-btn action-btn" onclick="deleteUser('${user.userId}')">
+                    <i class="fas fa-trash"></i>
+                  </button>
+                </td>
+              `;
+              tbody.appendChild(tr);
+            });
+          }
+        });
+    }
+    
+    function addNewUser() {
+      const userData = {
+        username: document.getElementById('newUsername').value,
+        email: document.getElementById('newEmail').value,
+        password: document.getElementById('newPassword').value,
+        role: document.getElementById('newRole').value,
+        department: document.getElementById('newDepartment').value
+      };
       
-      filtered.forEach((report, index) => {
-        const totalSAP = (report.woodSAP || 0) + (report.storeSAP || 0) + (report.dispatchSAP || 0);
-        const totalToken = (report.inStockTokens || 0) + (report.issuedTokens || 0);
-
-        if (shiftCount % 2 === 0) {
-          printHTML += `<div class="print-page">`;
-        }
-
-        printHTML += `
-          <div class="print-shift-report">
-            <div class="print-company-header">
-              <div class="print-company-name">Balaji Action Buildwell Private Ltd.</div>
-              <div class="print-company-address">
-                C34, C34A TO D C-3, C6A TO C, PLOT 5, ELDECO SIDCUL INDUSTRIAL PARK, SITARGANJ PIN- 262405
-              </div>
-            </div>
-            
-            <div class="print-report-title">SHIFT REPORT</div>
-            
-            <div class="print-report-details">
-              <div><strong>Date:</strong> ${report.date || "-"}</div>
-              <div><strong>Plant:</strong> ${report.plant || "-"}</div>
-              <div><strong>Shift:</strong> ${report.shift || "-"}</div>
-              <div><strong>Shift Person:</strong> ${report.shiftPerson || "-"}</div>
-            </div>
-            
-            <table class="print-table">
-              <thead>
-                <tr>
-                  <th>Material</th>
-                  <th>Received</th>
-                  <th>SAP Done</th>
-                  <th>Pending</th>
-                  <th>Remarks</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td>WOOD</td>
-                  <td>${report.woodReceived || 0}</td>
-                  <td>${report.woodSAP || 0}</td>
-                  <td>${report.woodPending || 0}</td>
-                  <td></td>
-                </tr>
-                <tr>
-                  <td>STORE</td>
-                  <td>${report.storeReceived || 0}</td>
-                  <td>${report.storeSAP || 0}</td>
-                  <td>${report.storePending || 0}</td>
-                  <td></td>
-                </tr>
-                <tr>
-                  <td>DISPATCH</td>
-                  <td>${report.dispatchReceived || 0}</td>
-                  <td>${report.dispatchSAP || 0}</td>
-                  <td>${report.dispatchPending || 0}</td>
-                  <td></td>
-                </tr>
-                <tr class="print-total-row">
-                  <td>Total SAP Done</td>
-                  <td colspan="4">${totalSAP}</td>
-                </tr>
-              </tbody>
-            </table>
-            
-            <table class="print-table">
-              <tr>
-                <td>In Stock Token Card</td>
-                <td>${report.inStockTokens || 0}</td>
-              </tr>
-              <tr>
-                <td>Issued Token Card</td>
-                <td>${report.issuedTokens || 0}</td>
-              </tr>
-              <tr class="print-total-row">
-                <td>Total Token Card</td>
-                <td>${totalToken}</td>
-              </tr>
-              <tr>
-                <td>Loss/Damage Token</td>
-                <td>${report.lossTokens || 0}</td>
-              </tr>
-            </table>
-            
-            <div style="margin-top: 3mm; font-size: 10pt;">
-              <strong>Remarks:</strong> ${report.remarks || ''}
-            </div>
-          </div>`;
-
-        if (shiftCount % 2 === 1 || index === filtered.length - 1) {
-          printHTML += `</div>`;
-        }
-        
-        shiftCount++;
-      });
-
-      printContainer.innerHTML = printHTML;
-
-    } catch (err) {
-      console.error("Error fetching shift reports:", err);
-      alert("Failed to load shift reports");
-    }
-  }
-
-  function exportShiftToExcel() {
-    const fromDate = document.getElementById("fromDate").value;
-    const toDate = document.getElementById("toDate").value;
-    const plant = document.getElementById("filterPlant").value;
-    const shift = document.getElementById("filterShift").value;
-
-    fetch("/api/reports/shift")
+      fetch('/api/admin/users', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify(userData)
+      })
       .then(res => res.json())
       .then(data => {
-        const filtered = data.filter(r => {
-          const reportDate = new Date(r.date);
-          if (fromDate && reportDate < new Date(fromDate)) return false;
-          if (toDate && reportDate > new Date(toDate)) return false;
-          if (plant && r.plant !== plant) return false;
-          if (shift && r.shift !== shift) return false;
-          return true;
+        if (data.success) {
+          showToast('User added successfully');
+          hideAddUserForm();
+          loadAllUsers();
+          resetAddUserForm();
+        } else {
+          showToast(data.message || 'Failed to add user');
+        }
+      });
+    }
+    
+    function resetAddUserForm() {
+      document.getElementById('newUsername').value = '';
+      document.getElementById('newEmail').value = '';
+      document.getElementById('newPassword').value = '';
+      document.getElementById('newRole').value = 'user';
+      document.getElementById('newDepartment').value = '';
+    }
+    
+    function editUser(userId) {
+      // Implementation for editing a user
+      showToast('Edit user: ' + userId);
+    }
+    
+    function deleteUser(userId) {
+      if (confirm('Are you sure you want to delete this user?')) {
+        fetch(`/api/admin/users/${userId}`, {
+          method: 'DELETE',
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+          }
+        })
+        .then(res => res.json())
+        .then(data => {
+          if (data.success) {
+            showToast('User deleted successfully');
+            loadAllUsers();
+          } else {
+            showToast(data.message || 'Failed to delete user');
+          }
         });
-
-        const formatted = filtered.map(r => [
-          r.date || "",
-          r.plant || "",
-          r.shift || "",
-          r.shiftPerson || "",
-          r.woodReceived || 0,
-          r.woodSAP || 0,
-          r.woodPending || 0,
-          r.storeReceived || 0,
-          r.storeSAP || 0,
-          r.storePending || 0,
-          r.dispatchReceived || 0,
-          r.dispatchSAP || 0,
-          r.dispatchPending || 0,
-          (r.woodSAP || 0) + (r.storeSAP || 0) + (r.dispatchSAP || 0),
-          r.inStockTokens || 0,
-          r.issuedTokens || 0,
-          (r.inStockTokens || 0) + (r.issuedTokens || 0),
-          r.lossTokens || 0,
-          r.remarks || ""
-        ]);
-
-        const header = [
-          "DATE",
-          "PLANT",
-          "SHIFT",
-          "SHIFT PERSON",
-          "WOOD (RECEIVED BY SECURITY)",
-          "WOOD (SAP DONE)",
-          "WOOD (PENDING)",
-          "STORE (RECEIVED BY SECURITY)",
-          "STORE (SAP DONE)",
-          "STORE (PENDING)",
-          "DISPATCH (RECEIVED BY SECURITY)",
-          "DISPATCH (SAP DONE)",
-          "DISPATCH (PENDING)",
-          "TOTAL SAP DONE",
-          "IN STOCK TOKEN CARD",
-          "ISSUED TOKEN CARD",
-          "TOTAL TOKEN CARD",
-          "LOSS/DAMAGE TOKEN",
-          "REMARKS"
-        ];
-
-        const ws = XLSX.utils.aoa_to_sheet([header, ...formatted]);
-        const wb = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(wb, ws, "Shift Reports");
-        XLSX.writeFile(wb, "shift_reports.xlsx");
+      }
+    }
+    
+    function toggleUserStatus(userId, currentStatus) {
+      fetch(`/api/admin/users/${userId}/status`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify({ active: !currentStatus })
       })
-      .catch(err => {
-        console.error("Excel export error:", err);
-        alert("Failed to export Excel");
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) {
+          showToast('User status updated');
+          loadAllUsers();
+        } else {
+          showToast(data.message || 'Failed to update status');
+        }
       });
-  }
-
-  function printShiftReports() {
-    const printContainer = document.getElementById("printContainer");
-    if (!printContainer) {
-      alert("Please generate the report first");
-      return;
     }
     
-    const printContent = printContainer.cloneNode(true);
-    printContent.style.display = "block";
-    printContent.style.position = "absolute";
-    printContent.style.left = "0";
-    printContent.style.top = "0";
-    
-    const printWindow = window.open('', '', 'width=800,height=600');
-    printWindow.document.write('<html><head><title>Shift Reports</title>');
-    printWindow.document.write('<link rel="stylesheet" href="styles.css">');
-    printWindow.document.write('</head><body>');
-    printWindow.document.write(printContent.innerHTML);
-    printWindow.document.write('</body></html>');
-    printWindow.document.close();
-    
-    printWindow.onload = function() {
-      printWindow.print();
-      printWindow.close();
-    };
-  }
-
-  async function fetchMethanolReports() {
-    const fromDate = document.getElementById('methanolFromDate').value;
-    const toDate = document.getElementById('methanolToDate').value;
-    const submittedBy = document.getElementById('methanolNameFilter').value.toLowerCase();
-    const tbody = document.querySelector("#methanolReportTable tbody");
-
-    try {
-      let url = '/api/methanol';
-      const params = new URLSearchParams();
-      if (fromDate) params.append('from', fromDate);
-      if (toDate) params.append('to', toDate);
+    function uploadDataFile() {
+      const category = document.getElementById('dataCategory').value;
+      const fileInput = document.getElementById('dataFile');
       
-      if (params.toString()) {
-        url += `?${params.toString()}`;
+      if (fileInput.files.length === 0) {
+        showToast('Please select a file to upload');
+        return;
       }
-
-      const res = await fetch(url);
-      const data = await res.json();
-
-      tbody.innerHTML = "";
       
-      const nameSet = new Set();
+      const formData = new FormData();
+      formData.append('file', fileInput.files[0]);
+      formData.append('category', category);
       
-      data.forEach((entry, index) => {
-        if (submittedBy && (!entry.name || !entry.name.toLowerCase().includes(submittedBy))) {
-          return;
+      fetch('/api/admin/upload-data', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: formData
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) {
+          showToast('Data uploaded successfully');
+          hideUploadForm();
+          fileInput.value = '';
+        } else {
+          showToast(data.message || 'Failed to upload data');
         }
-        
-        const row = document.createElement("tr");
-        row.innerHTML = `
-          <td>${index + 1}</td>
-          <td>${entry.date || "-"}</td>
-          <td>${entry.vehicleNo || "-"}</td>
-          <td>${entry.material || "METHANOL"}</td>
-          <td>${entry.outsideWeight || "-"}</td>
-          <td>${entry.mtWeight || "-"}</td>
-          <td>${entry.difference || (entry.outsideWeight - entry.mtWeight).toFixed(2) || "-"}</td>
-          <td>${entry.name || "-"}</td>
-        `;
-        tbody.appendChild(row);
-        
-        if (entry.name) nameSet.add(entry.name);
       });
-
-      const nameFilter = document.getElementById("methanolNameFilter");
-      nameFilter.innerHTML = '<option value="">All</option>' + 
-        [...nameSet].map(name => `<option value="${name}">${name}</option>`).join('');
-
-    } catch (err) {
-      console.error("Fetch methanol reports error:", err);
-      alert("Failed to load methanol reports");
     }
-  }
-
-  function exportMethanolToExcel() {
-    const table = document.getElementById("methanolReportTable");
-    const wb = XLSX.utils.table_to_book(table, { sheet: "MethanolReport" });
-    XLSX.writeFile(wb, "methanol_weight_reports.xlsx");
-  }
-
-  async function fetchLongBodyReports() {
-    const fromDate = document.getElementById('longBodyFromDate').value;
-    const toDate = document.getElementById('longBodyToDate').value;
-    const vehicleFilter = document.getElementById('longBodyVehicleFilter').value.toLowerCase();
-    const nameFilter = document.getElementById('longBodyNameFilter').value.toLowerCase();
-    const tbody = document.querySelector("#longBodyReportTable tbody");
-
-    try {
-      let url = '/api/long-body';
-      const params = new URLSearchParams();
-      if (fromDate) params.append('from', fromDate);
-      if (toDate) params.append('to', toDate);
+    
+    function exportAllData() {
+      fetch('/api/admin/export-data', {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
+      })
+      .then(res => res.blob())
+      .then(blob => {
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'system_data_export_' + new Date().toISOString().split('T')[0] + '.xlsx';
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        a.remove();
+      });
+    }
+    
+    function createBackup() {
+      fetch('/api/admin/create-backup', {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
+      })
+      .then(res => res.blob())
+      .then(blob => {
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'system_backup_' + new Date().toISOString().split('T')[0] + '.json';
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        a.remove();
+        showToast('Backup created successfully');
+      });
+    }
+    
+    function restoreFromBackup() {
+      const fileInput = document.getElementById('restoreFile');
       
-      if (params.toString()) {
-        url += `?${params.toString()}`;
+      if (fileInput.files.length === 0) {
+        showToast('Please select a backup file');
+        return;
       }
-
-      const res = await fetch(url);
-      const data = await res.json();
-
-      tbody.innerHTML = "";
       
-      const nameSet = new Set();
-      let serial = 1;
-      
-      data.forEach(entry => {
-        if (vehicleFilter && (!entry.vehicle || !entry.vehicle.toLowerCase().includes(vehicleFilter))) {
-          return;
-        }
-        if (nameFilter && (!entry.name || !entry.name.toLowerCase().includes(nameFilter))) {
-          return;
-        }
-        
-        const row = document.createElement("tr");
-        row.innerHTML = `
-          <td>${serial++}</td>
-          <td>${entry.date || "-"}</td>
-          <td>${entry.vehicle || "-"}</td>
-          <td>${entry.material || "-"}</td>
-          <td>${entry.outsideWeight || "-"}</td>
-          <td>${entry.old80 || "-"}</td>
-          <td>${entry.new80 || "-"}</td>
-          <td>${entry.difference || "-"}</td>
-          <td>${entry.name || "-"}</td>
-        `;
-        tbody.appendChild(row);
-        
-        if (entry.name) nameSet.add(entry.name);
-      });
-
-      const nameFilterDropdown = document.getElementById("longBodyNameFilter");
-      nameFilterDropdown.innerHTML = '<option value="">All</option>' + 
-        [...nameSet].map(name => `<option value="${name}">${name}</option>`).join('');
-
-    } catch (err) {
-      console.error("Fetch long body reports error:", err);
-      alert("Failed to load long body reports");
-    }
-  }
-
-  function exportLongBodyToExcel() {
-    const table = document.getElementById("longBodyReportTable");
-    const wb = XLSX.utils.table_to_book(table, { sheet: "LongBodyReport" });
-    XLSX.writeFile(wb, "long_body_reports.xlsx");
-  }
-
-  function printLongBodyReports() {
-    const printContent = document.getElementById("longBodyWeightReport").cloneNode(true);
-    printContent.style.width = "100%";
-    
-    // Remove buttons from print
-    const buttons = printContent.querySelectorAll('.long-body-actions');
-    buttons.forEach(btn => btn.remove());
-    
-    const printWindow = window.open('', '', 'width=800,height=600');
-    printWindow.document.write('<html><head><title>Long Body Weight Reports</title>');
-    printWindow.document.write('<style>body { font-family: Arial; } table { width: 100%; border-collapse: collapse; } th, td { border: 1px solid #000; padding: 8px; text-align: center; }</style>');
-    printWindow.document.write('</head><body>');
-    printWindow.document.write('<h1>Long Body Weight Reports</h1>');
-    printWindow.document.write(printContent.innerHTML);
-    printWindow.document.write('</body></html>');
-    printWindow.document.close();
-    
-    printWindow.onload = function() {
-      printWindow.print();
-      printWindow.close();
-    };
-  }
-
-  async function fetchWoodBillReports() {
-    const fromDate = document.getElementById('woodBillFromDate').value;
-    const toDate = document.getElementById('woodBillToDate').value;
-    const receiver = document.getElementById('woodBillReceiverFilter').value.toLowerCase();
-    const submittedBy = document.getElementById('woodBillSubmittedByFilter').value.toLowerCase();
-    const plant = document.getElementById('woodBillPlantFilter').value.toLowerCase();
-    
-    const tbody = document.querySelector("#woodBillReportTable tbody");
-
-    try {
-      let url = '/api/wood-bill';
-      const params = new URLSearchParams();
-      if (fromDate) params.append('from', fromDate);
-      if (toDate) params.append('to', toDate);
-      
-      if (params.toString()) {
-        url += `?${params.toString()}`;
+      if (!confirm('WARNING: This will overwrite current data. Continue?')) {
+        return;
       }
-
-      const res = await fetch(url);
-      const data = await res.json();
-
-      tbody.innerHTML = "";
       
-      const receiverSet = new Set();
-      const submittedBySet = new Set();
-      let serial = 1;
+      const formData = new FormData();
+      formData.append('file', fileInput.files[0]);
       
-      data.forEach(entry => {
-        if (receiver && (!entry.receiverName || !entry.receiverName.toLowerCase().includes(receiver))) {
-          return;
+      fetch('/api/admin/restore-backup', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: formData
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) {
+          showToast('System restored from backup');
+          fileInput.value = '';
+        } else {
+          showToast(data.message || 'Failed to restore backup');
         }
-        if (submittedBy && (!entry.submittedBy || !entry.submittedBy.toLowerCase().includes(submittedBy))) {
-          return;
-        }
-        if (plant && (!entry.plant || !entry.plant.toLowerCase().includes(plant))) {
-          return;
-        }
-        
-        const row = document.createElement("tr");
-        row.innerHTML = `
-          <td>${serial++}</td>
-          <td>${entry.sapDate || "-"}</td>
-          <td>${entry.billDate || "-"}</td>
-          <td>${entry.quantity || "-"}</td>
-          <td>${entry.submitTime || "-"}</td>
-          <td>${entry.receiverName || "-"}</td>
-          <td>${entry.submittedBy || "-"}</td>
-          <td>${entry.plant || "-"}</td>
-        `;
-        tbody.appendChild(row);
-        
-        if (entry.receiverName) receiverSet.add(entry.receiverName);
-        if (entry.submittedBy) submittedBySet.add(entry.submittedBy);
       });
-
-      // Populate filter dropdowns
-      const receiverFilter = document.getElementById("woodBillReceiverFilter");
-      receiverFilter.innerHTML = '<option value="">All</option>' + 
-        [...receiverSet].map(name => `<option value="${name}">${name}</option>`).join('');
-
-      const submittedByFilter = document.getElementById("woodBillSubmittedByFilter");
-      submittedByFilter.innerHTML = '<option value="">All</option>' + 
-        [...submittedBySet].map(name => `<option value="${name}">${name}</option>`).join('');
-
-    } catch (err) {
-      console.error("Fetch wood bill reports error:", err);
-      alert("Failed to load wood bill reports");
     }
-  }
-
-  function exportWoodBillToExcel() {
-    const table = document.getElementById("woodBillReportTable");
-    const wb = XLSX.utils.table_to_book(table, { sheet: "WoodBillReport" });
-    XLSX.writeFile(wb, "wood_bill_reports.xlsx");
-  }
-
-  function printWoodBillReports() {
-    const printContent = document.getElementById("woodBillReport").cloneNode(true);
-    printContent.style.width = "100%";
     
-    // Remove buttons from print
-    const buttons = printContent.querySelectorAll('.wood-bill-actions');
-    buttons.forEach(btn => btn.remove());
-    
-    const printWindow = window.open('', '', 'width=800,height=600');
-    printWindow.document.write('<html><head><title>Wood Bill Reports</title>');
-    printWindow.document.write('<style>body { font-family: Arial; } table { width: 100%; border-collapse: collapse; } th, td { border: 1px solid #000; padding: 8px; text-align: center; }</style>');
-    printWindow.document.write('</head><body>');
-    printWindow.document.write('<h1>Wood Bill Submit Reports</h1>');
-    printWindow.document.write(printContent.innerHTML);
-    printWindow.document.write('</body></html>');
-    printWindow.document.close();
-    
-    printWindow.onload = function() {
-      printWindow.print();
-      printWindow.close();
-    };
-  }
-
-  window.onload = function() {
-    loadProfile();
-    hideAllSections();
-    
-    // Initialize date filters
-    const today = new Date().toISOString().split('T')[0];
-    document.getElementById('woodBillFromDate').value = today;
-    document.getElementById('woodBillToDate').value = today;
-    document.getElementById('methanolFromDate').value = today;
-    document.getElementById('methanolToDate').value = today;
-    document.getElementById('longBodyFromDate').value = today;
-    document.getElementById('longBodyToDate').value = today;
-    
-    // Set initial dates for shift report if needed
-    if (document.getElementById('fromDate')) {
-      document.getElementById('fromDate').value = today;
-      document.getElementById('toDate').value = today;
+    function loadSystemSettings() {
+      fetch('/api/admin/settings', {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) {
+          document.getElementById('systemName').value = data.settings.systemName || 'BALAJI ACTION BUILDEWELL';
+          document.getElementById('maintenanceMode').value = data.settings.maintenanceMode ? 'true' : 'false';
+          document.getElementById('loginMethod').value = data.settings.loginMethod || 'email';
+          document.getElementById('passwordPolicy').value = data.settings.passwordPolicy || 'medium';
+        }
+      });
     }
-  };
-
-    // Global variables
-        let currentPlant = '';
-        let tokenCards = [];
-        let inactiveTokens = [];
-        let lossTokens = [];
-        let activatedTokens = [];
-        
-        // Initialize DataTables
-        $(document).ready(function() {
-            $('#tokenCardTable').DataTable();
-            $('#inactiveTokenTable').DataTable();
-            $('#lossTokenTable').DataTable();
-            $('#activatedTokenTable').DataTable();
-            
-            // Plant selection change handler
-            $('#plantSelect').change(function() {
-                currentPlant = $(this).val();
-                if (currentPlant) {
-                    $('#mainContent').show();
-                    loadPlantData(currentPlant);
-                } else {
-                    $('#mainContent').hide();
-                }
-            });
-        });
-        
-        // Load data for selected plant
-        function loadPlantData(plant) {
-            // In a real application, this would be an AJAX call to your backend
-            console.log(`Loading data for plant: ${plant}`);
-            
-            // Simulate loading data from server
-            setTimeout(() => {
-                // Sample data - replace with actual API calls
-                tokenCards = [
-                    { id: 1, cardNumber: 'TC-'+plant+'-001', status: 'Active' },
-                    { id: 2, cardNumber: 'TC-'+plant+'-002', status: 'Active' },
-                    { id: 3, cardNumber: 'TC-'+plant+'-003', status: 'Active' },
-                    { id: 4, cardNumber: 'TC-'+plant+'-004', status: 'Inactive' },
-                    { id: 5, cardNumber: 'TC-'+plant+'-005', status: 'Lost' }
-                ];
-                
-                inactiveTokens = [
-                    { id: 1, tokenId: 4, cardNumber: 'TC-'+plant+'-004', problem: 'Damaged chip', reportedDate: '2023-07-15' }
-                ];
-                
-                lossTokens = [
-                    { id: 1, tokenId: 5, cardNumber: 'TC-'+plant+'-005', status: 'Lost', reportedDate: '2023-07-10' }
-                ];
-                
-                activatedTokens = [];
-                
-                // Update UI with loaded data
-                updateTokenCardTable();
-                updateInactiveTokenTable();
-                updateLossTokenTable();
-                updateActivatedTokenTable();
-                updateTotalQuantity();
-                
-            }, 500);
+    
+    function saveSystemSettings() {
+      const settings = {
+        systemName: document.getElementById('systemName').value,
+        maintenanceMode: document.getElementById('maintenanceMode').value === 'true',
+        loginMethod: document.getElementById('loginMethod').value,
+        passwordPolicy: document.getElementById('passwordPolicy').value
+      };
+      
+      fetch('/api/admin/settings', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify(settings)
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) {
+          showToast('Settings saved successfully');
+        } else {
+          showToast(data.message || 'Failed to save settings');
         }
-        
-        // Show/hide sections
-        function showSection(sectionId) {
-            $('.card-section').hide();
-            $('#' + sectionId).show();
-        }
-        
-        // Update token card table
-        function updateTokenCardTable() {
-            const table = $('#tokenCardTable').DataTable();
-            table.clear();
-            
-            tokenCards.forEach(token => {
-                let statusClass = '';
-                if (token.status === 'Active') statusClass = 'status-active';
-                else if (token.status === 'Inactive') statusClass = 'status-inactive';
-                else if (token.status === 'Lost') statusClass = 'status-lost';
-                
-                table.row.add([
-                    `<input type="text" class="form-control token-card-number" value="${token.cardNumber}" data-id="${token.id}">`,
-                    `<span class="${statusClass}">${token.status}</span>`,
-                    `<button class="btn btn-sm btn-danger" onclick="deleteTokenCard(${token.id})">Delete</button>`
-                ]);
-            });
-            
-            table.draw();
-        }
-        
-        // Update inactive token table
-        function updateInactiveTokenTable() {
-            const table = $('#inactiveTokenTable').DataTable();
-            table.clear();
-            
-            inactiveTokens.forEach(token => {
-                table.row.add([
-                    `<select class="form-select inactive-token-select" data-id="${token.id}">
-                        ${tokenCards.map(t => 
-                            `<option value="${t.id}" ${t.id === token.tokenId ? 'selected' : ''}>${t.cardNumber}</option>`
-                        ).join('')}
-                    </select>`,
-                    `<input type="text" class="form-control problem-description" value="${token.problem}" data-id="${token.id}">`,
-                    token.reportedDate,
-                    `<button class="btn btn-sm btn-danger" onclick="deleteInactiveToken(${token.id})">Delete</button>`
-                ]);
-            });
-            
-            table.draw();
-        }
-
-// Update the sample data in loadPlantData function
-lossTokens = [
-    { 
-        id: 1, 
-        tokenId: 5, 
-        cardNumber: 'TC-'+plant+'-005', 
-        status: 'Lost', 
-        reportedDate: '2023-07-10',
-        reportedBy: 'John Doe (Shift A)'  // Added shift person info
+      });
     }
-];
-
-// Update the updateLossTokenTable function
-function updateLossTokenTable() {
-    const table = $('#lossTokenTable').DataTable();
-    table.clear();
     
-    lossTokens.forEach(token => {
-        table.row.add([
-            token.cardNumber,
-            `<span class="status-lost">${token.status}</span>`,
-            token.reportedDate,
-            token.reportedBy || 'N/A',  // Display shift person's name
-            `<button class="btn btn-sm btn-success" onclick="restoreLostToken(${token.id})">Restore</button>`
-        ]);
-    });
+    function loadAuditLogs() {
+      fetch('/api/admin/audit-logs', {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) {
+          const tbody = document.getElementById('auditLogsBody');
+          tbody.innerHTML = '';
+          
+          data.logs.forEach(log => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+              <td>${new Date(log.timestamp).toLocaleString()}</td>
+              <td>${log.userId || 'System'}</td>
+              <td>${log.action}</td>
+              <td>${log.details || '-'}</td>
+              <td>${log.ipAddress || '-'}</td>
+            `;
+            tbody.appendChild(tr);
+          });
+        }
+      });
+    }
     
-    table.draw();
-}
-        
-        // Update activated token table
-        function updateActivatedTokenTable() {
-            const table = $('#activatedTokenTable').DataTable();
-            table.clear();
-            
-            activatedTokens.forEach(token => {
-                table.row.add([
-                    `<select class="form-select activated-token-select" data-id="${token.id}">
-                        ${inactiveTokens.map(t => 
-                            `<option value="${t.id}" ${t.id === token.tokenId ? 'selected' : ''}>${t.cardNumber}</option>`
-                        ).join('')}
-                    </select>`,
-                    new Date().toISOString().split('T')[0],
-                    `<input type="text" class="form-control activation-notes" value="${token.notes || ''}" data-id="${token.id}">`,
-                    `<button class="btn btn-sm btn-danger" onclick="deleteActivatedToken(${token.id})">Delete</button>`
-                ]);
-            });
-            
-            table.draw();
-        }
-        
-        // Update total quantity display
-        function updateTotalQuantity() {
-            const activeCount = tokenCards.filter(t => t.status === 'Active').length;
-            $('#totalQuantity').text(activeCount);
-        }
-        
-        // Add new token row
-        function addNewTokenRow() {
-            const newId = tokenCards.length > 0 ? Math.max(...tokenCards.map(t => t.id)) + 1 : 1;
-            tokenCards.push({
-                id: newId,
-                cardNumber: 'TC-'+currentPlant+'-'+(100 + newId).toString().substring(1),
-                status: 'Active'
-            });
-            updateTokenCardTable();
-        }
-        
-        // Add new activated token row
-        function addNewActivatedTokenRow() {
-            const newId = activatedTokens.length > 0 ? Math.max(...activatedTokens.map(t => t.id)) + 1 : 1;
-            activatedTokens.push({
-                id: newId,
-                tokenId: inactiveTokens.length > 0 ? inactiveTokens[0].id : null,
-                notes: ''
-            });
-            updateActivatedTokenTable();
-        }
-        
-        // Delete token card
-        function deleteTokenCard(id) {
-            if (confirm('Are you sure you want to delete this token card?')) {
-                tokenCards = tokenCards.filter(t => t.id !== id);
-                updateTokenCardTable();
-                updateTotalQuantity();
-            }
-        }
-        
-        // Delete inactive token
-        function deleteInactiveToken(id) {
-            if (confirm('Are you sure you want to delete this inactive token record?')) {
-                inactiveTokens = inactiveTokens.filter(t => t.id !== id);
-                updateInactiveTokenTable();
-            }
-        }
-        
-        // Delete activated token
-        function deleteActivatedToken(id) {
-            if (confirm('Are you sure you want to delete this activation record?')) {
-                activatedTokens = activatedTokens.filter(t => t.id !== id);
-                updateActivatedTokenTable();
-            }
-        }
-        
-        // Restore lost token
-        function restoreLostToken(id) {
-            const token = lossTokens.find(t => t.id === id);
-            if (token) {
-                const mainToken = tokenCards.find(t => t.id === token.tokenId);
-                if (mainToken) {
-                    mainToken.status = 'Active';
-                    lossTokens = lossTokens.filter(t => t.id !== id);
-                    updateTokenCardTable();
-                    updateLossTokenTable();
-                    updateTotalQuantity();
-                }
-            }
-        }
-        
-        // Save token cards
-        function saveTokenCards() {
-            // In a real app, this would send data to the server
-            alert('Token cards saved successfully!');
-            console.log('Saved token cards:', tokenCards);
-        }
-        
-        // Save inactive tokens
-        function saveInactiveTokens() {
-            // In a real app, this would send data to the server
-            alert('Inactive tokens saved successfully!');
-            console.log('Saved inactive tokens:', inactiveTokens);
-        }
-        
-        // Save activated tokens
-        function saveActivatedTokens() {
-            // In a real app, this would send data to the server
-            alert('Activated tokens saved successfully!');
-            console.log('Saved activated tokens:', activatedTokens);
-        }
-        
-        // View functions
-        function viewTokenQuantity() {
-            const activeCount = tokenCards.filter(t => t.status === 'Active').length;
-            const inactiveCount = tokenCards.filter(t => t.status === 'Inactive').length;
-            const lostCount = tokenCards.filter(t => t.status === 'Lost').length;
-            
-            const content = `
-                <h4>Token Card Quantities</h4>
-                <table class="table">
-                    <tr><th>Active Tokens:</th><td>${activeCount}</td></tr>
-                    <tr><th>Inactive Tokens:</th><td>${inactiveCount}</td></tr>
-                    <tr><th>Lost Tokens:</th><td>${lostCount}</td></tr>
-                    <tr><th>Total Tokens:</th><td>${tokenCards.length}</td></tr>
-                </table>
-            `;
-            
-            $('#viewDataModalTitle').text('Token Card Quantity Report');
-            $('#viewDataModalBody').html(content);
-            $('#viewDataModal').modal('show');
-        }
-        
-        function viewTotalTokens() {
-            const content = `
-                <h4>All Token Cards</h4>
-                <table class="table">
-                    <thead>
-                        <tr>
-                            <th>Token Card Number</th>
-                            <th>Status</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        ${tokenCards.map(t => `
-                            <tr>
-                                <td>${t.cardNumber}</td>
-                                <td class="${t.status === 'Active' ? 'status-active' : t.status === 'Inactive' ? 'status-inactive' : 'status-lost'}">
-                                    ${t.status}
-                                </td>
-                            </tr>
-                        `).join('')}
-                    </tbody>
-                </table>
-            `;
-            
-            $('#viewDataModalTitle').text('All Token Cards');
-            $('#viewDataModalBody').html(content);
-            $('#viewDataModal').modal('show');
-        }
-        
-        function viewInactiveTokens() {
-            const content = `
-                <h4>Inactive Token Cards</h4>
-                <table class="table">
-                    <thead>
-                        <tr>
-                            <th>Token Card Number</th>
-                            <th>Problem Description</th>
-                            <th>Reported Date</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        ${inactiveTokens.map(t => `
-                            <tr>
-                                <td>${t.cardNumber}</td>
-                                <td>${t.problem}</td>
-                                <td>${t.reportedDate}</td>
-                            </tr>
-                        `).join('')}
-                    </tbody>
-                </table>
-            `;
-            
-            $('#viewDataModalTitle').text('Inactive Token Cards');
-            $('#viewDataModalBody').html(content);
-            $('#viewDataModal').modal('show');
-        }
-        
-      function viewLostTokens() {
-    const content = `
-        <h4>Lost Token Cards</h4>
-        <table class="table">
-            <thead>
-                <tr>
-                    <th>Token Card Number</th>
-                    <th>Status</th>
-                    <th>Reported Date</th>
-                    <th>Reported By</th>
-                </tr>
-            </thead>
-            <tbody>
-                ${lossTokens.map(t => `
-                    <tr>
-                        <td>${t.cardNumber}</td>
-                        <td class="status-lost">${t.status}</td>
-                        <td>${t.reportedDate}</td>
-                        <td>${t.reportedBy || 'N/A'}</td>
-                    </tr>
-                `).join('')}
-            </tbody>
-        </table>
-    `;
+    function refreshAuditLogs() {
+      loadAuditLogs();
+    }
     
-    $('#viewDataModalTitle').text('Lost Token Cards');
-    $('#viewDataModalBody').html(content);
-    $('#viewDataModal').modal('show');
-}        
-        function viewActivatedTokens() {
-            const content = `
-                <h4>Activated Token Cards</h4>
-                <table class="table">
-                    <thead>
-                        <tr>
-                            <th>Token Card Number</th>
-                            <th>Activated Date</th>
-                            <th>Notes</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        ${activatedTokens.map(t => `
-                            <tr>
-                                <td>${t.cardNumber}</td>
-                                <td>${t.activatedDate || new Date().toISOString().split('T')[0]}</td>
-                                <td>${t.notes || ''}</td>
-                            </tr>
-                        `).join('')}
-                    </tbody>
-                </table>
-            `;
-            
-            $('#viewDataModalTitle').text('Activated Token Cards');
-            $('#viewDataModalBody').html(content);
-            $('#viewDataModal').modal('show');
-        }
-</script>
+    function filterLogs() {
+      const searchTerm = document.getElementById('logSearch').value.toLowerCase();
+      const rows = document.querySelectorAll('#auditLogsBody tr');
+      
+      rows.forEach(row => {
+        const text = row.textContent.toLowerCase();
+        row.style.display = text.includes(searchTerm) ? '' : 'none';
+      });
+    }
+    
+    function searchUsers() {
+      const searchTerm = document.getElementById('userSearch').value.toLowerCase();
+      const rows = document.querySelectorAll('#usersTableBody tr');
+      
+      rows.forEach(row => {
+        const text = row.textContent.toLowerCase();
+        row.style.display = text.includes(searchTerm) ? '' : 'none';
+      });
+    }
+    
+    function toggleAdminNotifications() {
+      const panel = document.getElementById('adminNotificationPanel');
+      panel.classList.toggle('show');
+      
+      if (panel.classList.contains('show')) {
+        hideNotifications();
+        hideChatUserList();
+        hideProfileCard();
+      }
+    }
+    
+    // Modify your existing initApp function to check admin access
+    function initApp() {
+      checkMobile();
+      setupEventListeners();
+      loadUserProfile();
+      checkAdminAccess(); // Add this line
+      
+      // Rest of your existing init code...
+    }
+    
+    // Add this to your existing checkAuth function
+    function checkAuth() {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        window.location.href = 'index.html';
+        return;
+      }
+      initApp();
+    }
+  </script>
 </body>
 </html>
