@@ -1426,11 +1426,43 @@ function initApp() {
     
     // Load initial data
     loadUnreadCounts();
-    loadLastActiveChat();
-    loadNotifications(); // Add this line
+    // Remove this line: loadLastActiveChat();
+    loadNotifications();
   }
   
   initNotifications();
+}
+    async function loadLastActiveChat() {
+  const lastActiveChatId = localStorage.getItem('lastActiveChat');
+  if (lastActiveChatId) {
+    try {
+      const userResponse = await fetch(`/api/users`);
+      const users = await userResponse.json();
+      const chatUser = users.find(u => u.userId === lastActiveChatId);
+      
+      if (chatUser) {
+        const messagesResponse = await fetch(`/api/chat-history/${userId}/${lastActiveChatId}`);
+        const { messages } = await messagesResponse.json();
+        
+        // Just store the messages, don't open the chat UI
+        allMessages = messages || [];
+        
+        // Update unread counts if needed
+        const unread = messages.filter(m => 
+          m.from === lastActiveChatId && 
+          m.to === userId && 
+          !m.seen
+        ).length;
+        
+        if (unread > 0) {
+          unreadSenders.add(lastActiveChatId);
+          updateTotalUnreadCount();
+        }
+      }
+    } catch (error) {
+      console.error("Failed to load last active chat:", error);
+    }
+  }
 }
 // Check if device is mobile
 function checkMobile() {
