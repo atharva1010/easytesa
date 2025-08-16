@@ -1,171 +1,84 @@
-const express = require("express");
+const express = require('express');
+const ShiftReport = require('../models/ShiftReport');
+const { authenticate } = require('../middleware/auth');
+
 const router = express.Router();
-const ShiftReport = require("../models/ShiftReport");
-const Token = require("../models/Token");
-const auth = require("../middleware/auth");
 
-// ✅ Create Shift Report
-router.post("/", auth.authenticate, async (req, res) => {
-  console.log("📦 Received Shift Report Body:", req.body);
+// Utility: Map "06:00-09:00" stays as is, A/B/C preserved; helper for ordering
+const shiftOrder = ['A', 'B', 'C'];
+const getShiftCode = (s) => {
+  if (s === '06:00-14:00') return 'A';
+  if (s === '14:00-22:00') return 'B';
+  if (s === '22:00-06:00') return 'C';
+  return s; // already A/B/C or custom like 06:00-09:00
+};
 
+const previousShift = (code) => {
+  const c = getShiftCode(code);
+  if (!shiftOrder.includes(c)) return c; // for special like 06:00-09:00, just return itself
+  const idx = shiftOrder.indexOf(c);
+  return shiftOrder[(idx + shiftOrder.length - 1) % shiftOrder.length];
+};
+
+// --- PUBLIC: Get previous pending values for a plant/shift/date
+// Frontend calls this WITHOUT Authorization header.
+router.post('/previous-pending', async (req, res) => {
   try {
-    const {
-      date,
-      shift,
-      plant,
-      woodReceived = 0,
-      woodSAP = 0,
-      storeReceived = 0,
-      storeSAP = 0,
-      dispatchReceived = 0,
-      dispatchSAP = 0,
-      inStockTokens = 0,
-      lossTokens = 0,
-      remarks = "",
-      lostTokenNumbers = [] // array of token card numbers (strings)
-    } = req.body;
+    const { plant, shift, date } = req.body || {};
+    if (!plant || !shift || !date) {
+      return res.status(400).json({ success: false, message: 'plant, shift, date required' });
+    }
 
-    // Calculate pending
-    const woodPending = woodReceived - woodSAP;
-    const storePending = storeReceived - storeSAP;
-    const dispatchPending = dispatchReceived - dispatchSAP;
-    const totalSAP = woodSAP + storeSAP + dispatchSAP;
+    const shiftCode = getShiftCode(shift);
+    const prevCode = previousShift(shiftCode);
 
-    // Fetch total tokens for plant
-    const totalTokens = await Token.countDocuments({ plant, status: "Active" });
-    const issuedTokens = totalTokens - inStockTokens - lossTokens;
+    // If previous is C and current is A, we should look at previous DATE (simple approach)
+    // We will search latest document for same plant with (date <= current date) and shift = prevCode
+    const doc = await ShiftReport
+      .find({ plant, shift: prevCode, date: { $lte: date } })
+      .sort({ date: -1, createdAt: -1 })
+      .limit(1);
 
-    // Handle lost tokens
-    const lostTokensData = [];
-    for (const cardNumber of lostTokenNumbers) {
-      const token = await Token.findOne({ cardNumber, plant });
-      if (token) {
-        token.status = "Lost";
-        token.reportedBy = req.user._id;
-        token.reportedDate = new Date();
-        token.reportSource = "ShiftReport";
-        await token.save();
-        lostTokensData.push(token._id);
+    const latest = doc[0];
+
+    const pending = {
+      woodPending: latest?.woodPending || 0,
+      storePending: latest?.storePending || 0,
+      dispatchPending: latest?.dispatchPending || 0
+    };
+
+    return res.json({ success: true, pending });
+  } catch (err) {
+    console.error('previous-pending error:', err);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+});
+
+// --- PROTECTED: Save shift report
+router.post('/', authenticate, async (req, res) => {
+  try {
+    console.log('📦 Received Shift Report Body:', req.body);
+
+    const payload = req.body || {};
+    const required = ['date', 'shift', 'plant'];
+    for (const f of required) {
+      if (!payload[f]) {
+        return res.status(400).json({ success: false, message: `${f} is required` });
       }
     }
 
-    const newReport = new ShiftReport({
-      date: date || new Date(),
-      shift,
-      plant,
-      shiftPerson: req.user._id,
-      woodReceived,
-      woodSAP,
-      woodPending,
-      storeReceived,
-      storeSAP,
-      storePending,
-      dispatchReceived,
-      dispatchSAP,
-      dispatchPending,
-      lossTokens: lostTokensData.length > 0 ? lostTokensData : [],
-      inStockTokens,
-      remarks
-    });
-
-    await newReport.save();
-
-    res.json({
-      success: true,
-      message: "Report saved successfully",
-      report: newReport
-    });
-  } catch (err) {
-    console.error("❌ Error saving shift report:", err);
-    res.status(500).json({
-      success: false,
-      message: "Failed to save report",
-      error: err.message
-    });
-  }
-});
-
-// ✅ Get All Reports with Filter
-router.get("/", auth.authenticate, async (req, res) => {
-  try {
-    const { plant, shift, startDate, endDate } = req.query;
-
-    const filter = {};
-    if (plant) filter.plant = plant;
-    if (shift) filter.shift = shift;
-    if (startDate && endDate) {
-      filter.date = {
-        $gte: new Date(startDate),
-        $lte: new Date(endDate)
-      };
-    }
-
-    const reports = await ShiftReport.find(filter)
-      .populate("shiftPerson", "fullName")
-      .populate("lossTokens", "cardNumber status reportedDate")
-      .sort({ date: -1, createdAt: -1 });
-
-    res.json({ success: true, reports });
-  } catch (err) {
-    console.error("❌ Error fetching shift reports:", err);
-    res.status(500).json({
-      success: false,
-      message: "Failed to fetch reports",
-      error: err.message
-    });
-  }
-});
-
-// ✅ Get Previous Shift Pending
-router.post("/previous-pending", auth.authenticate, async (req, res) => {
-  try {
-    const { plant, shift, date } = req.body;
-
-    const previousReport = await ShiftReport.findOne({
-      plant,
-      shift,
-      date: { $lt: new Date(date) }
-    }).sort({ date: -1 });
-
-    const pending = {
-      woodPending: previousReport?.woodPending || 0,
-      storePending: previousReport?.storePending || 0,
-      dispatchPending: previousReport?.dispatchPending || 0
+    // Normalize shift for storage: keep exact value from frontend (A/B/C or 06:00-09:00)
+    const data = {
+      ...payload,
+      shift: payload.shift,
+      createdBy: req.user?.id || null
     };
 
-    res.json({ success: true, pending });
-  } catch (err) {
-    console.error("❌ Error fetching previous pending:", err);
-    res.status(500).json({
-      success: false,
-      message: "Failed to fetch previous pending",
-      error: err.message
-    });
-  }
-});
-
-// ✅ Get Report by ID
-router.get("/:id", auth.authenticate, async (req, res) => {
-  try {
-    const report = await ShiftReport.findById(req.params.id)
-      .populate("shiftPerson", "fullName")
-      .populate("lossTokens", "cardNumber status reportedDate reportedBy");
-
-    if (!report) {
-      return res.status(404).json({
-        success: false,
-        message: "Report not found"
-      });
-    }
-
+    const report = await ShiftReport.create(data);
     res.json({ success: true, report });
   } catch (err) {
-    console.error("❌ Error fetching shift report:", err);
-    res.status(500).json({
-      success: false,
-      message: "Failed to fetch report",
-      error: err.message
-    });
+    console.error('❌ Error saving shift report:', err);
+    res.status(500).json({ success: false, message: 'Server error' });
   }
 });
 
