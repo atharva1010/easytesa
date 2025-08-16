@@ -1,835 +1,2514 @@
+muje is full page ka admin pannel banake do full access 
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Admin Dashboard</title>
+  <title>User Dashboard</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
-    /* Add admin-specific styles here */
-    .admin-only {
-      display: none;
-    }
-    
-    .admin-controls {
-      background-color: #f8f9fa;
-      border-radius: 8px;
-      padding: 15px;
-      margin-bottom: 20px;
-      border: 1px solid #dee2e6;
-    }
-    
-    .admin-btn {
-      background: linear-gradient(135deg, #dc3545, #c82333);
-      color: white;
-      border: none;
-      border-radius: 8px;
-      padding: 0.7rem 1rem;
-      margin-right: 10px;
-      cursor: pointer;
-      transition: all 0.3s ease;
-    }
-    
-    .admin-btn:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-    }
-    
-    .admin-btn.primary {
-      background: linear-gradient(135deg, #28a745, #218838);
-    }
-    
-    .admin-btn.warning {
-      background: linear-gradient(135deg, #ffc107, #e0a800);
-    }
-    
-    .admin-form {
-      display: none;
-      background: white;
-      padding: 20px;
-      border-radius: 8px;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-      margin-top: 20px;
-    }
-    
-    .form-group {
-      margin-bottom: 15px;
-    }
-    
-    .form-group label {
-      display: block;
-      margin-bottom: 5px;
-      font-weight: 500;
-    }
-    
-    .form-control {
-      width: 100%;
-      padding: 10px;
-      border: 1px solid #ced4da;
-      border-radius: 4px;
-    }
-    
-    .form-actions {
-      margin-top: 20px;
-      text-align: right;
-    }
-    
-    .user-actions {
-      display: flex;
-      gap: 5px;
-    }
-    
-    .action-btn {
-      padding: 5px 10px;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-      font-size: 12px;
-    }
-    
-    .edit-btn {
-      background-color: #17a2b8;
-      color: white;
-    }
-    
-    .delete-btn {
-      background-color: #dc3545;
-      color: white;
-    }
-    
-    .status-btn {
-      background-color: #28a745;
-      color: white;
-    }
-    
-    /* Add this to your existing media queries */
+    @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+
+    /* Add this media query at the end of your existing styles */
     @media (max-width: 768px) {
-      .admin-controls {
-        flex-direction: column;
+      /* Hide columns 1, 2, 4, and 5 in shift schedule table on mobile */
+      .shift-schedule-freeze th:nth-child(1),
+      .shift-schedule-freeze td:nth-child(1),
+      .shift-schedule-freeze th:nth-child(2),
+      .shift-schedule-freeze td:nth-child(2),
+      .shift-schedule-freeze th:nth-child(4),
+      .shift-schedule-freeze td:nth-child(4),
+      .shift-schedule-freeze th:nth-child(5),
+      .shift-schedule-freeze td:nth-child(5) {
+        display: none;
       }
       
-      .admin-btn {
-        margin-bottom: 10px;
-        width: 100%;
+      /* Adjust the freeze column since we're hiding some columns */
+      .shift-schedule-freeze th.freeze-col,
+      .shift-schedule-freeze td.freeze-col {
+        position: sticky;
+        left: 0;
+        background: rgba(255, 255, 255, 0.95);
+        z-index: 5;
+      }
+      
+      /* Make sure the first visible column (now column 4) is frozen */
+      .shift-schedule-freeze th:nth-child(4),
+      .shift-schedule-freeze td:nth-child(4) {
+        position: sticky;
+        left: 0;
+        background: rgba(255, 255, 255, 0.95);
+        z-index: 5;
+      }
+
+      /* Show password text in ID PASSWORD table on mobile */
+      #dataTable tbody tr td:nth-child(2) button {
+        background: transparent !important;
+        color: var(--dark) !important;
+        padding: 0 !important;
       }
     }
-  </style>
+
+    :root {
+      --primary: #4f46e5;
+      --primary-light: #6366f1;
+      --primary-dark: #4338ca;
+      --secondary: #10b981;
+      --danger: #ef4444;
+      --warning: #f59e0b;
+      --dark: #1f2937;
+      --darker: #111827;
+      --light: #ffffff;
+      --gray: #6b7280;
+      --success: #22c55e;
+      --glass: rgba(255, 255, 255, 0.7);
+      --glass-border: rgba(0, 0, 0, 0.1);
+      --shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      --neon-blue: #3b82f6;
+      --neon-pink: #ec4899;
+      --neon-purple: #7b2ff7;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    html, body {
+      height: 100%;
+      font-family: 'Poppins', sans-serif;
+      background: #f3f4f6;
+      color: var(--dark);
+      overflow-x: hidden;
+    }
+
+    /* Header Styles */
+    header {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 60px;
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 1rem;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      z-index: 1000;
+      border-bottom: 1px solid var(--glass-border);
+    }
+
+    .logo-container {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .logo {
+      height: 35px;
+      filter: none;
+    }
+
+    .company-name {
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--primary-dark);
+      text-shadow: none;
+      display: none;
+    }
+
+    .header-controls {
+      display: flex;
+      align-items: center;
+      gap: 0.8rem;
+    }
+
+    .header-icon {
+      font-size: 1.2rem;
+      color: var(--dark);
+      cursor: pointer;
+      transition: var(--transition);
+      position: relative;
+    }
+
+    .header-icon:hover {
+      color: var(--primary);
+      transform: scale(1.1);
+    }
+
+    .notification-badge {
+      position: absolute;
+      top: -5px;
+      right: -5px;
+      width: 16px;
+      height: 16px;
+      background: var(--danger);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.7rem;
+      font-weight: bold;
+      color: white;
+    }
+
+    .profile-img {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 2px solid var(--primary);
+      cursor: pointer;
+      transition: var(--transition);
+      box-shadow: 0 0 10px rgba(79, 70, 229, 0.2);
+    }
+
+    .profile-img:hover {
+      transform: scale(1.05);
+      box-shadow: 0 0 15px rgba(79, 70, 229, 0.3);
+    }
+
+    /* Bottom Navigation (Mobile Only) */
+    .bottom-nav {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      height: 60px;
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px);
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      z-index: 1000;
+      border-top: 1px solid var(--glass-border);
+      display: none;
+    }
+
+    .nav-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: var(--gray);
+      font-size: 0.8rem;
+      cursor: pointer;
+      transition: var(--transition);
+      padding: 0.5rem;
+      position: relative;
+    }
+
+    .nav-item i {
+      font-size: 1.2rem;
+      margin-bottom: 0.2rem;
+    }
+
+    .nav-item.active {
+      color: var(--primary);
+    }
+
+    .nav-item:hover {
+      color: var(--dark);
+    }
+
+    /* Profile Card */
+    .profile-card {
+      position: fixed;
+      top: 70px;
+      right: 1rem;
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px);
+      border-radius: 12px;
+      padding: 1rem;
+      width: 280px;
+      box-shadow: var(--shadow);
+      border: 1px solid var(--glass-border);
+      z-index: 1100;
+      display: none;
+      animation: fadeIn 0.3s ease;
+    }
+
+    .profile-card.show {
+      display: block;
+    }
+
+    .profile-info {
+      margin-bottom: 1rem;
+    }
+
+    .profile-info p {
+      margin: 0.5rem 0;
+      color: var(--gray);
+      font-size: 0.9rem;
+    }
+
+    .profile-info p strong {
+      color: var(--dark);
+      font-weight: 500;
+    }
+
+    .logout-btn {
+      width: 100%;
+      padding: 0.7rem;
+      background: var(--danger);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: var(--transition);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+    }
+
+    .logout-btn:hover {
+      background: #dc2626;
+      box-shadow: 0 0 15px rgba(239, 68, 68, 0.3);
+    }
+
+    /* Mobile Profile Dropdown */
+    .profile-dropdown {
+      position: absolute;
+      bottom: 60px;
+      right: 10px;
+      width: 250px;
+      background: rgba(255, 255, 255, 0.95);
+      border-radius: 12px;
+      padding: 1rem;
+      box-shadow: var(--shadow);
+      border: 1px solid var(--glass-border);
+      z-index: 1100;
+      display: none;
+      animation: fadeIn 0.3s ease;
+    }
+
+    .profile-dropdown .profile-info {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      margin-bottom: 1rem;
+    }
+
+    .profile-dropdown .profile-info img {
+      width: 50px;
+      height: 50px;
+    }
+
+    .profile-dropdown .profile-info h4 {
+      margin: 0;
+      font-size: 1rem;
+      color: var(--dark);
+    }
+
+    .profile-dropdown .profile-info p {
+      margin: 0;
+      color: var(--gray);
+      font-size: 0.8rem;
+    }
+
+    .dropdown-divider {
+      height: 1px;
+      background: var(--glass-border);
+      margin: 0.5rem 0;
+    }
+
+    .dropdown-item {
+      width: 100%;
+      padding: 0.7rem;
+      background: var(--danger);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-weight: 500;
+      cursor: pointer;
+      text-align: left;
+      display: flex;
+      align-items: center;
+      gap: 0.7rem;
+    }
+
+    .dropdown-item:hover {
+      background: #dc2626;
+    }
+
+    .nav-item.active .profile-dropdown {
+      display: block;
+    }
+
+    /* Sidebar */
+    .sidebar {
+      position: fixed;
+      top: 60px;
+      left: 0;
+      width: 250px;
+      height: calc(100vh - 60px);
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px);
+      padding: 1rem;
+      transform: translateX(-100%);
+      transition: transform 0.3s ease;
+      z-index: 900;
+      border-right: 1px solid var(--glass-border);
+      overflow-y: auto;
+    }
+
+    .sidebar.show {
+      transform: translateX(0);
+    }
+
+    .sidebar-section {
+      margin-bottom: 1rem;
+    }
+
+    .sidebar-section h4 {
+      color: var(--primary);
+      margin-bottom: 0.8rem;
+      font-size: 0.9rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .sidebar-btn {
+      width: 100%;
+      padding: 0.7rem;
+      margin-bottom: 0.5rem;
+      background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: var(--transition);
+      display: flex;
+      align-items: center;
+      gap: 0.7rem;
+      font-size: 0.9rem;
+      box-shadow: 0 4px 6px rgba(79, 70, 229, 0.2);
+    }
+
+    .sidebar-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 12px rgba(79, 70, 229, 0.3);
+    }
+
+    /* Main Content */
+    .content {
+      margin-top: 60px;
+      padding: 1rem;
+      min-height: calc(100vh - 120px);
+      transition: margin-left 0.3s ease;
+      margin-bottom: 60px;
+    }
+
+    .content.expanded {
+      margin-left: 0;
+    }
+
+    /* Filters and Buttons */
+    .filters {
+      display: flex;
+      flex-direction: column;
+      gap: 0.8rem;
+      margin-bottom: 1rem;
+    }
+
+    .search-box {
+      width: 100%;
+      padding: 0.8rem;
+      border: 1px solid var(--glass-border);
+      border-radius: 8px;
+      background: var(--light);
+      color: var(--dark);
+      font-size: 0.9rem;
+      transition: var(--transition);
+    }
+
+    .search-box:focus {
+      outline: none;
+      border-color: var(--primary-light);
+      box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
+    }
+
+    .filter-select {
+      width: 100%;
+      padding: 0.8rem;
+      border: 1px solid var(--glass-border);
+      border-radius: 8px;
+      background: var(--light);
+      color: var(--dark);
+      font-size: 0.9rem;
+      transition: var(--transition);
+    }
+
+    .filter-select:focus {
+      outline: none;
+      border-color: var(--primary-light);
+      box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
+    }
+
+    .data-buttons {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+    }
+
+    .data-btn {
+      padding: 0.7rem;
+      background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: var(--transition);
+      font-size: 0.8rem;
+      text-align: center;
+      box-shadow: 0 4px 6px rgba(79, 70, 229, 0.2);
+    }
+
+    .data-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 12px rgba(79, 70, 229, 0.3);
+    }
+
+    /* Table Container */
+    .table-container {
+  width: 100%;
+  max-height: calc(100vh - 250px);
+  overflow: auto;
+  border-radius: 8px;
+  background: var(--light);
+  backdrop-filter: blur(5px);
+  border: 1px solid black; /* Changed to black */
+  box-shadow: var(--shadow);
+}
+
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  color: var(--dark);
+  font-size: 0.8rem;
+  border: 1px solid black; /* Added black border to table */
+}
+
+th, td {
+  padding: 0.6rem;
+  text-align: left;
+  border-bottom: 1px solid black; /* Changed to black */
+  border-right: 1px solid black; /* Added right border */
+}
+
+th {
+  position: sticky;
+  top: 0;
+  background: var(--light);
+  font-weight: 600;
+  z-index: 10;
+  border-top: 1px solid black; /* Added top border for header */
+}
+
+    td:first-child, th:first-child {
+  border-left: 1px solid black;
+}
+
+    /* Special table styles */
+    .shift-schedule-freeze th.freeze-col,
+.shift-schedule-freeze td.freeze-col {
+  position: sticky;
+  left: 0;
+  background: var(--light);
+  z-index: 5;
+  border-right: 1px solid black; /* Added right border for freeze column */
+}
+    /* Team Modal */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(5px);
+      z-index: 2000;
+      display: none;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .modal-overlay.show {
+      display: flex;
+    }
+
+    .team-modal {
+      background: var(--light);
+      border-radius: 12px;
+      width: 95%;
+      max-width: 1000px;
+      max-height: 80vh;
+      overflow: auto;
+      padding: 1.5rem;
+      border: 1px solid var(--glass-border);
+      box-shadow: var(--shadow);
+      position: relative;
+    }
+
+    .close-modal {
+      position: absolute;
+      top: 0.8rem;
+      right: 0.8rem;
+      background: var(--danger);
+      color: white;
+      border: none;
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: var(--transition);
+    }
+
+    .close-modal:hover {
+      transform: rotate(90deg);
+      box-shadow: 0 0 15px rgba(239, 68, 68, 0.3);
+    }
+
+    .team-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 1rem;
+      margin-top: 1rem;
+    }
+
+    .user-card {
+      background: rgba(249, 250, 251, 0.7);
+      border-radius: 8px;
+      padding: 1rem;
+      text-align: center;
+      transition: var(--transition);
+      border: 1px solid var(--glass-border);
+    }
+
+    .user-card:hover {
+      transform: translateY(-5px);
+      box-shadow: var(--shadow);
+    }
+
+    .user-avatar {
+      width: 70px;
+      height: 70px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 2px solid var(--primary);
+      margin: 0 auto 0.8rem;
+      box-shadow: 0 0 15px rgba(79, 70, 229, 0.2);
+    }
+
+    .user-name {
+      font-size: 1rem;
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+      color: var(--dark);
+    }
+
+    .user-detail {
+      font-size: 0.8rem;
+      color: var(--gray);
+      margin-bottom: 0.3rem;
+    }
+
+    .user-detail strong {
+      color: var(--dark);
+    }
+
+    /* Footer */
+    footer {
+      background: linear-gradient(to right, var(--primary-dark), var(--darker));
+      color: white;
+      text-align: center;
+      padding: 0.8rem;
+      font-size: 0.8rem;
+      position: fixed;
+      bottom: 60px;
+      left: 0;
+      width: 100%;
+      z-index: 100;
+      display: none;
+    }
+
+    /* Notification Panel */
+    .notification-panel {
+      position: fixed;
+      top: 70px;
+      right: 1rem;
+      background: var(--light);
+      border-radius: 12px;
+      padding: 1rem;
+      width: 280px;
+      box-shadow: var(--shadow);
+      border: 1px solid var(--glass-border);
+      z-index: 1100;
+      display: none;
+      animation: fadeIn 0.3s ease;
+    }
+
+    .notification-panel.show {
+      display: block;
+    }
+
+    /* Chat User List */
+    .chat-user-list {
+      position: fixed;
+      top: 70px;
+      right: 1rem;
+      background: var(--light);
+      border-radius: 12px;
+      padding: 1rem;
+      width: 280px;
+      box-shadow: var(--shadow);
+      border: 1px solid var(--glass-border);
+      z-index: 1100;
+      display: none;
+      animation: fadeIn 0.3s ease;
+    }
+
+    .chat-user-list.show {
+      display: block;
+    }
+
+    .user-list-container {
+      max-height: 300px;
+      overflow-y: auto;
+    }
+
+    .chat-user-item {
+      display: flex;
+      align-items: center;
+      gap: 0.8rem;
+      padding: 0.7rem;
+      margin-bottom: 0.5rem;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: var(--transition);
+    }
+
+    .chat-user-item:hover {
+      background: rgba(0, 0, 0, 0.02);
+    }
+
+    .chat-user-avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 2px solid var(--primary);
+      position: relative;
+    }
+
+    .online-dot {
+      position: absolute;
+      bottom: 0;
+      right: 0;
+      width: 10px;
+      height: 10px;
+      background-color: var(--success);
+      border-radius: 50%;
+      border: 2px solid var(--light);
+    }
+
+    .chat-user-info {
+      flex: 1;
+    }
+
+    .chat-user-name {
+      font-weight: 500;
+      margin-bottom: 0.2rem;
+      color: var(--dark);
+    }
+
+    .chat-user-status {
+      font-size: 0.8rem;
+      color: var(--gray);
+    }
+
+    .msg-count {
+      background: var(--danger);
+      color: white;
+      padding: 0.2rem 0.5rem;
+      border-radius: 50%;
+      font-size: 0.7rem;
+      display: none;
+    }
+
+    /* Chat Box */
+    .chat-box {
+      position: fixed;
+      bottom: 80px;
+      right: 1rem;
+      width: 280px;
+      max-width: 90%;
+      background: var(--light);
+      border-radius: 12px;
+      border: 1px solid var(--glass-border);
+      box-shadow: var(--shadow);
+      z-index: 2000;
+      display: none;
+    }
+
+    .chat-box.show {
+      display: block;
+      animation: fadeIn 0.3s ease;
+    }
+
+    .chat-header {
+      background: linear-gradient(to right, var(--primary), var(--primary-dark));
+      color: white;
+      padding: 0.8rem;
+      border-top-left-radius: 12px;
+      border-top-right-radius: 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .chat-messages {
+      height: 250px;
+      overflow-y: auto;
+      padding: 0.8rem;
+    }
+
+    .message {
+      display: flex;
+      flex-direction: column;
+      margin-bottom: 0.8rem;
+      position: relative;
+    }
+
+    .message-sender {
+      font-size: 0.8rem;
+      color: var(--gray);
+      margin-bottom: 0.2rem;
+    }
+
+    .message-content {
+      padding: 0.6rem 0.8rem;
+      border-radius: 12px;
+      max-width: 80%;
+      word-wrap: break-word;
+      position: relative;
+    }
+
+    .message-outgoing {
+      align-items: flex-end;
+    }
+
+    .message-outgoing .message-content {
+      background: var(--primary);
+      color: white;
+      border-radius: 12px 12px 0 12px;
+    }
+
+    .message-incoming {
+      align-items: flex-start;
+    }
+
+    .message-incoming .message-content {
+      background: rgba(0, 0, 0, 0.05);
+      color: var(--dark);
+      border-radius: 12px 12px 12px 0;
+    }
+
+    .message-time {
+      font-size: 0.7rem;
+      color: var(--gray);
+      margin-top: 0.2rem;
+      text-align: right;
+    }
+
+    .message-seen {
+      font-size: 0.6rem;
+      color: var(--primary-light);
+      margin-top: 0.2rem;
+      text-align: right;
+      font-style: italic;
+    }
+
+    .chat-input-container {
+      padding: 0.8rem;
+      display: flex;
+      gap: 0.5rem;
+      border-top: 1px solid var(--glass-border);
+    }
+
+    .chat-input {
+      flex: 1;
+      padding: 0.7rem;
+      background: rgba(0, 0, 0, 0.05);
+      border: none;
+      border-radius: 8px;
+      color: var(--dark);
+    }
+
+    .chat-send-btn {
+      padding: 0 1rem;
+      background: var(--primary);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+
+    /* Full Screen Chat */
+    .full-screen-chat {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: var(--light);
+      z-index: 3000;
+      display: none;
+      flex-direction: column;
+    }
+
+    .full-screen-chat.show {
+      display: flex;
+    }
+
+    .full-chat-header {
+      background: linear-gradient(to right, var(--primary), var(--primary-dark));
+      color: white;
+      padding: 1rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .full-chat-messages {
+      flex: 1;
+      overflow-y: auto;
+      padding: 1rem;
+    }
+
+    .full-chat-input-container {
+      padding: 1rem;
+      background: rgba(249, 250, 251, 0.9);
+      display: flex;
+      gap: 0.5rem;
+    }
+
+    /* Full Screen User List */
+    .full-screen-user-list {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: var(--light);
+      z-index: 3000;
+      display: none;
+      flex-direction: column;
+    }
+
+    .full-screen-user-list.show {
+      display: flex;
+    }
+
+    .full-user-list-header {
+      background: linear-gradient(to right, var(--primary), var(--primary-dark));
+      color: white;
+      padding: 1rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .full-user-list-container {
+      flex: 1;
+      overflow-y: auto;
+      padding: 1rem;
+    }
+
+    /* Iframe Container */
+    #iframeContainer {
+      display: none;
+      position: fixed;
+      top: 60px;
+      left: 0;
+      right: 0;
+      bottom: 60px;
+      background: var(--light);
+      z-index: 800;
+    }
+
+    #registerIframe {
+      width: 100%;
+      height: 100%;
+      border: none;
+    }
+
+    /* Context Menu */
+    .context-menu {
+      position: fixed;
+      background: var(--light);
+      border-radius: 8px;
+      box-shadow: var(--shadow);
+      z-index: 10000;
+      display: none;
+    }
+
+    .context-menu-item {
+      padding: 0.8rem 1.2rem;
+      cursor: pointer;
+      color: var(--dark);
+      font-size: 0.9rem;
+    }
+
+    .context-menu-item:hover {
+      background: rgba(0, 0, 0, 0.05);
+    }
+
+    /* Animations */
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes fadeOut {
+      from { opacity: 1; transform: translateY(0); }
+      to { opacity: 0; transform: translateY(10px); }
+    }
+
+    /* Toast Notification */
+    .toast {
+      position: fixed;
+      bottom: 80px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--dark);
+      color: white;
+      padding: 0.8rem 1.5rem;
+      border-radius: 8px;
+      box-shadow: var(--shadow);
+      z-index: 3000;
+      border: 1px solid var(--glass-border);
+      animation: fadeIn 0.3s ease;
+      display: none;
+    }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: rgba(0, 0, 0, 0.05);
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: var(--primary);
+      border-radius: 4px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: var(--primary-light);
+    }
+
+    /* Desktop Styles */
+    @media (min-width: 768px) {
+      header {
+        height: 70px;
+        padding: 0 2rem;
+      }
+
+      .company-name {
+        display: block;
+        font-size: 1.2rem;
+      }
+
+      .header-controls {
+        gap: 1.5rem;
+      }
+
+      .header-icon {
+        font-size: 1.4rem;
+      }
+
+      .profile-img {
+        width: 40px;
+        height: 40px;
+      }
+
+      .bottom-nav {
+        display: none;
+      }
+
+      .content {
+        margin-top: 70px;
+        padding: 2rem;
+        margin-bottom: 0;
+      }
+
+      .content.expanded {
+        margin-left: 250px;
+      }
+
+      .filters {
+        flex-direction: row;
+        align-items: center;
+      }
+
+      .search-box {
+        min-width: 250px;
+      }
+
+      .data-buttons {
+        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+        gap: 0.8rem;
+      }
+
+      .data-btn {
+        font-size: 0.9rem;
+      }
+
+      footer {
+        display: block;
+        bottom: 0;
+      }
+
+      .profile-card {
+        top: 80px;
+      }
+
+      .notification-panel {
+        top: 80px;
+        width: 350px;
+      }
+
+      .chat-user-list {
+        top: 80px;
+        width: 300px;
+      }
+
+      .chat-box {
+        bottom: 20px;
+        width: 350px;
+      }
+    }
+
+    /* Mobile Landscape */
+    @media (max-height: 500px) and (orientation: landscape) {
+      .content {
+        margin-bottom: 0;
+      }
+
+      footer {
+        display: none;
+      }
+    }
+
+    .unread-count {
+      background: var(--danger);
+      color: white;
+      border-radius: 50%;
+      font-size: 0.7rem;
+      min-width: 18px;
+      height: 18px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0 4px;
+      margin-left: 5px;
+    }
+
+    .user-unread-count {
+      background: var(--danger);
+      color: white;
+      border-radius: 50%;
+      font-size: 0.7rem;
+      min-width: 18px;
+      height: 18px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0 4px;
+      margin-left: auto;
+    }
+</style>
 </head>
 <body onload="checkAuth()">
-  <!-- Add admin controls to header -->
+  <!-- Header -->
   <header>
     <div class="logo-container">
       <button id="hamburger" class="header-icon" onclick="toggleSidebar()">
         <i class="fas fa-bars"></i>
       </button>
       <img src="assets/logo.png" alt="Logo" class="logo" onclick="goHome()">
-      <span class="company-name">BALAJI ACTION BUILDEWELL - ADMIN</span>
+      <span class="company-name">BALAJI ACTION BUILDEWELL</span>
     </div>
     
     <div class="header-controls">
-      <div id="admin-notification-icon" class="header-icon" onclick="toggleAdminNotifications()">
-        <i class="fas fa-cog"></i>
-      </div>
       <div id="notification-icon" class="header-icon" onclick="toggleNotifications()">
         <i class="fas fa-bell"></i>
         <span id="notificationCountBadge" class="unread-count" style="display: none;">0</span>
       </div>
+      
       <div id="message-icon" class="header-icon" onclick="toggleChatUserList()">
         <i class="fas fa-comment-dots"></i>
         <span id="messageCountBadge" class="unread-count" style="display: none;">0</span>
       </div>
+      
       <img id="profileImage" src="assets/profile.png" class="profile-img" onclick="toggleProfileCard()">
+    </div>
+    
+    <!-- Profile Card -->
+    <div id="profileCard" class="profile-card">
+      <div class="profile-info">
+        <h3 id="profile-name">Loading...</h3>
+        <p><strong>User ID:</strong> <span id="profile-id">-</span></p>
+        <p><strong>Email:</strong> <span id="profile-email">-</span></p>
+        <p><strong>Mobile:</strong> <span id="profile-mobile">-</span></p>
+        <p><strong>Department:</strong> <span id="profile-dept">-</span></p>
+        <p><strong>Designation:</strong> <span id="profile-designation">-</span></p>
+        <p><strong>Role:</strong> <span id="profile-role">-</span></p>
+      </div>
+      <button onclick="logout()" class="logout-btn">
+        <i class="fas fa-sign-out-alt"></i> Logout
+      </button>
     </div>
   </header>
 
-  <!-- Admin Notification Panel -->
-  <div id="adminNotificationPanel" class="notification-panel">
-    <h4 style="margin-bottom: 1rem;"><i class="fas fa-cog"></i> Admin Controls</h4>
-    <div class="admin-controls">
-      <button class="admin-btn primary" onclick="showUserManagement()">
-        <i class="fas fa-users"></i> Manage Users
-      </button>
-      <button class="admin-btn" onclick="showDataManagement()">
-        <i class="fas fa-database"></i> Manage Data
-      </button>
-      <button class="admin-btn warning" onclick="showSystemSettings()">
-        <i class="fas fa-cogs"></i> System Settings
-      </button>
-      <button class="admin-btn" onclick="showAuditLogs()">
-        <i class="fas fa-clipboard-list"></i> Audit Logs
-      </button>
+  <!-- Notification Panel -->
+  <div id="updatePanel" class="notification-panel">
+    <h4 style="margin-bottom: 1rem;"><i class="fas fa-bell"></i> Latest Updates</h4>
+    <div id="updatesList" style="max-height: 300px; overflow-y: auto;"></div>
+  </div>
+
+  <!-- Chat User List -->
+  <div id="chatUserList" class="chat-user-list">
+    <h4 style="margin-bottom: 1rem;"><i class="fas fa-comments"></i> Chat with:</h4>
+    <div id="userListContainer" class="user-list-container">
+      <p>No users available.</p>
     </div>
   </div>
 
-  <!-- Add admin sections to sidebar -->
+  <!-- Full Screen User List (Mobile Only) -->
+  <div id="fullScreenUserList" class="full-screen-user-list">
+    <div class="full-user-list-header">
+      <span><i class="fas fa-comments"></i> Chat Users</span>
+      <button onclick="closeFullScreenUserList()" style="background:none; border:none; color:white; font-size:1.2rem; cursor:pointer;">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+    <div id="fullUserListContainer" class="full-user-list-container">
+      <p>No users available.</p>
+    </div>
+  </div>
+
+  <!-- Sidebar -->
   <div class="sidebar" id="sidebar">
-    <div class="sidebar-section admin-only">
-      <h4>Admin Tools</h4>
-      <button class="sidebar-btn" onclick="showUserManagement()">
-        <i class="fas fa-users-cog"></i> User Management
-      </button>
-      <button class="sidebar-btn" onclick="showDataManagement()">
-        <i class="fas fa-database"></i> Data Management
-      </button>
-      <button class="sidebar-btn" onclick="showSystemSettings()">
-        <i class="fas fa-sliders-h"></i> System Settings
+    <div class="sidebar-section">
+      <button class="sidebar-btn" onclick="showTeam()">
+        <i class="fas fa-users"></i> View Team
       </button>
     </div>
     
-    <!-- Rest of your existing sidebar content -->
+    <div class="sidebar-section">
+      <h4>Register</h4>
+      <button class="sidebar-btn" onclick="window.open('wood-bill-register.html', '_blank')">
+        <i class="fas fa-tree"></i> Wood Bill Submit
+      </button>
+      <button class="sidebar-btn" onclick="window.open('methanol-register.html', '_blank')">
+        <i class="fas fa-flask"></i> Methanol Weight
+      </button>
+      <button class="sidebar-btn" onclick="window.open('longbody-register.html', '_blank')">
+        <i class="fas fa-ruler-combined"></i> Long Body
+      </button>
+      <button class="sidebar-btn" onclick="window.open('shift-register.html', '_blank')">
+        <i class="fas fa-calendar-alt"></i> Daily Shift Report
+      </button>
+    </div>
+    
+    <div class="sidebar-section">
+      <h4>Utility Page</h4>
+      <button class="sidebar-btn" onclick="window.open('Download.html', '_blank')">
+        <i class="fas fa-download"></i> Download
+      </button>
+      <button class="sidebar-btn" onclick="window.open('SOP.html', '_blank')">
+        <i class="fas fa-file-alt"></i> SOP
+      </button>
+      <button class="sidebar-btn" onclick="window.open('StickerGenrator.html', '_blank')">
+        <i class="fas fa-tag"></i> Sticker Generator
+      </button>
+      <button class="sidebar-btn" onclick="window.open('About.html', '_blank')">
+        <i class="fas fa-info-circle"></i> About Company
+      </button>
+    </div>
   </div>
 
-  <!-- Main Content - Add admin sections -->
+  <!-- Main Content -->
   <div class="content" id="mainContent" onclick="hideSidebar()">
-    <!-- Admin Dashboard Section -->
-    <div id="adminDashboard" class="admin-only">
-      <h2><i class="fas fa-tachometer-alt"></i> Admin Dashboard</h2>
-      <div class="admin-stats">
-        <div class="stat-card">
-          <i class="fas fa-users"></i>
-          <h3 id="totalUsers">0</h3>
-          <p>Total Users</p>
-        </div>
-        <div class="stat-card">
-          <i class="fas fa-file-alt"></i>
-          <h3 id="totalRecords">0</h3>
-          <p>Total Records</p>
-        </div>
-        <div class="stat-card">
-          <i class="fas fa-clock"></i>
-          <h3 id="activeSessions">0</h3>
-          <p>Active Sessions</p>
-        </div>
-      </div>
-      
-      <div class="admin-controls">
-        <button class="admin-btn primary" onclick="showUserManagement()">
-          <i class="fas fa-users"></i> Manage Users
-        </button>
-        <button class="admin-btn" onclick="showDataManagement()">
-          <i class="fas fa-database"></i> Manage Data
-        </button>
-        <button class="admin-btn warning" onclick="showSystemSettings()">
-          <i class="fas fa-cogs"></i> System Settings
-        </button>
-      </div>
+    <!-- Top Buttons and Filters -->
+    <div class="filters">
+      <input type="text" class="search-box" placeholder="Search..." id="searchBox" oninput="applyFilters()">
+      <select id="materialFilter" class="filter-select" onchange="applyFilters()" style="display: none;"></select>
     </div>
     
-    <!-- User Management Section -->
-    <div id="userManagement" class="admin-only" style="display:none;">
-      <h2><i class="fas fa-users-cog"></i> User Management</h2>
-      <div class="admin-controls">
-        <button class="admin-btn primary" onclick="showAddUserForm()">
-          <i class="fas fa-user-plus"></i> Add User
-        </button>
-        <button class="admin-btn" onclick="loadAllUsers()">
-          <i class="fas fa-sync-alt"></i> Refresh
-        </button>
-        <input type="text" id="userSearch" class="search-box" placeholder="Search users..." oninput="searchUsers()">
-      </div>
-      
-      <div id="addUserForm" class="admin-form">
-        <h3>Add New User</h3>
-        <div class="form-group">
-          <label for="newUsername">Username</label>
-          <input type="text" id="newUsername" class="form-control" required>
-        </div>
-        <div class="form-group">
-          <label for="newEmail">Email</label>
-          <input type="email" id="newEmail" class="form-control" required>
-        </div>
-        <div class="form-group">
-          <label for="newPassword">Password</label>
-          <input type="password" id="newPassword" class="form-control" required>
-        </div>
-        <div class="form-group">
-          <label for="newRole">Role</label>
-          <select id="newRole" class="form-control">
-            <option value="user">User</option>
-            <option value="admin">Admin</option>
-            <option value="manager">Manager</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label for="newDepartment">Department</label>
-          <input type="text" id="newDepartment" class="form-control">
-        </div>
-        <div class="form-actions">
-          <button class="admin-btn" onclick="hideAddUserForm()">Cancel</button>
-          <button class="admin-btn primary" onclick="addNewUser()">Save User</button>
-        </div>
-      </div>
-      
-      <div class="table-container">
-        <table id="usersTable">
-          <thead>
-            <tr>
-              <th>ID</th>
-              <th>Username</th>
-              <th>Email</th>
-              <th>Role</th>
-              <th>Department</th>
-              <th>Status</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody id="usersTableBody">
-            <!-- Users will be loaded here -->
-          </tbody>
-        </table>
-      </div>
+    <div class="data-buttons" id="topButtons">
+      <button class="data-btn" onclick="loadTable('WOOD PO')">WOOD PO</button>
+      <button class="data-btn" onclick="loadTable('CONTACTS')">CONTACTS</button>
+      <button class="data-btn" onclick="loadTable('ID PASSWORD')">ID PASSWORD</button>
+      <button class="data-btn" onclick="loadTable('SHIFT SCHEDULE')">SHIFT SCHEDULE</button>
+      <button class="data-btn" onclick="loadTable('T-CODE')">T-CODE</button>
     </div>
-    
-    <!-- Data Management Section -->
-    <div id="dataManagement" class="admin-only" style="display:none;">
-      <h2><i class="fas fa-database"></i> Data Management</h2>
-      <div class="admin-controls">
-        <button class="admin-btn primary" onclick="showUploadForm()">
-          <i class="fas fa-upload"></i> Upload Data
-        </button>
-        <button class="admin-btn" onclick="exportAllData()">
-          <i class="fas fa-download"></i> Export All
-        </button>
-        <button class="admin-btn warning" onclick="showBackupRestore()">
-          <i class="fas fa-history"></i> Backup/Restore
-        </button>
-      </div>
-      
-      <div id="uploadForm" class="admin-form">
-        <h3>Upload Data File</h3>
-        <div class="form-group">
-          <label for="dataCategory">Category</label>
-          <select id="dataCategory" class="form-control">
-            <option value="WOOD PO">WOOD PO</option>
-            <option value="CONTACTS">CONTACTS</option>
-            <option value="ID PASSWORD">ID PASSWORD</option>
-            <option value="SHIFT SCHEDULE">SHIFT SCHEDULE</option>
-            <option value="T-CODE">T-CODE</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label for="dataFile">Excel File</label>
-          <input type="file" id="dataFile" class="form-control" accept=".xlsx,.xls,.csv">
-        </div>
-        <div class="form-actions">
-          <button class="admin-btn" onclick="hideUploadForm()">Cancel</button>
-          <button class="admin-btn primary" onclick="uploadDataFile()">Upload</button>
-        </div>
-      </div>
-      
-      <div id="backupRestore" class="admin-form">
-        <h3>Backup & Restore</h3>
-        <div class="form-group">
-          <button class="admin-btn primary" onclick="createBackup()">
-            <i class="fas fa-save"></i> Create Backup
-          </button>
-        </div>
-        <div class="form-group">
-          <label for="restoreFile">Restore From Backup</label>
-          <input type="file" id="restoreFile" class="form-control" accept=".json,.sql,.backup">
-        </div>
-        <div class="form-actions">
-          <button class="admin-btn warning" onclick="restoreFromBackup()">
-            <i class="fas fa-history"></i> Restore
-          </button>
-        </div>
-      </div>
+
+    <!-- Table Display Area -->
+    <div class="table-container" id="tableSection">
+      <table id="dataTable">
+        <thead></thead>
+        <tbody></tbody>
+      </table>
     </div>
-    
-    <!-- System Settings Section -->
-    <div id="systemSettings" class="admin-only" style="display:none;">
-      <h2><i class="fas fa-cogs"></i> System Settings</h2>
-      <div class="admin-controls">
-        <button class="admin-btn primary" onclick="saveSystemSettings()">
-          <i class="fas fa-save"></i> Save Settings
-        </button>
-      </div>
-      
-      <div class="admin-form">
-        <div class="form-group">
-          <label for="systemName">System Name</label>
-          <input type="text" id="systemName" class="form-control" value="BALAJI ACTION BUILDEWELL">
-        </div>
-        <div class="form-group">
-          <label for="maintenanceMode">Maintenance Mode</label>
-          <select id="maintenanceMode" class="form-control">
-            <option value="false">Disabled</option>
-            <option value="true">Enabled</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label for="loginMethod">Login Method</label>
-          <select id="loginMethod" class="form-control">
-            <option value="email">Email</option>
-            <option value="username">Username</option>
-            <option value="both">Both</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label for="passwordPolicy">Password Policy</label>
-          <select id="passwordPolicy" class="form-control">
-            <option value="simple">Simple (6 chars min)</option>
-            <option value="medium">Medium (8 chars, 1 number)</option>
-            <option value="strong">Strong (10 chars, mixed case, special chars)</option>
-          </select>
-        </div>
-      </div>
+
+    <!-- Iframe for Register Forms -->
+    <div id="iframeContainer" style="display:none;">
+      <iframe id="registerIframe" src="" style="width:100%; height:calc(100vh - 120px); border:none;"></iframe>
     </div>
-    
-    <!-- Audit Logs Section -->
-    <div id="auditLogs" class="admin-only" style="display:none;">
-      <h2><i class="fas fa-clipboard-list"></i> Audit Logs</h2>
-      <div class="admin-controls">
-        <button class="admin-btn" onclick="refreshAuditLogs()">
-          <i class="fas fa-sync-alt"></i> Refresh
-        </button>
-        <input type="text" id="logSearch" class="search-box" placeholder="Search logs..." oninput="filterLogs()">
-      </div>
-      
-      <div class="table-container">
-        <table id="auditLogsTable">
-          <thead>
-            <tr>
-              <th>Timestamp</th>
-              <th>User</th>
-              <th>Action</th>
-              <th>Details</th>
-              <th>IP Address</th>
-            </tr>
-          </thead>
-          <tbody id="auditLogsBody">
-            <!-- Logs will be loaded here -->
-          </tbody>
-        </table>
-      </div>
-    </div>
-    
-    <!-- Your existing content sections -->
   </div>
 
-  <!-- Add to your existing scripts -->
+  <!-- Bottom Navigation (Mobile Only) -->
+  <div class="bottom-nav" id="bottomNav">
+    <div class="nav-item" onclick="loadTable('WOOD PO')">
+      <i class="fas fa-tree"></i>
+      <span>WOOD PO</span>
+    </div>
+    <div class="nav-item" onclick="loadTable('CONTACTS')">
+      <i class="fas fa-address-book"></i>
+      <span>CONTACTS</span>
+    </div>
+    <div class="nav-item" onclick="loadTable('ID PASSWORD')">
+      <i class="fas fa-key"></i>
+      <span>ID PASSWORD</span>
+    </div>
+    <div class="nav-item" onclick="loadTable('SHIFT SCHEDULE')">
+      <i class="fas fa-calendar-alt"></i>
+      <span>SHIFTS</span>
+    </div>
+    <div class="nav-item" onclick="loadTable('T-CODE')">
+      <i class="fas fa-code"></i>
+      <span>T-CODE</span>
+    </div>
+  </div>
+
+  <!-- Team Modal -->
+  <div id="teamModal" class="modal-overlay">
+    <div class="team-modal">
+      <button class="close-modal" onclick="hideTeam()">
+        <i class="fas fa-times"></i>
+      </button>
+      <h3><i class="fas fa-users"></i> Our Team</h3>
+      <div id="teamContainer" class="team-grid"></div>
+    </div>
+  </div>
+
+  <!-- Chat Box -->
+  <div id="chatBox" class="chat-box">
+    <div class="chat-header">
+      <span id="chatWith"><i class="fas fa-comment"></i> Chat</span>
+      <button onclick="closeChat()" style="background:none; border:none; color:white; font-size:1.2rem; cursor:pointer;">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+    <div id="chatMessages" class="chat-messages"></div>
+    <div class="chat-input-container">
+      <input type="text" id="chatInput" class="chat-input" placeholder="Type a message..." onkeypress="if(event.key==='Enter') sendMessage()">
+      <button onclick="sendMessage()" class="chat-send-btn">
+        <i class="fas fa-paper-plane"></i>
+      </button>
+    </div>
+  </div>
+
+  <!-- Full Screen Chat (Mobile Only) -->
+  <div id="fullScreenChat" class="full-screen-chat">
+    <div class="full-chat-header">
+      <span id="fullChatWith"><i class="fas fa-user"></i> Chat with <span id="fullChatUserName"></span></span>
+      <button onclick="closeFullScreenChat()" style="background:none; border:none; color:white; font-size:1.2rem; cursor:pointer;">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+    <div id="fullChatMessages" class="full-chat-messages"></div>
+    <div class="full-chat-input-container">
+      <input type="text" id="fullChatInput" class="chat-input" placeholder="Type a message..." onkeypress="if(event.key==='Enter') sendFullScreenMessage()">
+      <button onclick="sendFullScreenMessage()" class="chat-send-btn">
+        <i class="fas fa-paper-plane"></i>
+      </button>
+    </div>
+  </div>
+
+  <!-- Context Menu -->
+  <div id="contextMenu" class="context-menu">
+    <div class="context-menu-item" onclick="editSelectedMessage()">
+      <i class="fas fa-edit"></i> Edit
+    </div>
+    <div class="context-menu-item" onclick="deleteSelectedMessage()">
+      <i class="fas fa-trash"></i> Delete
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer>
+    &copy; All Rights Reserved easyGate
+  </footer>
+
+  <!-- Toast Notification -->
+  <div id="toast" class="toast"></div>
+
+  <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
   <script>
-    // Admin-specific functions
-    function checkAdminAccess() {
-      const role = localStorage.getItem('role');
-      if (role === 'admin') {
-        document.querySelectorAll('.admin-only').forEach(el => el.style.display = 'block');
-        document.getElementById('adminDashboard').style.display = 'block';
-        document.getElementById('admin-notification-icon').style.display = 'block';
-        loadAdminStats();
+// Global variables
+let originalData = [];
+let currentUser = null;
+let currentCategory = '';
+let allMessages = [];
+let activeChatUser = null;
+const userId = localStorage.getItem("userId");
+const userElements = {};
+const unreadSenders = new Set();
+let notifySound = null;
+let isMobile = false;
+let socket = null;
+let onlineUsers = new Set();
+let selectedMessage = null;
+let hasUnreadUpdates = false;
+let currentPage = 1;
+let isLoadingMessages = false;
+let hasMoreMessages = true;
+let unreadUpdatesCount = 0;
+
+// Initialize the app when page loads
+window.onload = function() {
+  checkAuth();
+};
+
+function checkAuth() {
+  const token = localStorage.getItem('token');
+  if (!token) {
+    window.location.href = 'index.html';
+    return;
+  }
+  initApp();
+}
+
+// Main initialization function
+function initApp() {
+  checkMobile();
+  setupEventListeners();
+  loadUserProfile();
+  
+  // Initialize notification sound
+  notifySound = new Audio("assets/notification.mp3");
+  notifySound.load();
+  
+  if (userId) {
+    // Initialize socket connection only if user is logged in
+    socket = io();
+    socket.emit("join", userId);
+    setupSocketListeners();
+    
+    // Load initial data
+    loadUnreadCounts();
+    loadLastActiveChat();
+    loadNotifications(); // Add this line
+  }
+  
+  initNotifications();
+}
+// Check if device is mobile
+function checkMobile() {
+  isMobile = window.matchMedia("(max-width: 768px)").matches || 
+            window.matchMedia("(max-height: 500px)").matches;
+  
+  if (isMobile) {
+    document.getElementById('bottomNav').style.display = 'flex';
+    document.getElementById('topButtons').style.display = 'none';
+    document.querySelector('footer').style.display = 'none';
+  } else {
+    document.getElementById('bottomNav').style.display = 'none';
+    document.getElementById('topButtons').style.display = 'grid';
+    document.querySelector('footer').style.display = 'block';
+  }
+}
+
+// Setup all event listeners
+function setupEventListeners() {
+  // Window resize handler
+  window.addEventListener('resize', checkMobile);
+
+  // Click outside handlers
+  window.addEventListener('click', function(e) {
+    if (!document.getElementById('profileImage').contains(e.target) && 
+        !document.getElementById('profileCard').contains(e.target)) {
+      hideProfileCard();
+    }
+    
+    if (!document.getElementById('notification-icon').contains(e.target) && 
+        !document.getElementById('updatePanel').contains(e.target)) {
+      hideNotifications();
+    }
+    
+    if (!document.getElementById('message-icon').contains(e.target) && 
+        !document.getElementById('chatUserList').contains(e.target) &&
+        !document.getElementById('chatBox').contains(e.target) &&
+        !document.getElementById('fullScreenChat').contains(e.target) &&
+        !document.getElementById('fullScreenUserList').contains(e.target)) {
+      hideChatUserList();
+    }
+
+    if (!e.target.closest('.message-content') && !e.target.closest('.context-menu')) {
+      document.getElementById('contextMenu').style.display = 'none';
+    }
+  });
+
+  // Active nav item highlighting
+  document.querySelectorAll('.nav-item').forEach(item => {
+    item.addEventListener('click', function() {
+      document.querySelectorAll('.nav-item').forEach(nav => nav.classList.remove('active'));
+      this.classList.add('active');
+    });
+  });
+
+  // Infinite scroll for chat messages
+  const chatContainer = isMobile ? 
+    document.getElementById('fullChatMessages') : 
+    document.getElementById('chatMessages');
+  
+  if (chatContainer) {
+    chatContainer.addEventListener('scroll', function() {
+      if (this.scrollTop < 100 && !isLoadingMessages && hasMoreMessages && activeChatUser) {
+        loadMoreMessages();
       }
-    }
+    });
+  }
+}
+
+// Load more messages for infinite scroll
+async function loadMoreMessages() {
+  if (isLoadingMessages || !hasMoreMessages || !activeChatUser) return;
+  
+  isLoadingMessages = true;
+  showLoadingIndicator();
+  
+  try {
+    const response = await fetch(
+      `/api/chat-history/${userId}/${activeChatUser.userId}?page=${currentPage + 1}`
+    );
     
-    function loadAdminStats() {
-      fetch('/api/admin/stats')
-        .then(res => res.json())
-        .then(data => {
-          if (data.success) {
-            document.getElementById('totalUsers').textContent = data.totalUsers;
-            document.getElementById('totalRecords').textContent = data.totalRecords;
-            document.getElementById('activeSessions').textContent = data.activeSessions;
-          }
-        });
+    if (response.ok) {
+      const { messages, pages } = await response.json();
+      if (messages && messages.length > 0) {
+        allMessages = [...messages, ...allMessages];
+        currentPage++;
+        
+        const chatContainer = isMobile ? 
+          document.getElementById('fullChatMessages') : 
+          document.getElementById('chatMessages');
+        const scrollPos = chatContainer.scrollHeight - chatContainer.scrollTop;
+        
+        renderMessages(true);
+        
+        setTimeout(() => {
+          chatContainer.scrollTop = chatContainer.scrollHeight - scrollPos;
+        }, 0);
+      }
+      hasMoreMessages = currentPage < pages;
     }
-    
-    function showUserManagement() {
-      hideAllAdminSections();
-      document.getElementById('userManagement').style.display = 'block';
-      loadAllUsers();
-    }
-    
-    function showDataManagement() {
-      hideAllAdminSections();
-      document.getElementById('dataManagement').style.display = 'block';
-    }
-    
-    function showSystemSettings() {
-      hideAllAdminSections();
-      document.getElementById('systemSettings').style.display = 'block';
-      loadSystemSettings();
-    }
-    
-    function showAuditLogs() {
-      hideAllAdminSections();
-      document.getElementById('auditLogs').style.display = 'block';
-      loadAuditLogs();
-    }
-    
-    function hideAllAdminSections() {
-      document.querySelectorAll('.admin-only > div').forEach(el => {
-        if (el.id !== 'adminDashboard') el.style.display = 'none';
+  } catch (error) {
+    console.error("Error loading more messages:", error);
+    showToast("Failed to load older messages");
+  } finally {
+    isLoadingMessages = false;
+    hideLoadingIndicator();
+  }
+}
+
+// Show loading indicator
+function showLoadingIndicator() {
+  const loadingDiv = document.createElement('div');
+  loadingDiv.className = 'loading-messages';
+  loadingDiv.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Loading older messages...';
+  
+  const chatContainer = isMobile ? 
+    document.getElementById('fullChatMessages') : 
+    document.getElementById('chatMessages');
+  
+  chatContainer.prepend(loadingDiv);
+}
+
+// Hide loading indicator
+function hideLoadingIndicator() {
+  const loadingDiv = document.querySelector('.loading-messages');
+  if (loadingDiv) {
+    loadingDiv.remove();
+  }
+}
+
+// Setup socket listeners
+function setupSocketListeners() {
+  // Load messages from server
+  socket.on("loadMessages", (messages) => {
+    allMessages = messages;
+
+    const incoming = messages.filter(m => m.to === userId && !m.seen);
+    if (incoming.length > 0) {
+      incoming.forEach(m => {
+        unreadSenders.add(m.from);
       });
+      updateTotalUnreadCount();
+      loadChatUsers();
     }
-    
-    function showAddUserForm() {
-      document.getElementById('addUserForm').style.display = 'block';
+
+    if (activeChatUser) renderMessages();
+  });
+
+  // New message received
+  socket.on("chatMessage", (data) => {
+    allMessages.push(data);
+
+    if (!activeChatUser || (data.from !== activeChatUser.userId && data.to !== activeChatUser.userId)) {
+      unreadSenders.add(data.from);
+      updateTotalUnreadCount();
+      loadChatUsers();
+
+      showDesktopNotification(`New Message from ${data.from}`, data.message);
+      playNotificationSound();
+      return;
     }
-    
-    function hideAddUserForm() {
-      document.getElementById('addUserForm').style.display = 'none';
+
+    appendMessage(data);
+  });
+
+  // Online users update
+  socket.on("onlineUsers", (users) => {
+    onlineUsers = new Set(users);
+    updateOnlineStatusIndicators();
+  });
+
+  // Message seen confirmation
+socket.on("messageSeen", (data) => {
+  // Update the specific message
+  updateMessageSeenStatus(data.messageId);
+  
+  // Update the user list item
+  if (data.senderId) {
+    updateUserListItem(data.senderId);
+  }
+});
+
+  // Message edited confirmation
+  socket.on("messageEdited", (data) => {
+    const msgIndex = allMessages.findIndex(m => m.id === data.messageId);
+    if (msgIndex !== -1) {
+      allMessages[msgIndex].message = data.newMessage;
+      allMessages[msgIndex].edited = true;
+      renderMessages();
     }
-    
-    function showUploadForm() {
-      document.getElementById('uploadForm').style.display = 'block';
-      document.getElementById('backupRestore').style.display = 'none';
+  });
+
+  // Message deleted confirmation
+  socket.on("messageDeleted", (data) => {
+    allMessages = allMessages.filter(m => m.id !== data.messageId);
+    renderMessages();
+  });
+}
+
+// Load unread message and notification counts
+async function loadUnreadCounts() {
+  try {
+    // Load unread message count
+    const messagesResponse = await fetch(`/api/messages/unread-count/${userId}`);
+    const messagesData = await messagesResponse.json();
+    if (messagesData.success) {
+      updateTotalUnreadCount(messagesData.count);
     }
-    
-    function hideUploadForm() {
-      document.getElementById('uploadForm').style.display = 'none';
+
+    // Load unread notification count
+    const notificationsResponse = await fetch(`/api/notifications/unread-count/${userId}`);
+    const notificationsData = await notificationsResponse.json();
+    if (notificationsData.success) {
+      updateNotificationUnreadCount(notificationsData.count);
     }
-    
-    function showBackupRestore() {
-      document.getElementById('backupRestore').style.display = 'block';
-      document.getElementById('uploadForm').style.display = 'none';
+  } catch (error) {
+    console.error("Error loading unread counts:", error);
+  }
+}
+
+// Count unread messages from a specific sender
+function countUnreadMessages(senderId) {
+  return allMessages.filter(m => 
+    m.from === senderId && 
+    m.to === userId && 
+    !m.seen
+  ).length;
+}
+
+// Update total unread count in header
+function updateTotalUnreadCount(count) {
+  const totalUnread = count || Array.from(unreadSenders).reduce((total, senderId) => {
+    return total + countUnreadMessages(senderId);
+  }, 0);
+
+  const badge = document.getElementById("messageCountBadge");
+  if (totalUnread > 0) {
+    badge.style.display = "flex";
+    badge.textContent = totalUnread > 9 ? "9+" : totalUnread;
+  } else {
+    badge.style.display = "none";
+  }
+}
+
+// Update notification unread count
+function updateNotificationUnreadCount(count) {
+  unreadUpdatesCount = count;
+  const badge = document.getElementById("notificationCountBadge");
+  if (unreadUpdatesCount > 0) {
+    badge.style.display = "flex";
+    badge.textContent = unreadUpdatesCount > 9 ? "9+" : unreadUpdatesCount;
+  } else {
+    badge.style.display = "none";
+  }
+}
+
+// Initialize notification permission
+function initNotifications() {
+  if ("Notification" in window) {
+    Notification.requestPermission();
+  }
+}
+
+// Play notification sound
+function playNotificationSound() {
+  if (notifySound) {
+    try {
+      notifySound.currentTime = 0;
+      notifySound.play().catch(e => console.warn("Audio play failed:", e));
+    } catch (e) {
+      console.warn("Error playing notification sound:", e);
     }
-    
-    function loadAllUsers() {
-      fetch('/api/admin/users')
-        .then(res => res.json())
-        .then(data => {
-          if (data.success) {
-            const tbody = document.getElementById('usersTableBody');
-            tbody.innerHTML = '';
-            
-            data.users.forEach(user => {
-              const tr = document.createElement('tr');
-              tr.innerHTML = `
-                <td>${user.userId}</td>
-                <td>${user.username}</td>
-                <td>${user.email || '-'}</td>
-                <td>${user.role}</td>
-                <td>${user.department || '-'}</td>
-                <td>
-                  <button class="status-btn action-btn" onclick="toggleUserStatus('${user.userId}', ${user.active})">
-                    ${user.active ? 'Active' : 'Inactive'}
-                  </button>
-                </td>
-                <td class="user-actions">
-                  <button class="edit-btn action-btn" onclick="editUser('${user.userId}')">
-                    <i class="fas fa-edit"></i>
-                  </button>
-                  <button class="delete-btn action-btn" onclick="deleteUser('${user.userId}')">
-                    <i class="fas fa-trash"></i>
-                  </button>
-                </td>
-              `;
-              tbody.appendChild(tr);
-            });
-          }
-        });
+  }
+}
+
+// Toggle sidebar
+function toggleSidebar() {
+  document.getElementById('sidebar').classList.toggle('show');
+  document.getElementById('mainContent').classList.toggle('expanded');
+}
+
+function hideSidebar() {
+  document.getElementById('sidebar').classList.remove('show');
+  document.getElementById('mainContent').classList.remove('expanded');
+}
+
+// Toggle profile card
+function toggleProfileCard() {
+  const profileCard = document.getElementById('profileCard');
+  profileCard.classList.toggle('show');
+}
+
+function hideProfileCard() {
+  document.getElementById('profileCard').classList.remove('show');
+}
+
+// Toggle notifications
+function toggleNotifications() {
+  const panel = document.getElementById('updatePanel');
+  panel.classList.toggle('show');
+  
+  if (panel.classList.contains('show')) {
+    markNotificationsAsRead();
+    hideProfileCard();
+    hideChatUserList();
+  }
+}
+
+function hideNotifications() {
+  document.getElementById('updatePanel').classList.remove('show');
+}
+
+// Mark notifications as read
+async function markNotificationsAsRead() {
+  try {
+    const response = await fetch('/api/notifications/mark-as-read', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${localStorage.getItem('token')}`
+      },
+      body: JSON.stringify({
+        userId: userId
+      })
+    });
+
+    if (response.ok) {
+      updateNotificationUnreadCount(0);
     }
-    
-    function addNewUser() {
-      const userData = {
-        username: document.getElementById('newUsername').value,
-        email: document.getElementById('newEmail').value,
-        password: document.getElementById('newPassword').value,
-        role: document.getElementById('newRole').value,
-        department: document.getElementById('newDepartment').value
-      };
+  } catch (error) {
+    console.error("Error marking notifications as read:", error);
+  }
+}
+
+// Toggle chat user list
+function toggleChatUserList() {
+  if (isMobile) {
+    document.getElementById('fullScreenUserList').classList.toggle('show');
+  } else {
+    document.getElementById('chatUserList').classList.toggle('show');
+  }
+  
+  if (document.getElementById('chatUserList').classList.contains('show') || 
+      document.getElementById('fullScreenUserList').classList.contains('show')) {
+    hideProfileCard();
+    hideNotifications();
+    loadChatUsers();
+  }
+}
+
+function hideChatUserList() {
+  document.getElementById('chatUserList').classList.remove('show');
+  document.getElementById('fullScreenUserList').classList.remove('show');
+}
+
+// Close full screen user list
+function closeFullScreenUserList() {
+  document.getElementById('fullScreenUserList').classList.remove('show');
+}
+
+// Load chat users
+function loadChatUsers() {
+  fetch("/api/users")
+    .then(res => res.json())
+    .then(users => {
+      const container = isMobile ? document.getElementById("fullUserListContainer") : document.getElementById("userListContainer");
+      container.innerHTML = '';
+
+      if (users.length === 0) {
+        container.innerHTML = '<p>No users available.</p>';
+        return;
+      }
+
+      users.filter(u => u.userId !== userId).forEach(user => {
+        const unreadCount = countUnreadMessages(user.userId);
+        const div = document.createElement("div");
+        div.className = "chat-user-item";
+        div.innerHTML = `
+          <div style="position:relative;">
+            <img src="${user.profilePic || 'assets/profile.png'}" class="chat-user-avatar">
+            <div class="online-dot" id="online-${user.userId}" style="display:${onlineUsers.has(user.userId) ? 'block' : 'none'}"></div>
+          </div>
+          <div class="chat-user-info">
+            <div class="chat-user-name">${user.username}</div>
+            <div class="chat-user-status">${user.department}</div>
+          </div>
+        `;
+        
+        // Only add unread count if there are unread messages
+        if (unreadCount > 0) {
+          const unreadBadge = document.createElement("span");
+          unreadBadge.className = "user-unread-count";
+          unreadBadge.textContent = unreadCount > 9 ? '9+' : unreadCount;
+          div.querySelector('.chat-user-info').appendChild(unreadBadge);
+        }
+        
+        div.onclick = () => openChatWith(user);
+        container.appendChild(div);
+        userElements[user.userId] = div;
+      });
+    })
+    .catch(error => {
+      console.error("Error loading chat users:", error);
+      const container = isMobile ? document.getElementById("fullUserListContainer") : document.getElementById("userListContainer");
+      container.innerHTML = '<p>Error loading users. Please try again.</p>';
+    });
+}
+    // Update online status indicators
+function updateOnlineStatusIndicators() {
+  Object.keys(userElements).forEach(userId => {
+    const dot = document.getElementById(`online-${userId}`);
+    if (dot) {
+      dot.style.display = onlineUsers.has(userId) ? 'block' : 'none';
+    }
+  });
+}
+
+// Load user profile
+function loadUserProfile() {
+  const token = localStorage.getItem('token');
+  
+  fetch('/api/me', {
+    headers: { Authorization: `Bearer ${token}` }
+  })
+    .then(res => res.json())
+    .then(data => {
+      if (!data.success || !data.user) {
+        return logout(true);
+      }
+
+      currentUser = data.user;
+      const profileImage = document.getElementById('profileImage');
       
-      fetch('/api/admin/users', {
+      const profilePic = currentUser.profilePic && currentUser.profilePic.startsWith('http')
+        ? currentUser.profilePic
+        : 'assets/profile.png';
+        
+      profileImage.src = profilePic;
+
+      document.getElementById('profile-name').textContent = currentUser.username;
+      document.getElementById('profile-id').textContent = currentUser.userId;
+      document.getElementById('profile-email').textContent = currentUser.email;
+      document.getElementById('profile-mobile').textContent = currentUser.mobile;
+      document.getElementById('profile-dept').textContent = currentUser.department;
+      document.getElementById('profile-designation').textContent = currentUser.designation;
+      document.getElementById('profile-role').textContent = currentUser.role;
+    })
+    .catch(error => {
+      console.error("Failed to fetch user:", error);
+      logout(true);
+    });
+}
+
+// Load last active chat if exists
+async function loadLastActiveChat() {
+  const lastActiveChatId = localStorage.getItem('lastActiveChat');
+  if (lastActiveChatId) {
+    try {
+      const userResponse = await fetch(`/api/users`);
+      const users = await userResponse.json();
+      const chatUser = users.find(u => u.userId === lastActiveChatId);
+      
+      if (chatUser) {
+        const messagesResponse = await fetch(`/api/chat-history/${userId}/${lastActiveChatId}`);
+        const { messages } = await messagesResponse.json();
+        
+        allMessages = messages || [];
+        openChatWith(chatUser);
+      }
+    } catch (error) {
+      console.error("Failed to load last active chat:", error);
+    }
+  }
+}
+
+// Open chat with a user
+function openChatWith(user) {
+  activeChatUser = user;
+  localStorage.setItem('lastActiveChat', user.userId);
+  
+  if (isMobile) {
+    document.getElementById("fullScreenChat").classList.add('show');
+    document.getElementById("fullChatMessages").innerHTML = '';
+    document.getElementById("fullChatInput").value = '';
+    document.getElementById("fullChatWith").innerHTML = `<i class="fas fa-user"></i> Chat with ${user.username}`;
+  } else {
+    document.getElementById("chatBox").classList.add('show');
+    document.getElementById("chatMessages").innerHTML = '';
+    document.getElementById("chatInput").value = '';
+    document.getElementById("chatWith").innerHTML = `<i class="fas fa-user"></i> Chat with ${user.username}`;
+  }
+// Remove unread count from user list
+  const userElement = userElements[user.userId];
+  if (userElement) {
+    const unreadBadge = userElement.querySelector('.user-unread-count');
+    if (unreadBadge) {
+      unreadBadge.remove();
+    }
+  }
+
+  // Remove from unread senders and update counts
+  unreadSenders.delete(user.userId);
+  updateTotalUnreadCount();
+  currentPage = 1;
+  hasMoreMessages = true;
+  
+  renderMessages();
+  markMessagesAsRead(user.userId);
+}
+
+  // Mark messages as read
+function updateUserListItem(userId) {
+  const userElement = userElements[userId];
+  if (userElement) {
+    const unreadBadge = userElement.querySelector('.user-unread-count');
+    if (unreadBadge) {
+      unreadBadge.remove();
+    }
+  }
+}
+
+// Modified markMessagesAsRead function
+async function markMessagesAsRead(senderId) {
+  try {
+    const unseenMessages = allMessages.filter(m => 
+      m.from === senderId && 
+      m.to === userId && 
+      !m.seen
+    );
+
+    if (unseenMessages.length > 0) {
+      const response = await fetch('/api/messages/mark-as-read', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         },
-        body: JSON.stringify(userData)
-      })
-      .then(res => res.json())
-      .then(data => {
-        if (data.success) {
-          showToast('User added successfully');
-          hideAddUserForm();
-          loadAllUsers();
-          resetAddUserForm();
-        } else {
-          showToast(data.message || 'Failed to add user');
-        }
-      });
-    }
-    
-    function resetAddUserForm() {
-      document.getElementById('newUsername').value = '';
-      document.getElementById('newEmail').value = '';
-      document.getElementById('newPassword').value = '';
-      document.getElementById('newRole').value = 'user';
-      document.getElementById('newDepartment').value = '';
-    }
-    
-    function editUser(userId) {
-      // Implementation for editing a user
-      showToast('Edit user: ' + userId);
-    }
-    
-    function deleteUser(userId) {
-      if (confirm('Are you sure you want to delete this user?')) {
-        fetch(`/api/admin/users/${userId}`, {
-          method: 'DELETE',
-          headers: {
-            'Authorization': `Bearer ${localStorage.getItem('token')}`
-          }
+        body: JSON.stringify({
+          messageIds: unseenMessages.map(m => m._id),
+          senderId: senderId,
+          receiverId: userId
         })
-        .then(res => res.json())
-        .then(data => {
-          if (data.success) {
-            showToast('User deleted successfully');
-            loadAllUsers();
-          } else {
-            showToast(data.message || 'Failed to delete user');
-          }
+      });
+
+      if (response.ok) {
+        // Update local messages
+        unseenMessages.forEach(msg => {
+          msg.seen = true;
+          msg.seenTimestamp = Date.now();
+        });
+        
+        // Update UI
+        updateUserListItem(senderId);
+        renderMessages();
+        updateTotalUnreadCount();
+      }
+    }
+  } catch (error) {
+    console.error("Error marking messages as read:", error);
+  }
+}
+
+// Render messages in chat
+function renderMessages(isPrepend = false) {
+  const box = isMobile ? document.getElementById("fullChatMessages") : document.getElementById("chatMessages");
+  
+  if (!isPrepend) {
+    box.innerHTML = "";
+  }
+
+  const msgs = allMessages.filter(m =>
+    (m.from === userId && m.to === activeChatUser.userId) ||
+    (m.to === userId && m.from === activeChatUser.userId)
+  );
+
+  if (isPrepend) {
+    const oldScrollHeight = box.scrollHeight;
+    const oldScrollTop = box.scrollTop;
+    
+    const fragment = document.createDocumentFragment();
+    
+    msgs.slice(0, -box.children.length).forEach(m => {
+      fragment.appendChild(createMessageElement(m));
+    });
+    
+    box.insertBefore(fragment, box.firstChild);
+    
+    setTimeout(() => {
+      box.scrollTop = box.scrollHeight - oldScrollHeight + oldScrollTop;
+    }, 0);
+  } else {
+    msgs.forEach(m => {
+      box.appendChild(createMessageElement(m));
+    });
+    box.scrollTop = box.scrollHeight;
+  }
+  
+  if (socket && activeChatUser) {
+    const unseenMessages = msgs.filter(m => m.to === userId && !m.seen);
+    if (unseenMessages.length > 0) {
+      socket.emit("markAsSeen", { 
+        messageIds: unseenMessages.map(m => m.id),
+        senderId: activeChatUser.userId
+      });
+    }
+  }
+}
+
+// Create message element for DOM
+function createMessageElement(msg) {
+  const isMe = msg.from === userId;
+  
+  const messageDiv = document.createElement("div");
+  messageDiv.className = `message message-${isMe ? 'outgoing' : 'incoming'}`;
+  messageDiv.dataset.messageId = msg._id;
+  
+  const senderDiv = document.createElement("div");
+  senderDiv.className = "message-sender";
+  senderDiv.textContent = isMe ? "You" : msg.from;
+  
+  const contentDiv = document.createElement("div");
+  contentDiv.className = "message-content";
+  contentDiv.textContent = msg.message;
+  
+  if (msg.edited) {
+    const editedSpan = document.createElement("span");
+    editedSpan.textContent = " (edited)";
+    editedSpan.style.fontSize = "0.7rem";
+    editedSpan.style.color = "var(--gray)";
+    contentDiv.appendChild(editedSpan);
+  }
+  
+  const timeDiv = document.createElement("div");
+  timeDiv.className = "message-time";
+  const sentTime = new Date(msg.timestamp || Date.now());
+  timeDiv.textContent = sentTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  
+  messageDiv.appendChild(senderDiv);
+  messageDiv.appendChild(contentDiv);
+  messageDiv.appendChild(timeDiv);
+  
+  if (isMe && msg.seen) {
+    const seenDiv = document.createElement("div");
+    seenDiv.className = "message-seen";
+    seenDiv.textContent = "Seen " + new Date(msg.seenTimestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    messageDiv.appendChild(seenDiv);
+  }
+  
+  if (isMe && !msg.seen) {
+    contentDiv.oncontextmenu = (e) => {
+      e.preventDefault();
+      showContextMenu(e, msg);
+      return false;
+    };
+    
+    contentDiv.addEventListener('touchstart', (e) => {
+      if (e.touches.length === 1) {
+        const touch = e.touches[0];
+        const touchHoldTimer = setTimeout(() => {
+          showContextMenu(touch, msg);
+        }, 800);
+        contentDiv.addEventListener('touchend', () => clearTimeout(touchHoldTimer), { once: true });
+      }
+    });
+  }
+  
+  return messageDiv;
+}
+
+// Show context menu for message actions
+function showContextMenu(e, msg) {
+  selectedMessage = msg;
+  const menu = document.getElementById('contextMenu');
+  menu.style.display = 'block';
+  
+  const x = e.clientX || e.pageX;
+  const y = e.clientY || e.pageY;
+  
+  menu.style.left = `${x}px`;
+  menu.style.top = `${y}px`;
+}
+
+// Edit selected message
+function editSelectedMessage() {
+  if (!selectedMessage) return;
+  
+  const newMessage = prompt("Edit your message:", selectedMessage.message);
+  if (newMessage && newMessage !== selectedMessage.message) {
+    const msgIndex = allMessages.findIndex(m => m.id === selectedMessage.id);
+    if (msgIndex !== -1) {
+      allMessages[msgIndex].message = newMessage;
+      allMessages[msgIndex].edited = true;
+      
+      if (socket) {
+        socket.emit("editMessage", { 
+          messageId: selectedMessage.id, 
+          newMessage: newMessage 
         });
       }
+      
+      renderMessages();
+    }
+  }
+  
+  document.getElementById('contextMenu').style.display = 'none';
+}
+
+// Delete selected message
+function deleteSelectedMessage() {
+  if (!selectedMessage) return;
+  
+  if (confirm("Are you sure you want to delete this message?")) {
+    allMessages = allMessages.filter(m => m.id !== selectedMessage.id);
+    
+    if (socket) {
+      socket.emit("deleteMessage", { messageId: selectedMessage.id });
     }
     
-    function toggleUserStatus(userId, currentStatus) {
-      fetch(`/api/admin/users/${userId}/status`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        },
-        body: JSON.stringify({ active: !currentStatus })
-      })
-      .then(res => res.json())
-      .then(data => {
-        if (data.success) {
-          showToast('User status updated');
-          loadAllUsers();
+    renderMessages();
+  }
+  
+  document.getElementById('contextMenu').style.display = 'none';
+}
+
+// Update message seen status
+function updateMessageSeenStatus(messageId) {
+  const msgIndex = allMessages.findIndex(m => m._id === messageId);
+  if (msgIndex !== -1) {
+    allMessages[msgIndex].seen = true;
+    allMessages[msgIndex].seenTimestamp = Date.now();
+    renderMessages();
+  }
+}
+
+// Send message
+function sendMessage() {
+  const input = document.getElementById("chatInput");
+  const message = input.value.trim();
+  if (!message || !activeChatUser) return;
+
+  const msg = {
+    id: Date.now().toString(),
+    from: userId,
+    to: activeChatUser.userId,
+    message,
+    timestamp: Date.now()
+  };
+
+  socket.emit("chatMessage", msg);
+  allMessages.push(msg);
+  appendMessage(msg);
+  input.value = "";
+}
+
+// Send message from full screen chat
+function sendFullScreenMessage() {
+  const input = document.getElementById("fullChatInput");
+  const message = input.value.trim();
+  if (!message || !activeChatUser) return;
+
+  const msg = {
+    id: Date.now().toString(),
+    from: userId,
+    to: activeChatUser.userId,
+    message,
+    timestamp: Date.now()
+  };
+
+  socket.emit("chatMessage", msg);
+  allMessages.push(msg);
+  appendMessage(msg);
+  input.value = "";
+}
+
+    // Add this function to load notifications
+async function loadNotifications() {
+  try {
+    const response = await fetch('/api/updates');
+    const updates = await response.json();
+    
+    const updatesList = document.getElementById('updatesList');
+    updatesList.innerHTML = '';
+    
+    if (updates.length === 0) {
+      updatesList.innerHTML = '<p>No updates available.</p>';
+      return;
+    }
+    
+    updates.forEach(update => {
+      const updateItem = document.createElement('div');
+      updateItem.className = 'update-item';
+      updateItem.style.padding = '10px';
+      updateItem.style.borderBottom = '1px solid #eee';
+      updateItem.style.cursor = 'pointer';
+      
+      const date = new Date(update.createdAt).toLocaleString();
+      updateItem.innerHTML = `
+        <div style="font-weight:bold;">${update.title || 'Update'}</div>
+        <div style="font-size:0.8em; color:#666;">${date}</div>
+        <div style="margin-top:5px;">${update.message}</div>
+        ${update.image ? `<img src="${update.image}" style="max-width:100%; margin-top:5px;">` : ''}
+      `;
+      
+      updateItem.addEventListener('click', () => {
+        showUpdateDetail(update);
+      });
+      
+      updatesList.appendChild(updateItem);
+    });
+    
+    // Update unread count
+    updateNotificationUnreadCount(updates.length);
+    
+  } catch (error) {
+    console.error('Error loading notifications:', error);
+    document.getElementById('updatesList').innerHTML = '<p>Error loading updates. Please try again.</p>';
+  }
+}
+
+// Add this function to show update details
+function showUpdateDetail(update) {
+  const modal = document.createElement('div');
+  modal.style.position = 'fixed';
+  modal.style.top = '0';
+  modal.style.left = '0';
+  modal.style.right = '0';
+  modal.style.bottom = '0';
+  modal.style.backgroundColor = 'rgba(0,0,0,0.7)';
+  modal.style.zIndex = '1000';
+  modal.style.display = 'flex';
+  modal.style.justifyContent = 'center';
+  modal.style.alignItems = 'center';
+  
+  const content = document.createElement('div');
+  content.style.backgroundColor = 'white';
+  content.style.padding = '20px';
+  content.style.borderRadius = '8px';
+  content.style.maxWidth = '80%';
+  content.style.maxHeight = '80%';
+  content.style.overflow = 'auto';
+  
+  const date = new Date(update.createdAt).toLocaleString();
+  content.innerHTML = `
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+      <h3 style="margin:0;">${update.title || 'Update Details'}</h3>
+      <button onclick="this.parentElement.parentElement.parentElement.remove()" style="background:none; border:none; font-size:1.2em; cursor:pointer;">×</button>
+    </div>
+    <div style="color:#666; margin-bottom:10px;">${date}</div>
+    <div style="margin-bottom:10px;">${update.message}</div>
+    ${update.image ? `<img src="${update.image}" style="max-width:100%; margin-top:10px;">` : ''}
+  `;
+  
+  modal.appendChild(content);
+  document.body.appendChild(modal);
+  
+  // Close modal when clicking outside
+  modal.addEventListener('click', (e) => {
+    if (e.target === modal) {
+      modal.remove();
+    }
+  });
+}
+    
+// Append single message to chat
+function appendMessage(msg) {
+  const box = isMobile ? document.getElementById("fullChatMessages") : document.getElementById("chatMessages");
+  box.appendChild(createMessageElement(msg));
+  box.scrollTop = box.scrollHeight;
+}
+
+// Close chat
+function closeChat() {
+  document.getElementById("chatBox").classList.remove('show');
+  activeChatUser = null;
+}
+
+// Close full screen chat
+function closeFullScreenChat() {
+  document.getElementById("fullScreenChat").classList.remove('show');
+  activeChatUser = null;
+}
+
+// Show desktop notification
+function showDesktopNotification(title, body) {
+  if ("Notification" in window && Notification.permission === "granted") {
+    new Notification(title, {
+      body: body,
+      icon: "/assets/profile.png"
+    });
+  }
+}
+
+// Show toast notification
+function showToast(message) {
+  const toast = document.getElementById('toast');
+  toast.textContent = message;
+  toast.style.display = 'block';
+  
+  setTimeout(() => {
+    toast.style.animation = 'fadeOut 0.3s ease';
+    setTimeout(() => {
+      toast.style.display = 'none';
+      toast.style.animation = 'fadeIn 0.3s ease';
+    }, 300);
+  }, 2000);
+}
+
+// Logout function
+function logout(forceRedirect = false) {
+  localStorage.clear();
+  window.location.href = 'index.html';
+}
+
+// Load table data
+function loadTable(category) {
+  currentCategory = category;
+  fetch(`/api/excel-data/${category}`)
+    .then(res => res.json())
+    .then(res => {
+      if (res.success) {
+        originalData = res.data;
+        renderTable(res.data);
+
+        const filter = document.getElementById("materialFilter");
+        if (category === 'WOOD PO') {
+          const materialSet = new Set(res.data.slice(1).map(row => row[3]));
+          filter.innerHTML = '<option value="">All Materials</option>' + [...materialSet].map(m => `<option>${m}</option>`).join('');
+          filter.style.display = 'block';
         } else {
-          showToast(data.message || 'Failed to update status');
+          filter.style.display = 'none';
         }
-      });
-    }
-    
-    function uploadDataFile() {
-      const category = document.getElementById('dataCategory').value;
-      const fileInput = document.getElementById('dataFile');
-      
-      if (fileInput.files.length === 0) {
-        showToast('Please select a file to upload');
-        return;
       }
-      
-      const formData = new FormData();
-      formData.append('file', fileInput.files[0]);
-      formData.append('category', category);
-      
-      fetch('/api/admin/upload-data', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        },
-        body: formData
-      })
-      .then(res => res.json())
-      .then(data => {
-        if (data.success) {
-          showToast('Data uploaded successfully');
-          hideUploadForm();
-          fileInput.value = '';
-        } else {
-          showToast(data.message || 'Failed to upload data');
-        }
-      });
+    });
+}
+
+// Render table
+function renderTable(data) {
+  const thead = document.querySelector("#dataTable thead");
+  const tbody = document.querySelector("#dataTable tbody");
+  thead.innerHTML = "";
+  tbody.innerHTML = "";
+
+  if (data.length === 0) return;
+
+  const table = document.getElementById("dataTable");
+  table.className = currentCategory === 'SHIFT SCHEDULE' ? 'shift-schedule-freeze' : '';
+
+  // Create header row
+  const headerRow = document.createElement("tr");
+  data[0].forEach((col, index) => {
+    const th = document.createElement("th");
+    th.textContent = col;
+    if (currentCategory === 'SHIFT SCHEDULE' && index < 5) {
+      th.classList.add('freeze-col');
     }
-    
-    function exportAllData() {
-      fetch('/api/admin/export-data', {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        }
-      })
-      .then(res => res.blob())
-      .then(blob => {
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = 'system_data_export_' + new Date().toISOString().split('T')[0] + '.xlsx';
-        document.body.appendChild(a);
-        a.click();
-        window.URL.revokeObjectURL(url);
-        a.remove();
-      });
+    headerRow.appendChild(th);
+  });
+  thead.appendChild(headerRow);
+
+  // Create data rows
+  data.slice(1).forEach((row, rowIndex) => {
+    const tr = document.createElement("tr");
+
+    const rowText = row.map(cell => String(cell).toUpperCase()).join(" ");
+    if (currentCategory === 'WOOD PO') {
+      if (rowText.includes("RAMPUR")) tr.style.background = "#00ff40";
+      else if (rowText.includes("SITAPUR")) tr.style.background = "#ff00ff";
+      else if (rowText.includes("OTHER")) tr.style.background = "#00ffff";
     }
-    
-    function createBackup() {
-      fetch('/api/admin/create-backup', {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        }
-      })
-      .then(res => res.blob())
-      .then(blob => {
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = 'system_backup_' + new Date().toISOString().split('T')[0] + '.json';
-        document.body.appendChild(a);
-        a.click();
-        window.URL.revokeObjectURL(url);
-        a.remove();
-        showToast('Backup created successfully');
-      });
-    }
-    
-    function restoreFromBackup() {
-      const fileInput = document.getElementById('restoreFile');
-      
-      if (fileInput.files.length === 0) {
-        showToast('Please select a backup file');
-        return;
+
+    row.forEach((cell, colIndex) => {
+      const td = document.createElement("td");
+      const value = typeof cell === 'object' ? (cell.text || '') : String(cell);
+
+      if (currentCategory === 'WOOD PO' && colIndex === 0) {
+        td.innerHTML = `<button onclick="copyText('${value}', 'PO Copied')" style="background:var(--primary); color:white; border:none; padding:0.3rem 0.6rem; border-radius:4px; cursor:pointer;">${value}</button>`;
+      } else if (currentCategory === 'ID PASSWORD' && colIndex === 1) {
+        td.innerHTML = `<button onclick="copyText('${value}', 'Password Copied')" style="background:var(--success); color:white; border:none; padding:0.3rem 0.6rem; border-radius:4px; cursor:pointer;">${isMobile ? value : '******'}</button>`;
+      } else {
+        td.textContent = value;
       }
-      
-      if (!confirm('WARNING: This will overwrite current data. Continue?')) {
-        return;
+
+      if (currentCategory === 'SHIFT SCHEDULE') {
+        if (rowIndex < 2 || colIndex < 5) td.style.background = 'rgba(173, 216, 230, 0.3)';
+        if (value === 'R') td.style.background = 'green';
+        else if (value === 'L') td.style.background = 'red';
+        else if (value === 'G') td.style.background = 'yellow';
       }
-      
-      const formData = new FormData();
-      formData.append('file', fileInput.files[0]);
-      
-      fetch('/api/admin/restore-backup', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        },
-        body: formData
-      })
-      .then(res => res.json())
-      .then(data => {
-        if (data.success) {
-          showToast('System restored from backup');
-          fileInput.value = '';
-        } else {
-          showToast(data.message || 'Failed to restore backup');
-        }
-      });
-    }
-    
-    function loadSystemSettings() {
-      fetch('/api/admin/settings', {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        }
-      })
-      .then(res => res.json())
-      .then(data => {
-        if (data.success) {
-          document.getElementById('systemName').value = data.settings.systemName || 'BALAJI ACTION BUILDEWELL';
-          document.getElementById('maintenanceMode').value = data.settings.maintenanceMode ? 'true' : 'false';
-          document.getElementById('loginMethod').value = data.settings.loginMethod || 'email';
-          document.getElementById('passwordPolicy').value = data.settings.passwordPolicy || 'medium';
-        }
-      });
-    }
-    
-    function saveSystemSettings() {
-      const settings = {
-        systemName: document.getElementById('systemName').value,
-        maintenanceMode: document.getElementById('maintenanceMode').value === 'true',
-        loginMethod: document.getElementById('loginMethod').value,
-        passwordPolicy: document.getElementById('passwordPolicy').value
-      };
-      
-      fetch('/api/admin/settings', {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        },
-        body: JSON.stringify(settings)
-      })
-      .then(res => res.json())
-      .then(data => {
-        if (data.success) {
-          showToast('Settings saved successfully');
-        } else {
-          showToast(data.message || 'Failed to save settings');
-        }
-      });
-    }
-    
-    function loadAuditLogs() {
-      fetch('/api/admin/audit-logs', {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        }
-      })
-      .then(res => res.json())
-      .then(data => {
-        if (data.success) {
-          const tbody = document.getElementById('auditLogsBody');
-          tbody.innerHTML = '';
-          
-          data.logs.forEach(log => {
-            const tr = document.createElement('tr');
-            tr.innerHTML = `
-              <td>${new Date(log.timestamp).toLocaleString()}</td>
-              <td>${log.userId || 'System'}</td>
-              <td>${log.action}</td>
-              <td>${log.details || '-'}</td>
-              <td>${log.ipAddress || '-'}</td>
-            `;
-            tbody.appendChild(tr);
-          });
-        }
-      });
-    }
-    
-    function refreshAuditLogs() {
-      loadAuditLogs();
-    }
-    
-    function filterLogs() {
-      const searchTerm = document.getElementById('logSearch').value.toLowerCase();
-      const rows = document.querySelectorAll('#auditLogsBody tr');
-      
-      rows.forEach(row => {
-        const text = row.textContent.toLowerCase();
-        row.style.display = text.includes(searchTerm) ? '' : 'none';
-      });
-    }
-    
-    function searchUsers() {
-      const searchTerm = document.getElementById('userSearch').value.toLowerCase();
-      const rows = document.querySelectorAll('#usersTableBody tr');
-      
-      rows.forEach(row => {
-        const text = row.textContent.toLowerCase();
-        row.style.display = text.includes(searchTerm) ? '' : 'none';
-      });
-    }
-    
-    function toggleAdminNotifications() {
-      const panel = document.getElementById('adminNotificationPanel');
-      panel.classList.toggle('show');
-      
-      if (panel.classList.contains('show')) {
-        hideNotifications();
-        hideChatUserList();
-        hideProfileCard();
+
+      if (currentCategory === 'SHIFT SCHEDULE' && colIndex < 5) {
+        td.classList.add('freeze-col');
       }
-    }
+
+      tr.appendChild(td);
+    });
+
+    tbody.appendChild(tr);
+  });
+}
+
+// Copy text to clipboard
+function copyText(text, message) {
+  navigator.clipboard.writeText(text).then(() => {
+    showToast(message);
+  }).catch(err => {
+    console.error("Copy failed", err);
+  });
+}
+
+// Apply filters to table
+function applyFilters() {
+  let filtered = [...originalData];
+  const searchVal = document.getElementById("searchBox").value.toLowerCase();
+  const materialVal = document.getElementById("materialFilter").value;
+
+  if (searchVal) {
+    filtered = filtered.filter(row => row.some(cell => String(cell).toLowerCase().includes(searchVal)));
+  }
+  if (materialVal) {
+    filtered = filtered.filter(row => row[3] === materialVal);
+  }
+
+  renderTable([originalData[0], ...filtered]);
+}
+
+// Show team modal
+function showTeam() {
+  document.getElementById('teamModal').classList.add('show');
+  fetch('/api/users')
+    .then(res => res.json())
+    .then(users => {
+      const container = document.getElementById('teamContainer');
+      container.innerHTML = users.map(user => `
+        <div class="user-card">
+          <img src="${user.profilePic || 'assets/profile.png'}" class="user-avatar">
+          <div class="user-name">${user.username}</div>
+          <div class="user-detail"><strong>ID:</strong> ${user.userId}</div>
+          <div class="user-detail"><strong>Dept:</strong> ${user.department}</div>
+          <div class="user-detail"><strong>Role:</strong> ${user.designation}</div>
+          <div class="user-detail"><strong>Email:</strong> ${user.email || '-'}</div>
+        </div>
+      `).join('');
+    });
+}
+
+// Hide team modal
+function hideTeam() {
+  document.getElementById('teamModal').classList.remove('show');
+}
+
+// Go to home page
+function goHome() {
+  window.location.href = 'dashboard.html';
+}
+
+// Handle beforeunload event
+window.addEventListener("beforeunload", function(e) {
+  if (socket && activeChatUser) {
+    const unseenMessages = allMessages.filter(m => 
+      m.to === userId && 
+      m.from === activeChatUser.userId && 
+      !m.seen
+    );
     
-    // Modify your existing initApp function to check admin access
-    function initApp() {
-      checkMobile();
-      setupEventListeners();
-      loadUserProfile();
-      checkAdminAccess(); // Add this line
-      
-      // Rest of your existing init code...
+    if (unseenMessages.length > 0) {
+      const xhr = new XMLHttpRequest();
+      xhr.open("POST", "/api/messages/mark-as-read", false);
+      xhr.setRequestHeader("Content-Type", "application/json");
+      xhr.setRequestHeader("Authorization", `Bearer ${localStorage.getItem('token')}`);
+      xhr.send(JSON.stringify({
+        messageIds: unseenMessages.map(m => m._id),
+        senderId: activeChatUser.userId,
+        receiverId: userId
+      }));
     }
-    
-    // Add this to your existing checkAuth function
-    function checkAuth() {
-      const token = localStorage.getItem('token');
-      if (!token) {
-        window.location.href = 'index.html';
-        return;
-      }
-      initApp();
-    }
+  }
+});
   </script>
 </body>
 </html>
