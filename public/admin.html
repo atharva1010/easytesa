@@ -1,2514 +1,2193 @@
-muje is full page ka admin pannel banake do full access 
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>User Dashboard</title>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <title>Admin Panel</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+      <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
-
-    /* Add this media query at the end of your existing styles */
-    @media (max-width: 768px) {
-      /* Hide columns 1, 2, 4, and 5 in shift schedule table on mobile */
-      .shift-schedule-freeze th:nth-child(1),
-      .shift-schedule-freeze td:nth-child(1),
-      .shift-schedule-freeze th:nth-child(2),
-      .shift-schedule-freeze td:nth-child(2),
-      .shift-schedule-freeze th:nth-child(4),
-      .shift-schedule-freeze td:nth-child(4),
-      .shift-schedule-freeze th:nth-child(5),
-      .shift-schedule-freeze td:nth-child(5) {
-        display: none;
-      }
-      
-      /* Adjust the freeze column since we're hiding some columns */
-      .shift-schedule-freeze th.freeze-col,
-      .shift-schedule-freeze td.freeze-col {
-        position: sticky;
-        left: 0;
-        background: rgba(255, 255, 255, 0.95);
-        z-index: 5;
-      }
-      
-      /* Make sure the first visible column (now column 4) is frozen */
-      .shift-schedule-freeze th:nth-child(4),
-      .shift-schedule-freeze td:nth-child(4) {
-        position: sticky;
-        left: 0;
-        background: rgba(255, 255, 255, 0.95);
-        z-index: 5;
-      }
-
-      /* Show password text in ID PASSWORD table on mobile */
-      #dataTable tbody tr td:nth-child(2) button {
-        background: transparent !important;
-        color: var(--dark) !important;
-        padding: 0 !important;
-      }
-    }
-
-    :root {
-      --primary: #4f46e5;
-      --primary-light: #6366f1;
-      --primary-dark: #4338ca;
-      --secondary: #10b981;
-      --danger: #ef4444;
-      --warning: #f59e0b;
-      --dark: #1f2937;
-      --darker: #111827;
-      --light: #ffffff;
-      --gray: #6b7280;
-      --success: #22c55e;
-      --glass: rgba(255, 255, 255, 0.7);
-      --glass-border: rgba(0, 0, 0, 0.1);
-      --shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-      --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-      --neon-blue: #3b82f6;
-      --neon-pink: #ec4899;
-      --neon-purple: #7b2ff7;
-    }
-
-    * {
+    html, body {
       margin: 0;
       padding: 0;
+      height: 100%;
+      font-family: Arial, sans-serif;
+    }
+    
+    body {
+      display: flex;
+      flex-direction: column;
+      background-image: url("/bg/background.jpg");
+      background-size: cover;
+      background-repeat: no-repeat;
+      background-position: center;
+      color: #000;
+    }
+
+    header {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 10px 20px;
+      background: rgba(0, 0, 0, 0.7);
+      color: white;
+      position: relative;
+    }
+
+    .header-title {
+      text-align: center;
+      flex-grow: 1;
+    }
+
+    .left { display: flex; align-items: center; }
+    .logo { height: 40px; margin-right: 10px; }
+
+    .right {
+      display: flex;
+      align-items: center;
+      position: absolute;
+      right: 20px;
+    }
+
+    .right button {
+      margin-left: 10px;
+      padding: 8px 15px;
+      border: none;
+      border-radius: 5px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .update-btn { background-color: #28a745; color: white; }
+    .logout-btn { background-color: #dc3545; color: white; }
+
+    .main {
+      display: flex;
+      flex: 1;
+    }
+
+    .sidebar {
+      width: 250px;
+      background-color: rgba(0, 0, 0, 0.6);
+      color: white;
+      padding: 20px;
+      height: calc(100vh - 60px);
+    }
+
+    .sidebar h3 {
+      margin-top: 20px;
+      border-bottom: 1px solid #ccc;
+      padding-bottom: 5px;
+      font-size: 16px;
+    }
+
+    .sidebar button {
+      display: block;
+      width: 100%;
+      background: #007799;
+      color: white;
+      border: none;
+      padding: 10px;
+      margin: 8px 0;
+      border-radius: 5px;
+      cursor: pointer;
+      text-align: left;
+    }
+
+    .sidebar button:hover {
+      background: #0099bb;
+    }
+
+    .content {
+      flex: 1;
+      padding: 20px;
+      overflow-y: auto;
+      width: 100%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .content-blank {
+      color: rgba(255, 255, 255, 0.7);
+      font-size: 1.5rem;
+    }
+
+    section {
+      background: rgba(255, 255, 255, 0.9);
+      margin: 0 auto;
+      padding: 20px;
+      border-radius: 10px;
+      width: 100%;
+      max-width: 1000px;
+      display: none;
       box-sizing: border-box;
     }
 
-    html, body {
-      height: 100%;
-      font-family: 'Poppins', sans-serif;
-      background: #f3f4f6;
-      color: var(--dark);
-      overflow-x: hidden;
-    }
-
-    /* Header Styles */
-    header {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 60px;
-      background: rgba(255, 255, 255, 0.95);
-      backdrop-filter: blur(10px);
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 0 1rem;
-      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-      z-index: 1000;
-      border-bottom: 1px solid var(--glass-border);
-    }
-
-    .logo-container {
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-    }
-
-    .logo {
-      height: 35px;
-      filter: none;
-    }
-
-    .company-name {
-      font-size: 1rem;
-      font-weight: 600;
-      color: var(--primary-dark);
-      text-shadow: none;
-      display: none;
-    }
-
-    .header-controls {
-      display: flex;
-      align-items: center;
-      gap: 0.8rem;
-    }
-
-    .header-icon {
-      font-size: 1.2rem;
-      color: var(--dark);
-      cursor: pointer;
-      transition: var(--transition);
-      position: relative;
-    }
-
-    .header-icon:hover {
-      color: var(--primary);
-      transform: scale(1.1);
-    }
-
-    .notification-badge {
-      position: absolute;
-      top: -5px;
-      right: -5px;
-      width: 16px;
-      height: 16px;
-      background: var(--danger);
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 0.7rem;
-      font-weight: bold;
-      color: white;
-    }
-
-    .profile-img {
-      width: 36px;
-      height: 36px;
-      border-radius: 50%;
-      object-fit: cover;
-      border: 2px solid var(--primary);
-      cursor: pointer;
-      transition: var(--transition);
-      box-shadow: 0 0 10px rgba(79, 70, 229, 0.2);
-    }
-
-    .profile-img:hover {
-      transform: scale(1.05);
-      box-shadow: 0 0 15px rgba(79, 70, 229, 0.3);
-    }
-
-    /* Bottom Navigation (Mobile Only) */
-    .bottom-nav {
-      position: fixed;
-      bottom: 0;
-      left: 0;
-      width: 100%;
-      height: 60px;
-      background: rgba(255, 255, 255, 0.95);
-      backdrop-filter: blur(10px);
-      display: flex;
-      justify-content: space-around;
-      align-items: center;
-      z-index: 1000;
-      border-top: 1px solid var(--glass-border);
-      display: none;
-    }
-
-    .nav-item {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      color: var(--gray);
-      font-size: 0.8rem;
-      cursor: pointer;
-      transition: var(--transition);
-      padding: 0.5rem;
-      position: relative;
-    }
-
-    .nav-item i {
-      font-size: 1.2rem;
-      margin-bottom: 0.2rem;
-    }
-
-    .nav-item.active {
-      color: var(--primary);
-    }
-
-    .nav-item:hover {
-      color: var(--dark);
-    }
-
-    /* Profile Card */
-    .profile-card {
-      position: fixed;
-      top: 70px;
-      right: 1rem;
-      background: rgba(255, 255, 255, 0.95);
-      backdrop-filter: blur(10px);
-      border-radius: 12px;
-      padding: 1rem;
-      width: 280px;
-      box-shadow: var(--shadow);
-      border: 1px solid var(--glass-border);
-      z-index: 1100;
-      display: none;
-      animation: fadeIn 0.3s ease;
-    }
-
-    .profile-card.show {
+    form input, form select, form button {
       display: block;
-    }
-
-    .profile-info {
-      margin-bottom: 1rem;
-    }
-
-    .profile-info p {
-      margin: 0.5rem 0;
-      color: var(--gray);
-      font-size: 0.9rem;
-    }
-
-    .profile-info p strong {
-      color: var(--dark);
-      font-weight: 500;
-    }
-
-    .logout-btn {
+      margin: 10px 0;
+      padding: 10px;
       width: 100%;
-      padding: 0.7rem;
-      background: var(--danger);
-      color: white;
-      border: none;
-      border-radius: 8px;
-      font-weight: 500;
-      cursor: pointer;
-      transition: var(--transition);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 0.5rem;
+      max-width: 400px;
     }
 
-    .logout-btn:hover {
-      background: #dc2626;
-      box-shadow: 0 0 15px rgba(239, 68, 68, 0.3);
-    }
-
-    /* Mobile Profile Dropdown */
-    .profile-dropdown {
-      position: absolute;
-      bottom: 60px;
-      right: 10px;
-      width: 250px;
-      background: rgba(255, 255, 255, 0.95);
-      border-radius: 12px;
-      padding: 1rem;
-      box-shadow: var(--shadow);
-      border: 1px solid var(--glass-border);
-      z-index: 1100;
-      display: none;
-      animation: fadeIn 0.3s ease;
-    }
-
-    .profile-dropdown .profile-info {
-      display: flex;
-      align-items: center;
-      gap: 1rem;
-      margin-bottom: 1rem;
-    }
-
-    .profile-dropdown .profile-info img {
-      width: 50px;
-      height: 50px;
-    }
-
-    .profile-dropdown .profile-info h4 {
-      margin: 0;
-      font-size: 1rem;
-      color: var(--dark);
-    }
-
-    .profile-dropdown .profile-info p {
-      margin: 0;
-      color: var(--gray);
-      font-size: 0.8rem;
-    }
-
-    .dropdown-divider {
-      height: 1px;
-      background: var(--glass-border);
-      margin: 0.5rem 0;
-    }
-
-    .dropdown-item {
+    .table-style {
       width: 100%;
-      padding: 0.7rem;
-      background: var(--danger);
-      color: white;
-      border: none;
-      border-radius: 8px;
-      font-weight: 500;
-      cursor: pointer;
+      border-collapse: collapse;
+      margin-bottom: 30px;
+    }
+
+    .table-style th,
+    .table-style td {
+      border: 1px solid #999;
+      padding: 10px;
+      text-align: center;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+    }
+
+    th, td {
+      border: 1px solid #ccc;
+      padding: 8px;
       text-align: left;
-      display: flex;
-      align-items: center;
-      gap: 0.7rem;
+      background: #fff;
     }
 
-    .dropdown-item:hover {
-      background: #dc2626;
-    }
-
-    .nav-item.active .profile-dropdown {
-      display: block;
-    }
-
-    /* Sidebar */
-    .sidebar {
-      position: fixed;
-      top: 60px;
-      left: 0;
-      width: 250px;
-      height: calc(100vh - 60px);
-      background: rgba(255, 255, 255, 0.95);
-      backdrop-filter: blur(10px);
-      padding: 1rem;
-      transform: translateX(-100%);
-      transition: transform 0.3s ease;
-      z-index: 900;
-      border-right: 1px solid var(--glass-border);
-      overflow-y: auto;
-    }
-
-    .sidebar.show {
-      transform: translateX(0);
-    }
-
-    .sidebar-section {
-      margin-bottom: 1rem;
-    }
-
-    .sidebar-section h4 {
-      color: var(--primary);
-      margin-bottom: 0.8rem;
-      font-size: 0.9rem;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-    }
-
-    .sidebar-btn {
-      width: 100%;
-      padding: 0.7rem;
-      margin-bottom: 0.5rem;
-      background: linear-gradient(135deg, var(--primary), var(--primary-dark));
-      color: white;
-      border: none;
-      border-radius: 8px;
-      font-weight: 500;
-      cursor: pointer;
-      transition: var(--transition);
-      display: flex;
-      align-items: center;
-      gap: 0.7rem;
-      font-size: 0.9rem;
-      box-shadow: 0 4px 6px rgba(79, 70, 229, 0.2);
-    }
-
-    .sidebar-btn:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 6px 12px rgba(79, 70, 229, 0.3);
-    }
-
-    /* Main Content */
-    .content {
-      margin-top: 60px;
-      padding: 1rem;
-      min-height: calc(100vh - 120px);
-      transition: margin-left 0.3s ease;
-      margin-bottom: 60px;
-    }
-
-    .content.expanded {
-      margin-left: 0;
-    }
-
-    /* Filters and Buttons */
-    .filters {
-      display: flex;
-      flex-direction: column;
-      gap: 0.8rem;
-      margin-bottom: 1rem;
-    }
-
-    .search-box {
-      width: 100%;
-      padding: 0.8rem;
-      border: 1px solid var(--glass-border);
-      border-radius: 8px;
-      background: var(--light);
-      color: var(--dark);
-      font-size: 0.9rem;
-      transition: var(--transition);
-    }
-
-    .search-box:focus {
-      outline: none;
-      border-color: var(--primary-light);
-      box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
-    }
-
-    .filter-select {
-      width: 100%;
-      padding: 0.8rem;
-      border: 1px solid var(--glass-border);
-      border-radius: 8px;
-      background: var(--light);
-      color: var(--dark);
-      font-size: 0.9rem;
-      transition: var(--transition);
-    }
-
-    .filter-select:focus {
-      outline: none;
-      border-color: var(--primary-light);
-      box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
-    }
-
-    .data-buttons {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-      gap: 0.5rem;
-      margin-bottom: 1rem;
-    }
-
-    .data-btn {
-      padding: 0.7rem;
-      background: linear-gradient(135deg, var(--primary), var(--primary-dark));
-      color: white;
-      border: none;
-      border-radius: 8px;
-      font-weight: 500;
-      cursor: pointer;
-      transition: var(--transition);
-      font-size: 0.8rem;
-      text-align: center;
-      box-shadow: 0 4px 6px rgba(79, 70, 229, 0.2);
-    }
-
-    .data-btn:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 6px 12px rgba(79, 70, 229, 0.3);
-    }
-
-    /* Table Container */
-    .table-container {
-  width: 100%;
-  max-height: calc(100vh - 250px);
-  overflow: auto;
-  border-radius: 8px;
-  background: var(--light);
-  backdrop-filter: blur(5px);
-  border: 1px solid black; /* Changed to black */
-  box-shadow: var(--shadow);
-}
-
-
-table {
-  width: 100%;
-  border-collapse: collapse;
-  color: var(--dark);
-  font-size: 0.8rem;
-  border: 1px solid black; /* Added black border to table */
-}
-
-th, td {
-  padding: 0.6rem;
-  text-align: left;
-  border-bottom: 1px solid black; /* Changed to black */
-  border-right: 1px solid black; /* Added right border */
-}
-
-th {
-  position: sticky;
-  top: 0;
-  background: var(--light);
-  font-weight: 600;
-  z-index: 10;
-  border-top: 1px solid black; /* Added top border for header */
-}
-
-    td:first-child, th:first-child {
-  border-left: 1px solid black;
-}
-
-    /* Special table styles */
-    .shift-schedule-freeze th.freeze-col,
-.shift-schedule-freeze td.freeze-col {
-  position: sticky;
-  left: 0;
-  background: var(--light);
-  z-index: 5;
-  border-right: 1px solid black; /* Added right border for freeze column */
-}
-    /* Team Modal */
-    .modal-overlay {
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background: rgba(0, 0, 0, 0.5);
-      backdrop-filter: blur(5px);
-      z-index: 2000;
+    #profileCard {
       display: none;
-      justify-content: center;
-      align-items: center;
-    }
-
-    .modal-overlay.show {
-      display: flex;
-    }
-
-    .team-modal {
-      background: var(--light);
-      border-radius: 12px;
-      width: 95%;
-      max-width: 1000px;
-      max-height: 80vh;
-      overflow: auto;
-      padding: 1.5rem;
-      border: 1px solid var(--glass-border);
-      box-shadow: var(--shadow);
-      position: relative;
-    }
-
-    .close-modal {
       position: absolute;
-      top: 0.8rem;
-      right: 0.8rem;
-      background: var(--danger);
-      color: white;
-      border: none;
-      width: 28px;
-      height: 28px;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      transition: var(--transition);
-    }
-
-    .close-modal:hover {
-      transform: rotate(90deg);
-      box-shadow: 0 0 15px rgba(239, 68, 68, 0.3);
-    }
-
-    .team-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-      gap: 1rem;
-      margin-top: 1rem;
-    }
-
-    .user-card {
-      background: rgba(249, 250, 251, 0.7);
-      border-radius: 8px;
-      padding: 1rem;
-      text-align: center;
-      transition: var(--transition);
-      border: 1px solid var(--glass-border);
-    }
-
-    .user-card:hover {
-      transform: translateY(-5px);
-      box-shadow: var(--shadow);
-    }
-
-    .user-avatar {
-      width: 70px;
-      height: 70px;
-      border-radius: 50%;
-      object-fit: cover;
-      border: 2px solid var(--primary);
-      margin: 0 auto 0.8rem;
-      box-shadow: 0 0 15px rgba(79, 70, 229, 0.2);
-    }
-
-    .user-name {
-      font-size: 1rem;
-      font-weight: 600;
-      margin-bottom: 0.5rem;
-      color: var(--dark);
-    }
-
-    .user-detail {
-      font-size: 0.8rem;
-      color: var(--gray);
-      margin-bottom: 0.3rem;
-    }
-
-    .user-detail strong {
-      color: var(--dark);
-    }
-
-    /* Footer */
-    footer {
-      background: linear-gradient(to right, var(--primary-dark), var(--darker));
-      color: white;
-      text-align: center;
-      padding: 0.8rem;
-      font-size: 0.8rem;
-      position: fixed;
-      bottom: 60px;
-      left: 0;
-      width: 100%;
+      right: 20px;
+      top: 60px;
+      background: rgb(9, 216, 223);
+      padding: 15px;
+      border-radius: 5px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.2);
       z-index: 100;
-      display: none;
+      color: rgb(1, 6, 7);
+      width: 200px;
     }
 
-    /* Notification Panel */
-    .notification-panel {
-      position: fixed;
-      top: 70px;
-      right: 1rem;
-      background: var(--light);
-      border-radius: 12px;
-      padding: 1rem;
-      width: 280px;
-      box-shadow: var(--shadow);
-      border: 1px solid var(--glass-border);
-      z-index: 1100;
-      display: none;
-      animation: fadeIn 0.3s ease;
-    }
-
-    .notification-panel.show {
-      display: block;
-    }
-
-    /* Chat User List */
-    .chat-user-list {
-      position: fixed;
-      top: 70px;
-      right: 1rem;
-      background: var(--light);
-      border-radius: 12px;
-      padding: 1rem;
-      width: 280px;
-      box-shadow: var(--shadow);
-      border: 1px solid var(--glass-border);
-      z-index: 1100;
-      display: none;
-      animation: fadeIn 0.3s ease;
-    }
-
-    .chat-user-list.show {
-      display: block;
-    }
-
-    .user-list-container {
-      max-height: 300px;
-      overflow-y: auto;
-    }
-
-    .chat-user-item {
-      display: flex;
-      align-items: center;
-      gap: 0.8rem;
-      padding: 0.7rem;
-      margin-bottom: 0.5rem;
-      border-radius: 8px;
-      cursor: pointer;
-      transition: var(--transition);
-    }
-
-    .chat-user-item:hover {
-      background: rgba(0, 0, 0, 0.02);
-    }
-
-    .chat-user-avatar {
+    #profileImage {
       width: 40px;
       height: 40px;
       border-radius: 50%;
+      cursor: pointer;
       object-fit: cover;
-      border: 2px solid var(--primary);
-      position: relative;
+      margin-left: 10px;
     }
 
-    .online-dot {
-      position: absolute;
-      bottom: 0;
-      right: 0;
-      width: 10px;
-      height: 10px;
-      background-color: var(--success);
-      border-radius: 50%;
-      border: 2px solid var(--light);
+    footer {
+  text-align: center;
+  padding: 10px;
+  background: #222;
+  color: white;
+  width: 100%;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  z-index: 100;
+}
+
+    /* Responsive table */
+    @media (max-width: 768px) {
+      table {
+        display: block;
+        overflow-x: auto;
+        white-space: nowrap;
+      }
+      
+      .right {
+        position: static;
+        margin-top: 10px;
+      }
+      
+      header {
+        flex-direction: column;
+      }
     }
 
-    .chat-user-info {
-      flex: 1;
-    }
-
-    .chat-user-name {
-      font-weight: 500;
-      margin-bottom: 0.2rem;
-      color: var(--dark);
-    }
-
-    .chat-user-status {
-      font-size: 0.8rem;
-      color: var(--gray);
-    }
-
-    .msg-count {
-      background: var(--danger);
-      color: white;
-      padding: 0.2rem 0.5rem;
-      border-radius: 50%;
-      font-size: 0.7rem;
-      display: none;
-    }
-
-    /* Chat Box */
-    .chat-box {
-      position: fixed;
-      bottom: 80px;
-      right: 1rem;
-      width: 280px;
-      max-width: 90%;
-      background: var(--light);
-      border-radius: 12px;
-      border: 1px solid var(--glass-border);
-      box-shadow: var(--shadow);
-      z-index: 2000;
-      display: none;
-    }
-
-    .chat-box.show {
-      display: block;
-      animation: fadeIn 0.3s ease;
-    }
-
-    .chat-header {
-      background: linear-gradient(to right, var(--primary), var(--primary-dark));
-      color: white;
-      padding: 0.8rem;
-      border-top-left-radius: 12px;
-      border-top-right-radius: 12px;
+    /* Shift Report Specific Styles */
+    .filters {
       display: flex;
-      justify-content: space-between;
-      align-items: center;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 20px;
+      padding: 15px;
+      background: #f5f5f5;
+      border-radius: 5px;
     }
 
-    .chat-messages {
-      height: 250px;
-      overflow-y: auto;
-      padding: 0.8rem;
-    }
-
-    .message {
+    .filters label {
       display: flex;
       flex-direction: column;
-      margin-bottom: 0.8rem;
-      position: relative;
+      gap: 5px;
     }
 
-    .message-sender {
-      font-size: 0.8rem;
-      color: var(--gray);
-      margin-bottom: 0.2rem;
-    }
-
-    .message-content {
-      padding: 0.6rem 0.8rem;
-      border-radius: 12px;
-      max-width: 80%;
-      word-wrap: break-word;
-      position: relative;
-    }
-
-    .message-outgoing {
-      align-items: flex-end;
-    }
-
-    .message-outgoing .message-content {
-      background: var(--primary);
-      color: white;
-      border-radius: 12px 12px 0 12px;
-    }
-
-    .message-incoming {
-      align-items: flex-start;
-    }
-
-    .message-incoming .message-content {
-      background: rgba(0, 0, 0, 0.05);
-      color: var(--dark);
-      border-radius: 12px 12px 12px 0;
-    }
-
-    .message-time {
-      font-size: 0.7rem;
-      color: var(--gray);
-      margin-top: 0.2rem;
-      text-align: right;
-    }
-
-    .message-seen {
-      font-size: 0.6rem;
-      color: var(--primary-light);
-      margin-top: 0.2rem;
-      text-align: right;
-      font-style: italic;
-    }
-
-    .chat-input-container {
-      padding: 0.8rem;
-      display: flex;
-      gap: 0.5rem;
-      border-top: 1px solid var(--glass-border);
-    }
-
-    .chat-input {
-      flex: 1;
-      padding: 0.7rem;
-      background: rgba(0, 0, 0, 0.05);
-      border: none;
-      border-radius: 8px;
-      color: var(--dark);
-    }
-
-    .chat-send-btn {
-      padding: 0 1rem;
-      background: var(--primary);
-      color: white;
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
-    }
-
-    /* Full Screen Chat */
-    .full-screen-chat {
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background: var(--light);
-      z-index: 3000;
-      display: none;
-      flex-direction: column;
-    }
-
-    .full-screen-chat.show {
-      display: flex;
-    }
-
-    .full-chat-header {
-      background: linear-gradient(to right, var(--primary), var(--primary-dark));
-      color: white;
-      padding: 1rem;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-
-    .full-chat-messages {
-      flex: 1;
-      overflow-y: auto;
-      padding: 1rem;
-    }
-
-    .full-chat-input-container {
-      padding: 1rem;
-      background: rgba(249, 250, 251, 0.9);
-      display: flex;
-      gap: 0.5rem;
-    }
-
-    /* Full Screen User List */
-    .full-screen-user-list {
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background: var(--light);
-      z-index: 3000;
-      display: none;
-      flex-direction: column;
-    }
-
-    .full-screen-user-list.show {
-      display: flex;
-    }
-
-    .full-user-list-header {
-      background: linear-gradient(to right, var(--primary), var(--primary-dark));
-      color: white;
-      padding: 1rem;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-
-    .full-user-list-container {
-      flex: 1;
-      overflow-y: auto;
-      padding: 1rem;
-    }
-
-    /* Iframe Container */
-    #iframeContainer {
-      display: none;
-      position: fixed;
-      top: 60px;
-      left: 0;
-      right: 0;
-      bottom: 60px;
-      background: var(--light);
-      z-index: 800;
-    }
-
-    #registerIframe {
-      width: 100%;
-      height: 100%;
-      border: none;
-    }
-
-    /* Context Menu */
-    .context-menu {
-      position: fixed;
-      background: var(--light);
-      border-radius: 8px;
-      box-shadow: var(--shadow);
-      z-index: 10000;
-      display: none;
-    }
-
-    .context-menu-item {
-      padding: 0.8rem 1.2rem;
-      cursor: pointer;
-      color: var(--dark);
-      font-size: 0.9rem;
-    }
-
-    .context-menu-item:hover {
-      background: rgba(0, 0, 0, 0.05);
-    }
-
-    /* Animations */
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(10px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-
-    @keyframes fadeOut {
-      from { opacity: 1; transform: translateY(0); }
-      to { opacity: 0; transform: translateY(10px); }
-    }
-
-    /* Toast Notification */
-    .toast {
-      position: fixed;
-      bottom: 80px;
-      left: 50%;
-      transform: translateX(-50%);
-      background: var(--dark);
-      color: white;
-      padding: 0.8rem 1.5rem;
-      border-radius: 8px;
-      box-shadow: var(--shadow);
-      z-index: 3000;
-      border: 1px solid var(--glass-border);
-      animation: fadeIn 0.3s ease;
-      display: none;
-    }
-
-    /* Scrollbar */
-    ::-webkit-scrollbar {
-      width: 6px;
-      height: 6px;
-    }
-
-    ::-webkit-scrollbar-track {
-      background: rgba(0, 0, 0, 0.05);
-    }
-
-    ::-webkit-scrollbar-thumb {
-      background: var(--primary);
+    .filters input, .filters select {
+      padding: 8px;
+      border: 1px solid #ddd;
       border-radius: 4px;
     }
 
-    ::-webkit-scrollbar-thumb:hover {
-      background: var(--primary-light);
+    .actions {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
     }
 
-    /* Desktop Styles */
-    @media (min-width: 768px) {
-      header {
-        height: 70px;
-        padding: 0 2rem;
-      }
-
-      .company-name {
-        display: block;
-        font-size: 1.2rem;
-      }
-
-      .header-controls {
-        gap: 1.5rem;
-      }
-
-      .header-icon {
-        font-size: 1.4rem;
-      }
-
-      .profile-img {
-        width: 40px;
-        height: 40px;
-      }
-
-      .bottom-nav {
-        display: none;
-      }
-
-      .content {
-        margin-top: 70px;
-        padding: 2rem;
-        margin-bottom: 0;
-      }
-
-      .content.expanded {
-        margin-left: 250px;
-      }
-
-      .filters {
-        flex-direction: row;
-        align-items: center;
-      }
-
-      .search-box {
-        min-width: 250px;
-      }
-
-      .data-buttons {
-        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-        gap: 0.8rem;
-      }
-
-      .data-btn {
-        font-size: 0.9rem;
-      }
-
-      footer {
-        display: block;
-        bottom: 0;
-      }
-
-      .profile-card {
-        top: 80px;
-      }
-
-      .notification-panel {
-        top: 80px;
-        width: 350px;
-      }
-
-      .chat-user-list {
-        top: 80px;
-        width: 300px;
-      }
-
-      .chat-box {
-        bottom: 20px;
-        width: 350px;
-      }
-    }
-
-    /* Mobile Landscape */
-    @media (max-height: 500px) and (orientation: landscape) {
-      .content {
-        margin-bottom: 0;
-      }
-
-      footer {
-        display: none;
-      }
-    }
-
-    .unread-count {
-      background: var(--danger);
+    .actions button {
+      padding: 8px 15px;
+      border: none;
+      border-radius: 4px;
+      background: #007799;
       color: white;
-      border-radius: 50%;
-      font-size: 0.7rem;
-      min-width: 18px;
-      height: 18px;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      padding: 0 4px;
-      margin-left: 5px;
+      cursor: pointer;
     }
 
-    .user-unread-count {
-      background: var(--danger);
-      color: white;
-      border-radius: 50%;
-      font-size: 0.7rem;
-      min-width: 18px;
-      height: 18px;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      padding: 0 4px;
-      margin-left: auto;
+    .actions button:hover {
+      opacity: 0.9;
     }
-</style>
+
+    
+  /* Add these styles to your existing CSS */
+  html {
+    overflow: hidden;
+    height: 100%;
+  }
+  
+  body {
+    overflow: hidden;
+    height: 100%;
+  }
+  
+  .main {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+  }
+  
+  .content {
+    flex: 1;
+    padding: 20px;
+    overflow-y: auto;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+  }
+  
+  section {
+    background: rgba(24, 211, 224, 0.9);
+    margin: 0 auto;
+    padding: 20px;
+    border-radius: 10px;
+    width: 100%;
+    max-width: 1000px;
+    display: none;
+    box-sizing: border-box;
+    max-height: calc(100vh - 160px);
+    overflow-y: auto;
+  }
+  
+  /* Add smooth scrolling behavior */
+  html {
+    scroll-behavior: smooth;
+  }
+
+
+    /* Long Body Report Styles */
+    .long-body-filter-box {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 20px;
+      padding: 15px;
+      background: #f5f5f5;
+      border-radius: 5px;
+    }
+
+    .long-body-filter-box label {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+
+    .long-body-filter-box input, 
+    .long-body-filter-box select {
+      padding: 8px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+    }
+
+    .long-body-actions {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    .long-body-actions button {
+      padding: 8px 15px;
+      border: none;
+      border-radius: 4px;
+      background: #007799;
+      color: white;
+      cursor: pointer;
+    }
+
+    .long-body-actions button:hover {
+      opacity: 0.9;
+    }
+
+    #longBodyReportTable {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+    }
+
+    #longBodyReportTable th, 
+    #longBodyReportTable td {
+      border: 1px solid #ccc;
+      padding: 8px;
+      text-align: center;
+      background: #fff;
+    }
+
+    /* Wood Bill Report Styles */
+    .wood-bill-filter-box {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 20px;
+      padding: 15px;
+      background: #f5f5f5;
+      border-radius: 5px;
+    }
+
+    .wood-bill-filter-box label {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+
+    .wood-bill-filter-box input, 
+    .wood-bill-filter-box select {
+      padding: 8px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+    }
+
+    .wood-bill-actions {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    .wood-bill-actions button {
+      padding: 8px 15px;
+      border: none;
+      border-radius: 4px;
+      background: #007799;
+      color: white;
+      cursor: pointer;
+    }
+
+    .wood-bill-actions button:hover {
+      opacity: 0.9;
+    }
+
+    #woodBillReportTable {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+    }
+
+    #woodBillReportTable th, 
+    #woodBillReportTable td {
+      border: 1px solid #ccc;
+      padding: 8px;
+      text-align: center;
+      background: #fff;
+    }
+
+    /* Print-specific styles */
+    @media print {
+      body * {
+        visibility: hidden;
+      }
+      #dailyShiftReport, #dailyShiftReport * {
+        visibility: visible;
+      }
+      #dailyShiftReport {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+        background: white;
+        padding: 0;
+        margin: 0;
+      }
+      .filters, .actions {
+        display: none !important;
+      }
+      
+      /* Print layout for shift reports */
+      .print-page {
+        page-break-after: always;
+        height: 297mm;
+        width: 210mm;
+        padding: 15mm;
+        box-sizing: border-box;
+      }
+      
+      .print-shift-report {
+        height: 50%;
+        margin-bottom: 10mm;
+      }
+      
+      .print-company-header {
+        text-align: center;
+        margin-bottom: 5mm;
+        border-bottom: 1px solid #000;
+        padding-bottom: 2mm;
+      }
+      
+      .print-company-name {
+        font-size: 16pt;
+        font-weight: bold;
+      }
+      
+      .print-company-address {
+        font-size: 10pt;
+      }
+      
+      .print-report-title {
+        text-align: center;
+        font-size: 14pt;
+        margin: 5mm 0;
+        font-weight: bold;
+      }
+      
+      .print-report-details {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 3mm;
+        font-size: 10pt;
+      }
+      
+      .print-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 10pt;
+        margin-bottom: 3mm;
+      }
+      
+      .print-table th, 
+      .print-table td {
+        border: 1px solid #000;
+        padding: 2mm;
+        text-align: center;
+      }
+      
+      .print-total-row {
+        font-weight: bold;
+      }
+    }
+
+    /* Token Management Styles */
+        .card-section {
+            display: none;
+            margin-top: 20px;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background-color: #f9f9f9;
+        }
+        .status-active {
+            color: green;
+            font-weight: bold;
+        }
+        .status-inactive {
+            color: red;
+            font-weight: bold;
+        }
+        .status-lost {
+            color: orange;
+            font-weight: bold;
+        }
+        .management-btn {
+            margin: 5px;
+            min-width: 200px;
+        }
+        .view-btn {
+            margin: 5px;
+            min-width: 150px;
+        }
+        #totalQuantity {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #0d6efd;
+        }
+
+  </style>
 </head>
-<body onload="checkAuth()">
-  <!-- Header -->
-  <header>
-    <div class="logo-container">
-      <button id="hamburger" class="header-icon" onclick="toggleSidebar()">
-        <i class="fas fa-bars"></i>
-      </button>
-      <img src="assets/logo.png" alt="Logo" class="logo" onclick="goHome()">
-      <span class="company-name">BALAJI ACTION BUILDEWELL</span>
-    </div>
-    
-    <div class="header-controls">
-      <div id="notification-icon" class="header-icon" onclick="toggleNotifications()">
-        <i class="fas fa-bell"></i>
-        <span id="notificationCountBadge" class="unread-count" style="display: none;">0</span>
-      </div>
-      
-      <div id="message-icon" class="header-icon" onclick="toggleChatUserList()">
-        <i class="fas fa-comment-dots"></i>
-        <span id="messageCountBadge" class="unread-count" style="display: none;">0</span>
-      </div>
-      
-      <img id="profileImage" src="assets/profile.png" class="profile-img" onclick="toggleProfileCard()">
-    </div>
-    
-    <!-- Profile Card -->
-    <div id="profileCard" class="profile-card">
-      <div class="profile-info">
-        <h3 id="profile-name">Loading...</h3>
-        <p><strong>User ID:</strong> <span id="profile-id">-</span></p>
-        <p><strong>Email:</strong> <span id="profile-email">-</span></p>
-        <p><strong>Mobile:</strong> <span id="profile-mobile">-</span></p>
-        <p><strong>Department:</strong> <span id="profile-dept">-</span></p>
-        <p><strong>Designation:</strong> <span id="profile-designation">-</span></p>
-        <p><strong>Role:</strong> <span id="profile-role">-</span></p>
-      </div>
-      <button onclick="logout()" class="logout-btn">
-        <i class="fas fa-sign-out-alt"></i> Logout
-      </button>
-    </div>
-  </header>
+<body>
 
-  <!-- Notification Panel -->
-  <div id="updatePanel" class="notification-panel">
-    <h4 style="margin-bottom: 1rem;"><i class="fas fa-bell"></i> Latest Updates</h4>
-    <div id="updatesList" style="max-height: 300px; overflow-y: auto;"></div>
+<header>
+  <div class="left">
+    <img src="assets/logo.png" class="logo">
+    <div class="header-title">BALAJI ACTION BUILDEWELL PRIVATE LIMITED</div>
+  </div>
+  <div class="right">
+    <img id="profileImage" src="assets/profile.png" onclick="toggleProfile()">
+    <div id="profileCard"></div>
+    <button class="update-btn" onclick="toggleSection('postUpdate')">Post Update</button>
+    <button class="logout-btn" onclick="logout()">Logout</button>
+  </div>
+</header>
+
+<div class="main">
+  <div class="sidebar">
+    <h3>User Management</h3>
+    <button onclick="toggleSection('createUser')">➕ Create User</button>
+    <button onclick="toggleSection('showUsers')">👥 Show All Users</button>
+
+ <h3>Token Card Management</h3>
+<button onclick="toggleSection('tokenManagement')">🪙 Manage Token Cards</button>
+
+    <h3>Upload Section</h3>
+    <button onclick="toggleSection('uploadBackground')">🖼️ Upload Background</button>
+    <button onclick="toggleSection('excelUpload')">📊 Upload Excel</button>
+    
+    <h3>All Reports</h3>
+    <button onclick="toggleSection('dailyShiftReport')">📅 Daily Shift Report</button>
+    <button onclick="toggleSection('methanolWeightReport')">⚖️ Methanol Weight Report</button>
+    <button onclick="toggleSection('longBodyWeightReport')">📊 Long Body Weight Report</button>
+    <button onclick="toggleSection('woodBillReport')">🌲 Wood Bill Submit</button>
   </div>
 
-  <!-- Chat User List -->
-  <div id="chatUserList" class="chat-user-list">
-    <h4 style="margin-bottom: 1rem;"><i class="fas fa-comments"></i> Chat with:</h4>
-    <div id="userListContainer" class="user-list-container">
-      <p>No users available.</p>
-    </div>
-  </div>
-
-  <!-- Full Screen User List (Mobile Only) -->
-  <div id="fullScreenUserList" class="full-screen-user-list">
-    <div class="full-user-list-header">
-      <span><i class="fas fa-comments"></i> Chat Users</span>
-      <button onclick="closeFullScreenUserList()" style="background:none; border:none; color:white; font-size:1.2rem; cursor:pointer;">
-        <i class="fas fa-times"></i>
-      </button>
-    </div>
-    <div id="fullUserListContainer" class="full-user-list-container">
-      <p>No users available.</p>
-    </div>
-  </div>
-
-  <!-- Sidebar -->
-  <div class="sidebar" id="sidebar">
-    <div class="sidebar-section">
-      <button class="sidebar-btn" onclick="showTeam()">
-        <i class="fas fa-users"></i> View Team
-      </button>
+  <div class="content">
+    <!-- Blank state initially -->
+    <div class="content-blank" id="blankContent">
+      easyGate Admin Page View "Do any activity carefully".
     </div>
     
-    <div class="sidebar-section">
-      <h4>Register</h4>
-      <button class="sidebar-btn" onclick="window.open('wood-bill-register.html', '_blank')">
-        <i class="fas fa-tree"></i> Wood Bill Submit
-      </button>
-      <button class="sidebar-btn" onclick="window.open('methanol-register.html', '_blank')">
-        <i class="fas fa-flask"></i> Methanol Weight
-      </button>
-      <button class="sidebar-btn" onclick="window.open('longbody-register.html', '_blank')">
-        <i class="fas fa-ruler-combined"></i> Long Body
-      </button>
-      <button class="sidebar-btn" onclick="window.open('shift-register.html', '_blank')">
-        <i class="fas fa-calendar-alt"></i> Daily Shift Report
-      </button>
-    </div>
-    
-    <div class="sidebar-section">
-      <h4>Utility Page</h4>
-      <button class="sidebar-btn" onclick="window.open('Download.html', '_blank')">
-        <i class="fas fa-download"></i> Download
-      </button>
-      <button class="sidebar-btn" onclick="window.open('SOP.html', '_blank')">
-        <i class="fas fa-file-alt"></i> SOP
-      </button>
-      <button class="sidebar-btn" onclick="window.open('StickerGenrator.html', '_blank')">
-        <i class="fas fa-tag"></i> Sticker Generator
-      </button>
-      <button class="sidebar-btn" onclick="window.open('About.html', '_blank')">
-        <i class="fas fa-info-circle"></i> About Company
-      </button>
-    </div>
-  </div>
+    <!-- Post Update Section -->
+    <section id="postUpdate">
+      <h3>📢 Post an Update</h3>
+      <form id="updateForm">
+        <input type="text" id="updateTitle" placeholder="Enter update title" required>
+        <textarea id="updateMessage" placeholder="Write your message..." required style="width:100%; min-height:150px; padding:10px; margin-bottom:10px;"></textarea>
+        <input type="file" id="updateImage" accept="image/*">
+        <button type="button" onclick="submitUpdate()">Submit</button>
+        <button type="button" onclick="hideAllSections()">Cancel</button>
+      </form>
+    </section>
 
-  <!-- Main Content -->
-  <div class="content" id="mainContent" onclick="hideSidebar()">
-    <!-- Top Buttons and Filters -->
-    <div class="filters">
-      <input type="text" class="search-box" placeholder="Search..." id="searchBox" oninput="applyFilters()">
-      <select id="materialFilter" class="filter-select" onchange="applyFilters()" style="display: none;"></select>
-    </div>
-    
-    <div class="data-buttons" id="topButtons">
-      <button class="data-btn" onclick="loadTable('WOOD PO')">WOOD PO</button>
-      <button class="data-btn" onclick="loadTable('CONTACTS')">CONTACTS</button>
-      <button class="data-btn" onclick="loadTable('ID PASSWORD')">ID PASSWORD</button>
-      <button class="data-btn" onclick="loadTable('SHIFT SCHEDULE')">SHIFT SCHEDULE</button>
-      <button class="data-btn" onclick="loadTable('T-CODE')">T-CODE</button>
-    </div>
+    <!-- Create User -->
+    <section id="createUser">
+      <h3>Create New User</h3>
+      <form id="userForm" enctype="multipart/form-data">
+        <input type="hidden" name="userIdUpdate" id="userIdUpdate" value="">
+        <input type="text" name="username" placeholder="Username" required>
+        <input type="text" name="userId" placeholder="User ID" required>
+        <input type="text" name="department" placeholder="Department" required>
+        <input type="text" name="designation" placeholder="Designation" required>
+        <input type="text" name="mobile" placeholder="Mobile No." required>
+        <input type="email" name="email" placeholder="Email" required>
+        <select name="role" required>
+          <option value="user">User</option>
+          <option value="admin">Admin</option>
+        </select>
+        <input type="password" name="password" placeholder="Password">
+        <input type="file" name="profilePic" accept="image/*">
+        <button type="submit">Save</button>
+      </form>
+      <p id="msg"></p>
+    </section>
 
-    <!-- Table Display Area -->
-    <div class="table-container" id="tableSection">
-      <table id="dataTable">
-        <thead></thead>
+    <!-- Show Users -->
+    <section id="showUsers">
+      <h3>All Users</h3>
+      <table id="usersTable">
+        <thead>
+          <tr>
+            <th>Username</th>
+            <th>User ID</th>
+            <th>Department</th>
+            <th>Designation</th>
+            <th>Mobile</th>
+            <th>Email</th>
+            <th>Role</th>
+            <th>Profile Pic</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
         <tbody></tbody>
       </table>
-    </div>
+    </section>
 
-    <!-- Iframe for Register Forms -->
-    <div id="iframeContainer" style="display:none;">
-      <iframe id="registerIframe" src="" style="width:100%; height:calc(100vh - 120px); border:none;"></iframe>
-    </div>
-  </div>
+    <!-- Upload Background -->
+    <section id="uploadBackground">
+      <h3>Upload Background</h3>
+      <form id="backgroundForm" enctype="multipart/form-data">
+        <input type="file" name="background" required />
+        <button type="submit">Upload Background</button>
+      </form>
+    </section>
 
-  <!-- Bottom Navigation (Mobile Only) -->
-  <div class="bottom-nav" id="bottomNav">
-    <div class="nav-item" onclick="loadTable('WOOD PO')">
-      <i class="fas fa-tree"></i>
-      <span>WOOD PO</span>
-    </div>
-    <div class="nav-item" onclick="loadTable('CONTACTS')">
-      <i class="fas fa-address-book"></i>
-      <span>CONTACTS</span>
-    </div>
-    <div class="nav-item" onclick="loadTable('ID PASSWORD')">
-      <i class="fas fa-key"></i>
-      <span>ID PASSWORD</span>
-    </div>
-    <div class="nav-item" onclick="loadTable('SHIFT SCHEDULE')">
-      <i class="fas fa-calendar-alt"></i>
-      <span>SHIFTS</span>
-    </div>
-    <div class="nav-item" onclick="loadTable('T-CODE')">
-      <i class="fas fa-code"></i>
-      <span>T-CODE</span>
-    </div>
-  </div>
+    <!-- Upload Excel -->
+    <section id="excelUpload">
+      <h3>Upload Excel File</h3>
+      <form id="excelForm" enctype="multipart/form-data">
+        <select name="category" required>
+          <option value="">Select Category</option>
+          <option value="WOOD PO">WOOD PO</option>
+          <option value="CONTACTS">CONTACTS</option>
+          <option value="ID PASSWORD">ID PASSWORD</option>
+          <option value="SHIFT SCHEDULE">SHIFT SCHEDULE</option>
+          <option value="T-CODE">T-CODE</option>
+        </select>
+        <input type="file" name="excelFile" accept=".xlsx" required>
+        <button type="submit">Upload</button>
+      </form>
+      <p id="excelMsg"></p>
+    </section>
 
-  <!-- Team Modal -->
-  <div id="teamModal" class="modal-overlay">
-    <div class="team-modal">
-      <button class="close-modal" onclick="hideTeam()">
-        <i class="fas fa-times"></i>
-      </button>
-      <h3><i class="fas fa-users"></i> Our Team</h3>
-      <div id="teamContainer" class="team-grid"></div>
-    </div>
-  </div>
-
-  <!-- Chat Box -->
-  <div id="chatBox" class="chat-box">
-    <div class="chat-header">
-      <span id="chatWith"><i class="fas fa-comment"></i> Chat</span>
-      <button onclick="closeChat()" style="background:none; border:none; color:white; font-size:1.2rem; cursor:pointer;">
-        <i class="fas fa-times"></i>
-      </button>
-    </div>
-    <div id="chatMessages" class="chat-messages"></div>
-    <div class="chat-input-container">
-      <input type="text" id="chatInput" class="chat-input" placeholder="Type a message..." onkeypress="if(event.key==='Enter') sendMessage()">
-      <button onclick="sendMessage()" class="chat-send-btn">
-        <i class="fas fa-paper-plane"></i>
-      </button>
-    </div>
-  </div>
-
-  <!-- Full Screen Chat (Mobile Only) -->
-  <div id="fullScreenChat" class="full-screen-chat">
-    <div class="full-chat-header">
-      <span id="fullChatWith"><i class="fas fa-user"></i> Chat with <span id="fullChatUserName"></span></span>
-      <button onclick="closeFullScreenChat()" style="background:none; border:none; color:white; font-size:1.2rem; cursor:pointer;">
-        <i class="fas fa-times"></i>
-      </button>
-    </div>
-    <div id="fullChatMessages" class="full-chat-messages"></div>
-    <div class="full-chat-input-container">
-      <input type="text" id="fullChatInput" class="chat-input" placeholder="Type a message..." onkeypress="if(event.key==='Enter') sendFullScreenMessage()">
-      <button onclick="sendFullScreenMessage()" class="chat-send-btn">
-        <i class="fas fa-paper-plane"></i>
-      </button>
-    </div>
-  </div>
-
-  <!-- Context Menu -->
-  <div id="contextMenu" class="context-menu">
-    <div class="context-menu-item" onclick="editSelectedMessage()">
-      <i class="fas fa-edit"></i> Edit
-    </div>
-    <div class="context-menu-item" onclick="deleteSelectedMessage()">
-      <i class="fas fa-trash"></i> Delete
-    </div>
-  </div>
-
-  <!-- Footer -->
-  <footer>
-    &copy; All Rights Reserved easyGate
-  </footer>
-
-  <!-- Toast Notification -->
-  <div id="toast" class="toast"></div>
-
-  <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
-  <script>
-// Global variables
-let originalData = [];
-let currentUser = null;
-let currentCategory = '';
-let allMessages = [];
-let activeChatUser = null;
-const userId = localStorage.getItem("userId");
-const userElements = {};
-const unreadSenders = new Set();
-let notifySound = null;
-let isMobile = false;
-let socket = null;
-let onlineUsers = new Set();
-let selectedMessage = null;
-let hasUnreadUpdates = false;
-let currentPage = 1;
-let isLoadingMessages = false;
-let hasMoreMessages = true;
-let unreadUpdatesCount = 0;
-
-// Initialize the app when page loads
-window.onload = function() {
-  checkAuth();
-};
-
-function checkAuth() {
-  const token = localStorage.getItem('token');
-  if (!token) {
-    window.location.href = 'index.html';
-    return;
-  }
-  initApp();
-}
-
-// Main initialization function
-function initApp() {
-  checkMobile();
-  setupEventListeners();
-  loadUserProfile();
-  
-  // Initialize notification sound
-  notifySound = new Audio("assets/notification.mp3");
-  notifySound.load();
-  
-  if (userId) {
-    // Initialize socket connection only if user is logged in
-    socket = io();
-    socket.emit("join", userId);
-    setupSocketListeners();
-    
-    // Load initial data
-    loadUnreadCounts();
-    loadLastActiveChat();
-    loadNotifications(); // Add this line
-  }
-  
-  initNotifications();
-}
-// Check if device is mobile
-function checkMobile() {
-  isMobile = window.matchMedia("(max-width: 768px)").matches || 
-            window.matchMedia("(max-height: 500px)").matches;
-  
-  if (isMobile) {
-    document.getElementById('bottomNav').style.display = 'flex';
-    document.getElementById('topButtons').style.display = 'none';
-    document.querySelector('footer').style.display = 'none';
-  } else {
-    document.getElementById('bottomNav').style.display = 'none';
-    document.getElementById('topButtons').style.display = 'grid';
-    document.querySelector('footer').style.display = 'block';
-  }
-}
-
-// Setup all event listeners
-function setupEventListeners() {
-  // Window resize handler
-  window.addEventListener('resize', checkMobile);
-
-  // Click outside handlers
-  window.addEventListener('click', function(e) {
-    if (!document.getElementById('profileImage').contains(e.target) && 
-        !document.getElementById('profileCard').contains(e.target)) {
-      hideProfileCard();
-    }
-    
-    if (!document.getElementById('notification-icon').contains(e.target) && 
-        !document.getElementById('updatePanel').contains(e.target)) {
-      hideNotifications();
-    }
-    
-    if (!document.getElementById('message-icon').contains(e.target) && 
-        !document.getElementById('chatUserList').contains(e.target) &&
-        !document.getElementById('chatBox').contains(e.target) &&
-        !document.getElementById('fullScreenChat').contains(e.target) &&
-        !document.getElementById('fullScreenUserList').contains(e.target)) {
-      hideChatUserList();
-    }
-
-    if (!e.target.closest('.message-content') && !e.target.closest('.context-menu')) {
-      document.getElementById('contextMenu').style.display = 'none';
-    }
-  });
-
-  // Active nav item highlighting
-  document.querySelectorAll('.nav-item').forEach(item => {
-    item.addEventListener('click', function() {
-      document.querySelectorAll('.nav-item').forEach(nav => nav.classList.remove('active'));
-      this.classList.add('active');
-    });
-  });
-
-  // Infinite scroll for chat messages
-  const chatContainer = isMobile ? 
-    document.getElementById('fullChatMessages') : 
-    document.getElementById('chatMessages');
-  
-  if (chatContainer) {
-    chatContainer.addEventListener('scroll', function() {
-      if (this.scrollTop < 100 && !isLoadingMessages && hasMoreMessages && activeChatUser) {
-        loadMoreMessages();
-      }
-    });
-  }
-}
-
-// Load more messages for infinite scroll
-async function loadMoreMessages() {
-  if (isLoadingMessages || !hasMoreMessages || !activeChatUser) return;
-  
-  isLoadingMessages = true;
-  showLoadingIndicator();
-  
-  try {
-    const response = await fetch(
-      `/api/chat-history/${userId}/${activeChatUser.userId}?page=${currentPage + 1}`
-    );
-    
-    if (response.ok) {
-      const { messages, pages } = await response.json();
-      if (messages && messages.length > 0) {
-        allMessages = [...messages, ...allMessages];
-        currentPage++;
+        <!-- Token Mangement-->
+    <section id="tokenManagement">
+    <div class="container mt-4">
+        <h1 class="text-center mb-4">🪙 Token Card Management System</h1>
         
-        const chatContainer = isMobile ? 
-          document.getElementById('fullChatMessages') : 
-          document.getElementById('chatMessages');
-        const scrollPos = chatContainer.scrollHeight - chatContainer.scrollTop;
-        
-        renderMessages(true);
-        
-        setTimeout(() => {
-          chatContainer.scrollTop = chatContainer.scrollHeight - scrollPos;
-        }, 0);
-      }
-      hasMoreMessages = currentPage < pages;
-    }
-  } catch (error) {
-    console.error("Error loading more messages:", error);
-    showToast("Failed to load older messages");
-  } finally {
-    isLoadingMessages = false;
-    hideLoadingIndicator();
-  }
-}
-
-// Show loading indicator
-function showLoadingIndicator() {
-  const loadingDiv = document.createElement('div');
-  loadingDiv.className = 'loading-messages';
-  loadingDiv.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Loading older messages...';
-  
-  const chatContainer = isMobile ? 
-    document.getElementById('fullChatMessages') : 
-    document.getElementById('chatMessages');
-  
-  chatContainer.prepend(loadingDiv);
-}
-
-// Hide loading indicator
-function hideLoadingIndicator() {
-  const loadingDiv = document.querySelector('.loading-messages');
-  if (loadingDiv) {
-    loadingDiv.remove();
-  }
-}
-
-// Setup socket listeners
-function setupSocketListeners() {
-  // Load messages from server
-  socket.on("loadMessages", (messages) => {
-    allMessages = messages;
-
-    const incoming = messages.filter(m => m.to === userId && !m.seen);
-    if (incoming.length > 0) {
-      incoming.forEach(m => {
-        unreadSenders.add(m.from);
-      });
-      updateTotalUnreadCount();
-      loadChatUsers();
-    }
-
-    if (activeChatUser) renderMessages();
-  });
-
-  // New message received
-  socket.on("chatMessage", (data) => {
-    allMessages.push(data);
-
-    if (!activeChatUser || (data.from !== activeChatUser.userId && data.to !== activeChatUser.userId)) {
-      unreadSenders.add(data.from);
-      updateTotalUnreadCount();
-      loadChatUsers();
-
-      showDesktopNotification(`New Message from ${data.from}`, data.message);
-      playNotificationSound();
-      return;
-    }
-
-    appendMessage(data);
-  });
-
-  // Online users update
-  socket.on("onlineUsers", (users) => {
-    onlineUsers = new Set(users);
-    updateOnlineStatusIndicators();
-  });
-
-  // Message seen confirmation
-socket.on("messageSeen", (data) => {
-  // Update the specific message
-  updateMessageSeenStatus(data.messageId);
-  
-  // Update the user list item
-  if (data.senderId) {
-    updateUserListItem(data.senderId);
-  }
-});
-
-  // Message edited confirmation
-  socket.on("messageEdited", (data) => {
-    const msgIndex = allMessages.findIndex(m => m.id === data.messageId);
-    if (msgIndex !== -1) {
-      allMessages[msgIndex].message = data.newMessage;
-      allMessages[msgIndex].edited = true;
-      renderMessages();
-    }
-  });
-
-  // Message deleted confirmation
-  socket.on("messageDeleted", (data) => {
-    allMessages = allMessages.filter(m => m.id !== data.messageId);
-    renderMessages();
-  });
-}
-
-// Load unread message and notification counts
-async function loadUnreadCounts() {
-  try {
-    // Load unread message count
-    const messagesResponse = await fetch(`/api/messages/unread-count/${userId}`);
-    const messagesData = await messagesResponse.json();
-    if (messagesData.success) {
-      updateTotalUnreadCount(messagesData.count);
-    }
-
-    // Load unread notification count
-    const notificationsResponse = await fetch(`/api/notifications/unread-count/${userId}`);
-    const notificationsData = await notificationsResponse.json();
-    if (notificationsData.success) {
-      updateNotificationUnreadCount(notificationsData.count);
-    }
-  } catch (error) {
-    console.error("Error loading unread counts:", error);
-  }
-}
-
-// Count unread messages from a specific sender
-function countUnreadMessages(senderId) {
-  return allMessages.filter(m => 
-    m.from === senderId && 
-    m.to === userId && 
-    !m.seen
-  ).length;
-}
-
-// Update total unread count in header
-function updateTotalUnreadCount(count) {
-  const totalUnread = count || Array.from(unreadSenders).reduce((total, senderId) => {
-    return total + countUnreadMessages(senderId);
-  }, 0);
-
-  const badge = document.getElementById("messageCountBadge");
-  if (totalUnread > 0) {
-    badge.style.display = "flex";
-    badge.textContent = totalUnread > 9 ? "9+" : totalUnread;
-  } else {
-    badge.style.display = "none";
-  }
-}
-
-// Update notification unread count
-function updateNotificationUnreadCount(count) {
-  unreadUpdatesCount = count;
-  const badge = document.getElementById("notificationCountBadge");
-  if (unreadUpdatesCount > 0) {
-    badge.style.display = "flex";
-    badge.textContent = unreadUpdatesCount > 9 ? "9+" : unreadUpdatesCount;
-  } else {
-    badge.style.display = "none";
-  }
-}
-
-// Initialize notification permission
-function initNotifications() {
-  if ("Notification" in window) {
-    Notification.requestPermission();
-  }
-}
-
-// Play notification sound
-function playNotificationSound() {
-  if (notifySound) {
-    try {
-      notifySound.currentTime = 0;
-      notifySound.play().catch(e => console.warn("Audio play failed:", e));
-    } catch (e) {
-      console.warn("Error playing notification sound:", e);
-    }
-  }
-}
-
-// Toggle sidebar
-function toggleSidebar() {
-  document.getElementById('sidebar').classList.toggle('show');
-  document.getElementById('mainContent').classList.toggle('expanded');
-}
-
-function hideSidebar() {
-  document.getElementById('sidebar').classList.remove('show');
-  document.getElementById('mainContent').classList.remove('expanded');
-}
-
-// Toggle profile card
-function toggleProfileCard() {
-  const profileCard = document.getElementById('profileCard');
-  profileCard.classList.toggle('show');
-}
-
-function hideProfileCard() {
-  document.getElementById('profileCard').classList.remove('show');
-}
-
-// Toggle notifications
-function toggleNotifications() {
-  const panel = document.getElementById('updatePanel');
-  panel.classList.toggle('show');
-  
-  if (panel.classList.contains('show')) {
-    markNotificationsAsRead();
-    hideProfileCard();
-    hideChatUserList();
-  }
-}
-
-function hideNotifications() {
-  document.getElementById('updatePanel').classList.remove('show');
-}
-
-// Mark notifications as read
-async function markNotificationsAsRead() {
-  try {
-    const response = await fetch('/api/notifications/mark-as-read', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${localStorage.getItem('token')}`
-      },
-      body: JSON.stringify({
-        userId: userId
-      })
-    });
-
-    if (response.ok) {
-      updateNotificationUnreadCount(0);
-    }
-  } catch (error) {
-    console.error("Error marking notifications as read:", error);
-  }
-}
-
-// Toggle chat user list
-function toggleChatUserList() {
-  if (isMobile) {
-    document.getElementById('fullScreenUserList').classList.toggle('show');
-  } else {
-    document.getElementById('chatUserList').classList.toggle('show');
-  }
-  
-  if (document.getElementById('chatUserList').classList.contains('show') || 
-      document.getElementById('fullScreenUserList').classList.contains('show')) {
-    hideProfileCard();
-    hideNotifications();
-    loadChatUsers();
-  }
-}
-
-function hideChatUserList() {
-  document.getElementById('chatUserList').classList.remove('show');
-  document.getElementById('fullScreenUserList').classList.remove('show');
-}
-
-// Close full screen user list
-function closeFullScreenUserList() {
-  document.getElementById('fullScreenUserList').classList.remove('show');
-}
-
-// Load chat users
-function loadChatUsers() {
-  fetch("/api/users")
-    .then(res => res.json())
-    .then(users => {
-      const container = isMobile ? document.getElementById("fullUserListContainer") : document.getElementById("userListContainer");
-      container.innerHTML = '';
-
-      if (users.length === 0) {
-        container.innerHTML = '<p>No users available.</p>';
-        return;
-      }
-
-      users.filter(u => u.userId !== userId).forEach(user => {
-        const unreadCount = countUnreadMessages(user.userId);
-        const div = document.createElement("div");
-        div.className = "chat-user-item";
-        div.innerHTML = `
-          <div style="position:relative;">
-            <img src="${user.profilePic || 'assets/profile.png'}" class="chat-user-avatar">
-            <div class="online-dot" id="online-${user.userId}" style="display:${onlineUsers.has(user.userId) ? 'block' : 'none'}"></div>
-          </div>
-          <div class="chat-user-info">
-            <div class="chat-user-name">${user.username}</div>
-            <div class="chat-user-status">${user.department}</div>
-          </div>
-        `;
-        
-        // Only add unread count if there are unread messages
-        if (unreadCount > 0) {
-          const unreadBadge = document.createElement("span");
-          unreadBadge.className = "user-unread-count";
-          unreadBadge.textContent = unreadCount > 9 ? '9+' : unreadCount;
-          div.querySelector('.chat-user-info').appendChild(unreadBadge);
-        }
-        
-        div.onclick = () => openChatWith(user);
-        container.appendChild(div);
-        userElements[user.userId] = div;
-      });
-    })
-    .catch(error => {
-      console.error("Error loading chat users:", error);
-      const container = isMobile ? document.getElementById("fullUserListContainer") : document.getElementById("userListContainer");
-      container.innerHTML = '<p>Error loading users. Please try again.</p>';
-    });
-}
-    // Update online status indicators
-function updateOnlineStatusIndicators() {
-  Object.keys(userElements).forEach(userId => {
-    const dot = document.getElementById(`online-${userId}`);
-    if (dot) {
-      dot.style.display = onlineUsers.has(userId) ? 'block' : 'none';
-    }
-  });
-}
-
-// Load user profile
-function loadUserProfile() {
-  const token = localStorage.getItem('token');
-  
-  fetch('/api/me', {
-    headers: { Authorization: `Bearer ${token}` }
-  })
-    .then(res => res.json())
-    .then(data => {
-      if (!data.success || !data.user) {
-        return logout(true);
-      }
-
-      currentUser = data.user;
-      const profileImage = document.getElementById('profileImage');
-      
-      const profilePic = currentUser.profilePic && currentUser.profilePic.startsWith('http')
-        ? currentUser.profilePic
-        : 'assets/profile.png';
-        
-      profileImage.src = profilePic;
-
-      document.getElementById('profile-name').textContent = currentUser.username;
-      document.getElementById('profile-id').textContent = currentUser.userId;
-      document.getElementById('profile-email').textContent = currentUser.email;
-      document.getElementById('profile-mobile').textContent = currentUser.mobile;
-      document.getElementById('profile-dept').textContent = currentUser.department;
-      document.getElementById('profile-designation').textContent = currentUser.designation;
-      document.getElementById('profile-role').textContent = currentUser.role;
-    })
-    .catch(error => {
-      console.error("Failed to fetch user:", error);
-      logout(true);
-    });
-}
-
-// Load last active chat if exists
-async function loadLastActiveChat() {
-  const lastActiveChatId = localStorage.getItem('lastActiveChat');
-  if (lastActiveChatId) {
-    try {
-      const userResponse = await fetch(`/api/users`);
-      const users = await userResponse.json();
-      const chatUser = users.find(u => u.userId === lastActiveChatId);
-      
-      if (chatUser) {
-        const messagesResponse = await fetch(`/api/chat-history/${userId}/${lastActiveChatId}`);
-        const { messages } = await messagesResponse.json();
-        
-        allMessages = messages || [];
-        openChatWith(chatUser);
-      }
-    } catch (error) {
-      console.error("Failed to load last active chat:", error);
-    }
-  }
-}
-
-// Open chat with a user
-function openChatWith(user) {
-  activeChatUser = user;
-  localStorage.setItem('lastActiveChat', user.userId);
-  
-  if (isMobile) {
-    document.getElementById("fullScreenChat").classList.add('show');
-    document.getElementById("fullChatMessages").innerHTML = '';
-    document.getElementById("fullChatInput").value = '';
-    document.getElementById("fullChatWith").innerHTML = `<i class="fas fa-user"></i> Chat with ${user.username}`;
-  } else {
-    document.getElementById("chatBox").classList.add('show');
-    document.getElementById("chatMessages").innerHTML = '';
-    document.getElementById("chatInput").value = '';
-    document.getElementById("chatWith").innerHTML = `<i class="fas fa-user"></i> Chat with ${user.username}`;
-  }
-// Remove unread count from user list
-  const userElement = userElements[user.userId];
-  if (userElement) {
-    const unreadBadge = userElement.querySelector('.user-unread-count');
-    if (unreadBadge) {
-      unreadBadge.remove();
-    }
-  }
-
-  // Remove from unread senders and update counts
-  unreadSenders.delete(user.userId);
-  updateTotalUnreadCount();
-  currentPage = 1;
-  hasMoreMessages = true;
-  
-  renderMessages();
-  markMessagesAsRead(user.userId);
-}
-
-  // Mark messages as read
-function updateUserListItem(userId) {
-  const userElement = userElements[userId];
-  if (userElement) {
-    const unreadBadge = userElement.querySelector('.user-unread-count');
-    if (unreadBadge) {
-      unreadBadge.remove();
-    }
-  }
-}
-
-// Modified markMessagesAsRead function
-async function markMessagesAsRead(senderId) {
-  try {
-    const unseenMessages = allMessages.filter(m => 
-      m.from === senderId && 
-      m.to === userId && 
-      !m.seen
-    );
-
-    if (unseenMessages.length > 0) {
-      const response = await fetch('/api/messages/mark-as-read', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        },
-        body: JSON.stringify({
-          messageIds: unseenMessages.map(m => m._id),
-          senderId: senderId,
-          receiverId: userId
-        })
-      });
-
-      if (response.ok) {
-        // Update local messages
-        unseenMessages.forEach(msg => {
-          msg.seen = true;
-          msg.seenTimestamp = Date.now();
-        });
-        
-        // Update UI
-        updateUserListItem(senderId);
-        renderMessages();
-        updateTotalUnreadCount();
-      }
-    }
-  } catch (error) {
-    console.error("Error marking messages as read:", error);
-  }
-}
-
-// Render messages in chat
-function renderMessages(isPrepend = false) {
-  const box = isMobile ? document.getElementById("fullChatMessages") : document.getElementById("chatMessages");
-  
-  if (!isPrepend) {
-    box.innerHTML = "";
-  }
-
-  const msgs = allMessages.filter(m =>
-    (m.from === userId && m.to === activeChatUser.userId) ||
-    (m.to === userId && m.from === activeChatUser.userId)
-  );
-
-  if (isPrepend) {
-    const oldScrollHeight = box.scrollHeight;
-    const oldScrollTop = box.scrollTop;
-    
-    const fragment = document.createDocumentFragment();
-    
-    msgs.slice(0, -box.children.length).forEach(m => {
-      fragment.appendChild(createMessageElement(m));
-    });
-    
-    box.insertBefore(fragment, box.firstChild);
-    
-    setTimeout(() => {
-      box.scrollTop = box.scrollHeight - oldScrollHeight + oldScrollTop;
-    }, 0);
-  } else {
-    msgs.forEach(m => {
-      box.appendChild(createMessageElement(m));
-    });
-    box.scrollTop = box.scrollHeight;
-  }
-  
-  if (socket && activeChatUser) {
-    const unseenMessages = msgs.filter(m => m.to === userId && !m.seen);
-    if (unseenMessages.length > 0) {
-      socket.emit("markAsSeen", { 
-        messageIds: unseenMessages.map(m => m.id),
-        senderId: activeChatUser.userId
-      });
-    }
-  }
-}
-
-// Create message element for DOM
-function createMessageElement(msg) {
-  const isMe = msg.from === userId;
-  
-  const messageDiv = document.createElement("div");
-  messageDiv.className = `message message-${isMe ? 'outgoing' : 'incoming'}`;
-  messageDiv.dataset.messageId = msg._id;
-  
-  const senderDiv = document.createElement("div");
-  senderDiv.className = "message-sender";
-  senderDiv.textContent = isMe ? "You" : msg.from;
-  
-  const contentDiv = document.createElement("div");
-  contentDiv.className = "message-content";
-  contentDiv.textContent = msg.message;
-  
-  if (msg.edited) {
-    const editedSpan = document.createElement("span");
-    editedSpan.textContent = " (edited)";
-    editedSpan.style.fontSize = "0.7rem";
-    editedSpan.style.color = "var(--gray)";
-    contentDiv.appendChild(editedSpan);
-  }
-  
-  const timeDiv = document.createElement("div");
-  timeDiv.className = "message-time";
-  const sentTime = new Date(msg.timestamp || Date.now());
-  timeDiv.textContent = sentTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-  
-  messageDiv.appendChild(senderDiv);
-  messageDiv.appendChild(contentDiv);
-  messageDiv.appendChild(timeDiv);
-  
-  if (isMe && msg.seen) {
-    const seenDiv = document.createElement("div");
-    seenDiv.className = "message-seen";
-    seenDiv.textContent = "Seen " + new Date(msg.seenTimestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    messageDiv.appendChild(seenDiv);
-  }
-  
-  if (isMe && !msg.seen) {
-    contentDiv.oncontextmenu = (e) => {
-      e.preventDefault();
-      showContextMenu(e, msg);
-      return false;
-    };
-    
-    contentDiv.addEventListener('touchstart', (e) => {
-      if (e.touches.length === 1) {
-        const touch = e.touches[0];
-        const touchHoldTimer = setTimeout(() => {
-          showContextMenu(touch, msg);
-        }, 800);
-        contentDiv.addEventListener('touchend', () => clearTimeout(touchHoldTimer), { once: true });
-      }
-    });
-  }
-  
-  return messageDiv;
-}
-
-// Show context menu for message actions
-function showContextMenu(e, msg) {
-  selectedMessage = msg;
-  const menu = document.getElementById('contextMenu');
-  menu.style.display = 'block';
-  
-  const x = e.clientX || e.pageX;
-  const y = e.clientY || e.pageY;
-  
-  menu.style.left = `${x}px`;
-  menu.style.top = `${y}px`;
-}
-
-// Edit selected message
-function editSelectedMessage() {
-  if (!selectedMessage) return;
-  
-  const newMessage = prompt("Edit your message:", selectedMessage.message);
-  if (newMessage && newMessage !== selectedMessage.message) {
-    const msgIndex = allMessages.findIndex(m => m.id === selectedMessage.id);
-    if (msgIndex !== -1) {
-      allMessages[msgIndex].message = newMessage;
-      allMessages[msgIndex].edited = true;
-      
-      if (socket) {
-        socket.emit("editMessage", { 
-          messageId: selectedMessage.id, 
-          newMessage: newMessage 
-        });
-      }
-      
-      renderMessages();
-    }
-  }
-  
-  document.getElementById('contextMenu').style.display = 'none';
-}
-
-// Delete selected message
-function deleteSelectedMessage() {
-  if (!selectedMessage) return;
-  
-  if (confirm("Are you sure you want to delete this message?")) {
-    allMessages = allMessages.filter(m => m.id !== selectedMessage.id);
-    
-    if (socket) {
-      socket.emit("deleteMessage", { messageId: selectedMessage.id });
-    }
-    
-    renderMessages();
-  }
-  
-  document.getElementById('contextMenu').style.display = 'none';
-}
-
-// Update message seen status
-function updateMessageSeenStatus(messageId) {
-  const msgIndex = allMessages.findIndex(m => m._id === messageId);
-  if (msgIndex !== -1) {
-    allMessages[msgIndex].seen = true;
-    allMessages[msgIndex].seenTimestamp = Date.now();
-    renderMessages();
-  }
-}
-
-// Send message
-function sendMessage() {
-  const input = document.getElementById("chatInput");
-  const message = input.value.trim();
-  if (!message || !activeChatUser) return;
-
-  const msg = {
-    id: Date.now().toString(),
-    from: userId,
-    to: activeChatUser.userId,
-    message,
-    timestamp: Date.now()
-  };
-
-  socket.emit("chatMessage", msg);
-  allMessages.push(msg);
-  appendMessage(msg);
-  input.value = "";
-}
-
-// Send message from full screen chat
-function sendFullScreenMessage() {
-  const input = document.getElementById("fullChatInput");
-  const message = input.value.trim();
-  if (!message || !activeChatUser) return;
-
-  const msg = {
-    id: Date.now().toString(),
-    from: userId,
-    to: activeChatUser.userId,
-    message,
-    timestamp: Date.now()
-  };
-
-  socket.emit("chatMessage", msg);
-  allMessages.push(msg);
-  appendMessage(msg);
-  input.value = "";
-}
-
-    // Add this function to load notifications
-async function loadNotifications() {
-  try {
-    const response = await fetch('/api/updates');
-    const updates = await response.json();
-    
-    const updatesList = document.getElementById('updatesList');
-    updatesList.innerHTML = '';
-    
-    if (updates.length === 0) {
-      updatesList.innerHTML = '<p>No updates available.</p>';
-      return;
-    }
-    
-    updates.forEach(update => {
-      const updateItem = document.createElement('div');
-      updateItem.className = 'update-item';
-      updateItem.style.padding = '10px';
-      updateItem.style.borderBottom = '1px solid #eee';
-      updateItem.style.cursor = 'pointer';
-      
-      const date = new Date(update.createdAt).toLocaleString();
-      updateItem.innerHTML = `
-        <div style="font-weight:bold;">${update.title || 'Update'}</div>
-        <div style="font-size:0.8em; color:#666;">${date}</div>
-        <div style="margin-top:5px;">${update.message}</div>
-        ${update.image ? `<img src="${update.image}" style="max-width:100%; margin-top:5px;">` : ''}
-      `;
-      
-      updateItem.addEventListener('click', () => {
-        showUpdateDetail(update);
-      });
-      
-      updatesList.appendChild(updateItem);
-    });
-    
-    // Update unread count
-    updateNotificationUnreadCount(updates.length);
-    
-  } catch (error) {
-    console.error('Error loading notifications:', error);
-    document.getElementById('updatesList').innerHTML = '<p>Error loading updates. Please try again.</p>';
-  }
-}
-
-// Add this function to show update details
-function showUpdateDetail(update) {
-  const modal = document.createElement('div');
-  modal.style.position = 'fixed';
-  modal.style.top = '0';
-  modal.style.left = '0';
-  modal.style.right = '0';
-  modal.style.bottom = '0';
-  modal.style.backgroundColor = 'rgba(0,0,0,0.7)';
-  modal.style.zIndex = '1000';
-  modal.style.display = 'flex';
-  modal.style.justifyContent = 'center';
-  modal.style.alignItems = 'center';
-  
-  const content = document.createElement('div');
-  content.style.backgroundColor = 'white';
-  content.style.padding = '20px';
-  content.style.borderRadius = '8px';
-  content.style.maxWidth = '80%';
-  content.style.maxHeight = '80%';
-  content.style.overflow = 'auto';
-  
-  const date = new Date(update.createdAt).toLocaleString();
-  content.innerHTML = `
-    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-      <h3 style="margin:0;">${update.title || 'Update Details'}</h3>
-      <button onclick="this.parentElement.parentElement.parentElement.remove()" style="background:none; border:none; font-size:1.2em; cursor:pointer;">×</button>
-    </div>
-    <div style="color:#666; margin-bottom:10px;">${date}</div>
-    <div style="margin-bottom:10px;">${update.message}</div>
-    ${update.image ? `<img src="${update.image}" style="max-width:100%; margin-top:10px;">` : ''}
-  `;
-  
-  modal.appendChild(content);
-  document.body.appendChild(modal);
-  
-  // Close modal when clicking outside
-  modal.addEventListener('click', (e) => {
-    if (e.target === modal) {
-      modal.remove();
-    }
-  });
-}
-    
-// Append single message to chat
-function appendMessage(msg) {
-  const box = isMobile ? document.getElementById("fullChatMessages") : document.getElementById("chatMessages");
-  box.appendChild(createMessageElement(msg));
-  box.scrollTop = box.scrollHeight;
-}
-
-// Close chat
-function closeChat() {
-  document.getElementById("chatBox").classList.remove('show');
-  activeChatUser = null;
-}
-
-// Close full screen chat
-function closeFullScreenChat() {
-  document.getElementById("fullScreenChat").classList.remove('show');
-  activeChatUser = null;
-}
-
-// Show desktop notification
-function showDesktopNotification(title, body) {
-  if ("Notification" in window && Notification.permission === "granted") {
-    new Notification(title, {
-      body: body,
-      icon: "/assets/profile.png"
-    });
-  }
-}
-
-// Show toast notification
-function showToast(message) {
-  const toast = document.getElementById('toast');
-  toast.textContent = message;
-  toast.style.display = 'block';
-  
-  setTimeout(() => {
-    toast.style.animation = 'fadeOut 0.3s ease';
-    setTimeout(() => {
-      toast.style.display = 'none';
-      toast.style.animation = 'fadeIn 0.3s ease';
-    }, 300);
-  }, 2000);
-}
-
-// Logout function
-function logout(forceRedirect = false) {
-  localStorage.clear();
-  window.location.href = 'index.html';
-}
-
-// Load table data
-function loadTable(category) {
-  currentCategory = category;
-  fetch(`/api/excel-data/${category}`)
-    .then(res => res.json())
-    .then(res => {
-      if (res.success) {
-        originalData = res.data;
-        renderTable(res.data);
-
-        const filter = document.getElementById("materialFilter");
-        if (category === 'WOOD PO') {
-          const materialSet = new Set(res.data.slice(1).map(row => row[3]));
-          filter.innerHTML = '<option value="">All Materials</option>' + [...materialSet].map(m => `<option>${m}</option>`).join('');
-          filter.style.display = 'block';
-        } else {
-          filter.style.display = 'none';
-        }
-      }
-    });
-}
-
-// Render table
-function renderTable(data) {
-  const thead = document.querySelector("#dataTable thead");
-  const tbody = document.querySelector("#dataTable tbody");
-  thead.innerHTML = "";
-  tbody.innerHTML = "";
-
-  if (data.length === 0) return;
-
-  const table = document.getElementById("dataTable");
-  table.className = currentCategory === 'SHIFT SCHEDULE' ? 'shift-schedule-freeze' : '';
-
-  // Create header row
-  const headerRow = document.createElement("tr");
-  data[0].forEach((col, index) => {
-    const th = document.createElement("th");
-    th.textContent = col;
-    if (currentCategory === 'SHIFT SCHEDULE' && index < 5) {
-      th.classList.add('freeze-col');
-    }
-    headerRow.appendChild(th);
-  });
-  thead.appendChild(headerRow);
-
-  // Create data rows
-  data.slice(1).forEach((row, rowIndex) => {
-    const tr = document.createElement("tr");
-
-    const rowText = row.map(cell => String(cell).toUpperCase()).join(" ");
-    if (currentCategory === 'WOOD PO') {
-      if (rowText.includes("RAMPUR")) tr.style.background = "#00ff40";
-      else if (rowText.includes("SITAPUR")) tr.style.background = "#ff00ff";
-      else if (rowText.includes("OTHER")) tr.style.background = "#00ffff";
-    }
-
-    row.forEach((cell, colIndex) => {
-      const td = document.createElement("td");
-      const value = typeof cell === 'object' ? (cell.text || '') : String(cell);
-
-      if (currentCategory === 'WOOD PO' && colIndex === 0) {
-        td.innerHTML = `<button onclick="copyText('${value}', 'PO Copied')" style="background:var(--primary); color:white; border:none; padding:0.3rem 0.6rem; border-radius:4px; cursor:pointer;">${value}</button>`;
-      } else if (currentCategory === 'ID PASSWORD' && colIndex === 1) {
-        td.innerHTML = `<button onclick="copyText('${value}', 'Password Copied')" style="background:var(--success); color:white; border:none; padding:0.3rem 0.6rem; border-radius:4px; cursor:pointer;">${isMobile ? value : '******'}</button>`;
-      } else {
-        td.textContent = value;
-      }
-
-      if (currentCategory === 'SHIFT SCHEDULE') {
-        if (rowIndex < 2 || colIndex < 5) td.style.background = 'rgba(173, 216, 230, 0.3)';
-        if (value === 'R') td.style.background = 'green';
-        else if (value === 'L') td.style.background = 'red';
-        else if (value === 'G') td.style.background = 'yellow';
-      }
-
-      if (currentCategory === 'SHIFT SCHEDULE' && colIndex < 5) {
-        td.classList.add('freeze-col');
-      }
-
-      tr.appendChild(td);
-    });
-
-    tbody.appendChild(tr);
-  });
-}
-
-// Copy text to clipboard
-function copyText(text, message) {
-  navigator.clipboard.writeText(text).then(() => {
-    showToast(message);
-  }).catch(err => {
-    console.error("Copy failed", err);
-  });
-}
-
-// Apply filters to table
-function applyFilters() {
-  let filtered = [...originalData];
-  const searchVal = document.getElementById("searchBox").value.toLowerCase();
-  const materialVal = document.getElementById("materialFilter").value;
-
-  if (searchVal) {
-    filtered = filtered.filter(row => row.some(cell => String(cell).toLowerCase().includes(searchVal)));
-  }
-  if (materialVal) {
-    filtered = filtered.filter(row => row[3] === materialVal);
-  }
-
-  renderTable([originalData[0], ...filtered]);
-}
-
-// Show team modal
-function showTeam() {
-  document.getElementById('teamModal').classList.add('show');
-  fetch('/api/users')
-    .then(res => res.json())
-    .then(users => {
-      const container = document.getElementById('teamContainer');
-      container.innerHTML = users.map(user => `
-        <div class="user-card">
-          <img src="${user.profilePic || 'assets/profile.png'}" class="user-avatar">
-          <div class="user-name">${user.username}</div>
-          <div class="user-detail"><strong>ID:</strong> ${user.userId}</div>
-          <div class="user-detail"><strong>Dept:</strong> ${user.department}</div>
-          <div class="user-detail"><strong>Role:</strong> ${user.designation}</div>
-          <div class="user-detail"><strong>Email:</strong> ${user.email || '-'}</div>
+        <!-- Plant Selection -->
+        <div class="row mb-4">
+            <div class="col-md-6 offset-md-3">
+                <label for="plantSelect" class="form-label">Select Plant:</label>
+                <select class="form-select" id="plantSelect">
+                    <option value="">-- Select Plant --</option>
+                    <option value="C2">C2</option>
+                    <option value="C3">C3</option>
+                    <option value="C34A">C34A</option>
+                </select>
+            </div>
         </div>
-      `).join('');
-    });
-}
+        
+        <!-- Main Content (shown after plant selection) -->
+        <div id="mainContent" style="display: none;">
+            <!-- Management Buttons -->
+            <div class="row mb-4">
+                <div class="col-12 text-center">
+                    <button class="btn btn-primary management-btn" onclick="showSection('tokenCardSection')">Token Card</button>
+                    <button class="btn btn-info management-btn" disabled>
+                        Total Token Card Quantity: <span id="totalQuantity">0</span>
+                    </button>
+                    <button class="btn btn-warning management-btn" onclick="showSection('inactiveTokenSection')">Inactive/Error Token Card</button>
+                    <button class="btn btn-danger management-btn" onclick="showSection('lossTokenSection')">Loss Token Card</button>
+                    <button class="btn btn-success management-btn" onclick="showSection('activatedTokenSection')">Activated Error Tokens</button>
+                </div>
+            </div>
+            
+            <!-- View Data Buttons -->
+            <div class="row mb-4">
+                <div class="col-12 text-center">
+                    <button class="btn btn-outline-primary view-btn" onclick="viewTokenQuantity()">Token Card Quantity</button>
+                    <button class="btn btn-outline-secondary view-btn" onclick="viewTotalTokens()">Total Token Card with Number</button>
+                    <button class="btn btn-outline-warning view-btn" onclick="viewInactiveTokens()">Inactive Token Cards</button>
+                    <button class="btn btn-outline-danger view-btn" onclick="viewLostTokens()">Lost Token Card</button>
+                    <button class="btn btn-outline-success view-btn" onclick="viewActivatedTokens()">Activated Token Card</button>
+                </div>
+            </div>
+            
+            <!-- Token Card Section -->
+            <div id="tokenCardSection" class="card-section">
+                <h3>Token Card Management</h3>
+                <div class="mb-3">
+                    <button class="btn btn-sm btn-primary" onclick="addNewTokenRow()">Add New Token</button>
+                </div>
+                <table id="tokenCardTable" class="table table-striped table-bordered">
+                    <thead>
+                        <tr>
+                            <th>Token Card Number</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Rows will be added dynamically -->
+                    </tbody>
+                </table>
+                <div class="text-end mt-3">
+                    <button class="btn btn-success" onclick="saveTokenCards()">Save All Changes</button>
+                </div>
+            </div>
+            
+            <!-- Inactive/Error Token Section -->
+            <div id="inactiveTokenSection" class="card-section">
+                <h3>Inactive/Error Token Cards</h3>
+                <table id="inactiveTokenTable" class="table table-striped table-bordered">
+                    <thead>
+                        <tr>
+                            <th>Token Card Number</th>
+                            <th>Problem Description</th>
+                            <th>Reported Date</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Rows will be added dynamically -->
+                    </tbody>
+                </table>
+                <div class="text-end mt-3">
+                    <button class="btn btn-success" onclick="saveInactiveTokens()">Save All Changes</button>
+                </div>
+            </div>
+            
+            <!-- Loss Token Section -->
+            <div id="lossTokenSection" class="card-section">
+                <h3>Loss Token Cards</h3>
+                <table id="lossTokenTable" class="table table-striped table-bordered">
+    <thead>
+        <tr>
+            <th>Token Card Number</th>
+            <th>Status</th>
+            <th>Reported Date</th>
+            <th>Reported By</th> <!-- New Column -->
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        <!-- Rows will be added dynamically -->
+    </tbody>
+</table>
+            
+            <!-- Activated Tokens Section -->
+            <div id="activatedTokenSection" class="card-section">
+                <h3>Activated Error Tokens</h3>
+                <div class="mb-3">
+                    <button class="btn btn-sm btn-primary" onclick="addNewActivatedTokenRow()">Add Activated Token</button>
+                </div>
+                <table id="activatedTokenTable" class="table table-striped table-bordered">
+                    <thead>
+                        <tr>
+                            <th>Token Card Number</th>
+                            <th>Activated Date</th>
+                            <th>Notes</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Rows will be added dynamically -->
+                    </tbody>
+                </table>
+                <div class="text-end mt-3">
+                    <button class="btn btn-success" onclick="saveActivatedTokens()">Save All Changes</button>
+                </div>
+            </div>
+        </div>
+    </div>
 
-// Hide team modal
-function hideTeam() {
-  document.getElementById('teamModal').classList.remove('show');
-}
+    <!-- Modals -->
+    <div class="modal fade" id="viewDataModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="viewDataModalTitle">Data View</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body" id="viewDataModalBody">
+                    <!-- Content will be loaded dynamically -->
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
 
-// Go to home page
-function goHome() {
-  window.location.href = 'dashboard.html';
-}
-
-// Handle beforeunload event
-window.addEventListener("beforeunload", function(e) {
-  if (socket && activeChatUser) {
-    const unseenMessages = allMessages.filter(m => 
-      m.to === userId && 
-      m.from === activeChatUser.userId && 
-      !m.seen
-    );
+<!-- Daily Shift Report Section -->
+    <section id="dailyShiftReport">
+      <h2>✨ VIEW SHIFT REPORT ✨</h2>
+      
+      <div class="filters">
+        <div>
+          <label>From Date:
+            <input type="date" id="fromDate">
+          </label>
+        </div>
+        <div>
+          <label>To Date:
+            <input type="date" id="toDate">
+          </label>
+        </div>
+        <div>
+          <label>Plant:
+            <select id="filterPlant">
+              <option value="">ALL</option>
+              <option value="C34A">C34A</option>
+              <option value="C2">C2</option>
+              <option value="C3">C3</option>
+            </select>
+          </label>
+        </div>
+        <div>
+          <label>Shift:
+            <select id="filterShift">
+              <option value="">ALL</option>
+              <option value="A">A</option>
+              <option value="B">B</option>
+              <option value="C">C</option>
+            </select>
+          </label>
+        </div>
+      </div>
+      
+      <div class="actions">
+        <button onclick="fetchReports()">🔍 View Report</button>
+        <button onclick="exportShiftToExcel()">📤 Export Excel</button>
+        <button onclick="printShiftReports()">🖨️ Print</button>
+      </div>
+      
+      <div id="reportContainer"></div>
+    </section>
     
-    if (unseenMessages.length > 0) {
-      const xhr = new XMLHttpRequest();
-      xhr.open("POST", "/api/messages/mark-as-read", false);
-      xhr.setRequestHeader("Content-Type", "application/json");
-      xhr.setRequestHeader("Authorization", `Bearer ${localStorage.getItem('token')}`);
-      xhr.send(JSON.stringify({
-        messageIds: unseenMessages.map(m => m._id),
-        senderId: activeChatUser.userId,
-        receiverId: userId
-      }));
+    <!-- Methanol Weight Report Section -->
+    <section id="methanolWeightReport">
+      <h2>⚖️ METHANOL WEIGHT REPORT</h2>
+      
+      <div class="filter-box">
+        <label>
+          From Date
+          <input type="date" id="methanolFromDate">
+        </label>
+        <label>
+          To Date
+          <input type="date" id="methanolToDate">
+        </label>
+        <label>
+          Submitted By
+          <select id="methanolNameFilter">
+            <option value="">All</option>
+          </select>
+        </label>
+        <button onclick="fetchMethanolReports()" class="view-report-btn">🔍 View Report</button>
+        <button onclick="exportMethanolToExcel()">📤 Export to Excel</button>
+      </div>
+
+      <table id="methanolReportTable">
+        <thead>
+          <tr>
+            <th>S.NO</th>
+            <th>DATE</th>
+            <th>VEHICLE NO.</th>
+            <th>MATERIAL</th>
+            <th>OUTSIDE WEIGHT</th>
+            <th>100 MT WEIGHT</th>
+            <th>DIFFERENCE</th>
+            <th>SUBMITTED BY</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </section>
+    
+    <!-- Long Body Weight Report Section -->
+    <section id="longBodyWeightReport">
+      <h2>📊 LONG BODY WEIGHT REPORT</h2>
+      
+      <div class="long-body-filter-box">
+        <div>
+          <label>From Date:
+            <input type="date" id="longBodyFromDate">
+          </label>
+        </div>
+        <div>
+          <label>To Date:
+            <input type="date" id="longBodyToDate">
+          </label>
+        </div>
+        <div>
+          <label>Vehicle No:
+            <input type="text" id="longBodyVehicleFilter" placeholder="Filter by vehicle">
+          </label>
+        </div>
+        <div>
+          <label>Submitted By:
+            <select id="longBodyNameFilter">
+              <option value="">All</option>
+            </select>
+          </label>
+        </div>
+      </div>
+      
+      <div class="long-body-actions">
+        <button onclick="fetchLongBodyReports()">🔍 View Report</button>
+        <button onclick="exportLongBodyToExcel()">📤 Export Excel</button>
+        <button onclick="printLongBodyReports()">🖨️ Print</button>
+      </div>
+      
+      <table id="longBodyReportTable">
+        <thead>
+          <tr>
+            <th>S.NO</th>
+            <th>DATE</th>
+            <th>VEHICLE NO.</th>
+            <th>MATERIAL</th>
+            <th>OUTSIDE WEIGHT</th>
+            <th>80 MT OLD</th>
+            <th>80 MT NEW</th>
+            <th>DIFFERENCE (OLD - NEW)</th>
+            <th>SUBMITTED BY</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </section>
+      
+    <!-- Wood Bill Submit Section -->
+<section id="woodBillReport">
+  <h2>🌲 WOOD BILL SUBMIT REPORT</h2>
+  
+  <!-- Filter Box -->
+  <div class="wood-bill-filter-box">
+    <div>
+      <label>From Date:
+        <input type="date" id="woodBillFromDate">
+      </label>
+    </div>
+    <div>
+      <label>To Date:
+        <input type="date" id="woodBillToDate">
+      </label>
+    </div>
+    <div>
+      <label>Receiver:
+        <select id="woodBillReceiverFilter">
+          <option value="">All</option>
+        </select>
+      </label>
+    </div>
+    <div>
+      <label>Submitted By:
+        <select id="woodBillSubmittedByFilter">
+          <option value="">All</option>
+        </select>
+      </label>
+    </div>
+    <div>
+      <label>Plant:
+        <select id="woodBillPlantFilter">
+          <option value="">All</option>
+          <option value="C34A">C34A</option>
+          <option value="C2">C2</option>
+          <option value="C3">C3</option>
+        </select>
+      </label>
+    </div>
+  </div>
+  
+  <!-- Action Buttons -->
+  <div class="wood-bill-actions">
+    <button onclick="fetchWoodBillReports()">🔍 View Report</button>
+    <button onclick="exportWoodBillToExcel()">📤 Export Excel</button>
+    <button onclick="printWoodBillReports()">🖨️ Print</button>
+  </div>
+  
+  <!-- Table View -->
+  <table id="woodBillReportTable">
+    <thead>
+      <tr>
+        <th>S.NO</th>
+        <th>SAP DATE</th>
+        <th>BILL SUBMIT DATE</th>
+        <th>QUANTITY</th>
+        <th>SUBMIT TIME</th>
+        <th>RECEIVER NAME</th>
+        <th>SUBMITTED BY</th>
+        <th>PLANT</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+</section>
+
+<footer>
+  &copy; All rights reserved easyGate
+</footer>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+<script>
+  function hideAllSections() {
+    const sections = document.querySelectorAll('.content section');
+    sections.forEach(section => {
+      section.style.display = 'none';
+    });
+    document.getElementById('blankContent').style.display = 'block';
+  }
+
+  function toggleSection(id) {
+    document.getElementById('blankContent').style.display = 'none';
+    const sections = document.querySelectorAll('.content section');
+    sections.forEach(section => {
+      section.style.display = 'none';
+      section.style.overflowY = 'hidden';
+    });
+    
+    const activeSection = document.getElementById(id);
+    activeSection.style.display = 'block';
+    
+    setTimeout(() => {
+      activeSection.style.overflowY = 'auto';
+      activeSection.scrollTop = 0;
+    }, 50);
+    
+    document.querySelector('.content').scrollTop = 0;
+
+    if (id === 'showUsers') fetchUsers();
+    if (id === 'dailyShiftReport') {
+      const today = new Date().toISOString().split('T')[0];
+      document.getElementById('fromDate').value = today;
+      document.getElementById('toDate').value = today;
+      fetchReports();
+    }
+    if (id === 'longBodyWeightReport') {
+      const today = new Date().toISOString().split('T')[0];
+      document.getElementById('longBodyFromDate').value = today;
+      document.getElementById('longBodyToDate').value = today;
+      fetchLongBodyReports();
+    }
+    if (id === 'methanolWeightReport') {
+      const today = new Date().toISOString().split('T')[0];
+      document.getElementById('methanolFromDate').value = today;
+      document.getElementById('methanolToDate').value = today;
+      fetchMethanolReports();
+    }
+    if (id === 'woodBillReport') {
+      const today = new Date().toISOString().split('T')[0];
+      document.getElementById('woodBillFromDate').value = today;
+      document.getElementById('woodBillToDate').value = today;
+      fetchWoodBillReports();
     }
   }
+
+  function logout() {
+    localStorage.clear();
+    window.location.href = 'index.html';
+  }
+
+  function toggleProfile() {
+    const card = document.getElementById("profileCard");
+    card.style.display = card.style.display === "block" ? "none" : "block";
+  }
+
+  async function fetchUsers() {
+  try {
+    const res = await fetch("/api/users");
+    const users = await res.json();
+    const tbody = document.querySelector("#usersTable tbody");
+    tbody.innerHTML = "";
+
+    users.forEach(u => {
+      const profilePicUrl = u.profilePic && u.profilePic.startsWith("http")
+        ? u.profilePic
+        : "assets/profile.png";
+
+      const row = document.createElement("tr");
+      row.innerHTML = `
+        <td>${u.username}</td>
+        <td>${u.userId}</td>
+        <td>${u.department}</td>
+        <td>${u.designation}</td>
+        <td>${u.mobile}</td>
+        <td>${u.email}</td>
+        <td>${u.role}</td>
+        <td>
+          <img src="${profilePicUrl}" width="40" height="40" 
+               style="border-radius:50%; object-fit:cover;">
+        </td>
+        <td>
+          <button onclick='editUser(${JSON.stringify(u)})'>Edit</button>
+          <button onclick="deleteUser('${u._id}')">Delete</button>
+        </td>`;
+      tbody.appendChild(row);
+    });
+  } catch (err) {
+    console.error("Fetch users error:", err);
+    alert("Failed to load users");
+  }
+}
+
+  async function deleteUser(userId) {
+    if (!confirm("Are you sure you want to delete this user?")) return;
+    try {
+      const res = await fetch(`/api/delete-user/${userId}`, { method: "DELETE" });
+      const result = await res.json();
+      alert(result.message);
+      if (result.success) fetchUsers();
+    } catch (err) {
+      console.error("Delete error:", err);
+      alert("Delete failed");
+    }
+  }
+
+  function editUser(user) {
+    toggleSection('createUser');
+    const form = document.getElementById("userForm");
+    form.reset();
+    form.username.value = user.username;
+    form.userId.value = user.userId;
+    form.userId.disabled = true;
+    document.getElementById("userIdUpdate").value = user._id;
+    form.department.value = user.department;
+    form.designation.value = user.designation;
+    form.mobile.value = user.mobile;
+    form.email.value = user.email;
+    form.role.value = user.role;
+    form.password.required = false;
+  }
+
+  document.getElementById("userForm").addEventListener("submit", async function (e) {
+    e.preventDefault();
+    try {
+      const formData = new FormData(this);
+      const res = await fetch("/api/create-user", {
+        method: "POST",
+        body: formData
+      });
+      const result = await res.json();
+      document.getElementById("msg").innerText = result.message;
+      if (result.success) this.reset();
+    } catch (err) {
+      console.error("Create user error:", err);
+      alert("Failed to create user");
+    }
+  });
+
+  document.getElementById("backgroundForm").addEventListener("submit", async function (e) {
+    e.preventDefault();
+    try {
+      const formData = new FormData(this);
+      const res = await fetch("/api/upload-background", {
+        method: "POST",
+        body: formData
+      });
+      const result = await res.json();
+      alert(result.message);
+    } catch (err) {
+      console.error("Upload background error:", err);
+      alert("Failed to upload background");
+    }
+  });
+
+  document.getElementById("excelForm").addEventListener("submit", async function (e) {
+  e.preventDefault();
+  try {
+    const formData = new FormData(this);
+
+    const token = localStorage.getItem("token"); // ✅ get token
+
+    const res = await fetch("/api/upload-excel", {
+      method: "POST",
+      body: formData,
+      headers: {
+        Authorization: `Bearer ${token}` // ✅ add token to headers
+      }
+    });
+
+    const result = await res.json();
+    document.getElementById("excelMsg").innerText = result.message;
+    if (result.success) this.reset();
+  } catch (err) {
+    console.error("Upload excel error:", err);
+    alert("Failed to upload Excel");
+  }
 });
-  </script>
+
+
+  async function loadProfile() {
+    const token = localStorage.getItem("token");
+    if (!token) return logout();
+    try {
+      const res = await fetch("/api/me", {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      const result = await res.json();
+      if (!result.success) return logout();
+
+      const user = result.user;
+      const profileImg = document.getElementById("profileImage");
+      profileImg.src = user.profilePic || "assets/profile.png";
+      document.getElementById("profileCard").innerHTML = `
+        <strong>${user.username}</strong><br>
+        <small>${user.role}</small><hr>
+        <p><strong>User ID:</strong> ${user.userId}</p>
+        <p><strong>Email:</strong> ${user.email}</p>
+        <p><strong>Mobile:</strong> ${user.mobile}</p>
+        <p><strong>Dept:</strong> ${user.department}</p>
+        <p><strong>Desig:</strong> ${user.designation}</p>`;
+    } catch (err) {
+      console.error("Profile error:", err);
+      logout();
+    }
+  }
+
+  async function submitUpdate() {
+    const title = document.getElementById("updateTitle").value.trim();
+    const message = document.getElementById("updateMessage").value.trim();
+    const imageFile = document.getElementById("updateImage").files[0];
+    if (!title || !message) return alert("Please fill in both title and message");
+
+    try {
+      const formData = new FormData();
+      formData.append("title", title);
+      formData.append("message", message);
+      if (imageFile) formData.append("image", imageFile);
+
+      const res = await fetch("/api/updates", {
+        method: "POST",
+        body: formData
+      });
+
+      const data = await res.json();
+      alert(data.message || "Update posted.");
+      document.getElementById("updateTitle").value = "";
+      document.getElementById("updateMessage").value = "";
+      document.getElementById("updateImage").value = "";
+      hideAllSections();
+    } catch (err) {
+      console.error("Update post error:", err);
+      alert("Failed to post update");
+    }
+  }
+
+  async function fetchReports() {
+    const fromDate = document.getElementById("fromDate").value;
+    const toDate = document.getElementById("toDate").value;
+    const plant = document.getElementById("filterPlant").value;
+    const shift = document.getElementById("filterShift").value;
+
+    try {
+      const res = await fetch("/api/reports/shift");
+      const data = await res.json();
+
+      const filtered = data.filter(r => {
+        const reportDate = new Date(r.date);
+        if (fromDate && reportDate < new Date(fromDate)) return false;
+        if (toDate && reportDate > new Date(toDate)) return false;
+        if (plant && r.plant !== plant) return false;
+        if (shift && r.shift !== shift) return false;
+        return true;
+      });
+
+      const container = document.getElementById("reportContainer");
+      container.innerHTML = "";
+
+      filtered.forEach(report => {
+        const totalSAP = (report.woodSAP || 0) + (report.storeSAP || 0) + (report.dispatchSAP || 0);
+        const totalToken = (report.inStockTokens || 0) + (report.issuedTokens || 0);
+
+        const html = `
+          <table class="table-style">
+            <thead>
+              <tr>
+                <th colspan="5" style="text-align:left; background:#555; color:white;">
+                  Date: ${report.date || "-"} | Plant: ${report.plant || "-"} | Shift: ${report.shift || "-"} | Shift Person: ${report.shiftPerson || "-"}
+                </th>
+              </tr>
+              <tr>
+                <th>Material</th>
+                <th>Received Bills by Security</th>
+                <th>SAP Done</th>
+                <th>Pending</th>
+                <th>Remarks</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td>WOOD</td><td>${report.woodReceived || 0}</td><td>${report.woodSAP || 0}</td><td>${report.woodPending || 0}</td><td></td></tr>
+              <tr><td>STORE</td><td>${report.storeReceived || 0}</td><td>${report.storeSAP || 0}</td><td>${report.storePending || 0}</td><td></td></tr>
+              <tr><td>DISPATCH</td><td>${report.dispatchReceived || 0}</td><td>${report.dispatchSAP || 0}</td><td>${report.dispatchPending || 0}</td><td></td></tr>
+              <tr><td><strong>Total SAP Done</strong></td><td colspan="4">${totalSAP}</td></tr>
+              <tr><td>In Stock Token Card</td><td colspan="4">${report.inStockTokens || 0}</td></tr>
+              <tr><td>Issued Token Card</td><td colspan="4">${report.issuedTokens || 0}</td></tr>
+              <tr><td>Total Token Card</td><td colspan="4">${totalToken}</td></tr>
+              <tr><td><strong>Loss/Damage Token</strong></td><td colspan="4">${report.lossTokens || 0}</td></tr>
+              <tr><td>Remarks</td><td colspan="4">${report.remarks || ''}</td></tr>
+            </tbody>
+          </table>`;
+        
+        container.innerHTML += html;
+      });
+
+      const printContainer = document.createElement("div");
+      printContainer.id = "printContainer";
+      printContainer.style.display = "none";
+      document.body.appendChild(printContainer);
+
+      let printHTML = '';
+      let shiftCount = 0;
+      
+      filtered.forEach((report, index) => {
+        const totalSAP = (report.woodSAP || 0) + (report.storeSAP || 0) + (report.dispatchSAP || 0);
+        const totalToken = (report.inStockTokens || 0) + (report.issuedTokens || 0);
+
+        if (shiftCount % 2 === 0) {
+          printHTML += `<div class="print-page">`;
+        }
+
+        printHTML += `
+          <div class="print-shift-report">
+            <div class="print-company-header">
+              <div class="print-company-name">Balaji Action Buildwell Private Ltd.</div>
+              <div class="print-company-address">
+                C34, C34A TO D C-3, C6A TO C, PLOT 5, ELDECO SIDCUL INDUSTRIAL PARK, SITARGANJ PIN- 262405
+              </div>
+            </div>
+            
+            <div class="print-report-title">SHIFT REPORT</div>
+            
+            <div class="print-report-details">
+              <div><strong>Date:</strong> ${report.date || "-"}</div>
+              <div><strong>Plant:</strong> ${report.plant || "-"}</div>
+              <div><strong>Shift:</strong> ${report.shift || "-"}</div>
+              <div><strong>Shift Person:</strong> ${report.shiftPerson || "-"}</div>
+            </div>
+            
+            <table class="print-table">
+              <thead>
+                <tr>
+                  <th>Material</th>
+                  <th>Received</th>
+                  <th>SAP Done</th>
+                  <th>Pending</th>
+                  <th>Remarks</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>WOOD</td>
+                  <td>${report.woodReceived || 0}</td>
+                  <td>${report.woodSAP || 0}</td>
+                  <td>${report.woodPending || 0}</td>
+                  <td></td>
+                </tr>
+                <tr>
+                  <td>STORE</td>
+                  <td>${report.storeReceived || 0}</td>
+                  <td>${report.storeSAP || 0}</td>
+                  <td>${report.storePending || 0}</td>
+                  <td></td>
+                </tr>
+                <tr>
+                  <td>DISPATCH</td>
+                  <td>${report.dispatchReceived || 0}</td>
+                  <td>${report.dispatchSAP || 0}</td>
+                  <td>${report.dispatchPending || 0}</td>
+                  <td></td>
+                </tr>
+                <tr class="print-total-row">
+                  <td>Total SAP Done</td>
+                  <td colspan="4">${totalSAP}</td>
+                </tr>
+              </tbody>
+            </table>
+            
+            <table class="print-table">
+              <tr>
+                <td>In Stock Token Card</td>
+                <td>${report.inStockTokens || 0}</td>
+              </tr>
+              <tr>
+                <td>Issued Token Card</td>
+                <td>${report.issuedTokens || 0}</td>
+              </tr>
+              <tr class="print-total-row">
+                <td>Total Token Card</td>
+                <td>${totalToken}</td>
+              </tr>
+              <tr>
+                <td>Loss/Damage Token</td>
+                <td>${report.lossTokens || 0}</td>
+              </tr>
+            </table>
+            
+            <div style="margin-top: 3mm; font-size: 10pt;">
+              <strong>Remarks:</strong> ${report.remarks || ''}
+            </div>
+          </div>`;
+
+        if (shiftCount % 2 === 1 || index === filtered.length - 1) {
+          printHTML += `</div>`;
+        }
+        
+        shiftCount++;
+      });
+
+      printContainer.innerHTML = printHTML;
+
+    } catch (err) {
+      console.error("Error fetching shift reports:", err);
+      alert("Failed to load shift reports");
+    }
+  }
+
+  function exportShiftToExcel() {
+    const fromDate = document.getElementById("fromDate").value;
+    const toDate = document.getElementById("toDate").value;
+    const plant = document.getElementById("filterPlant").value;
+    const shift = document.getElementById("filterShift").value;
+
+    fetch("/api/reports/shift")
+      .then(res => res.json())
+      .then(data => {
+        const filtered = data.filter(r => {
+          const reportDate = new Date(r.date);
+          if (fromDate && reportDate < new Date(fromDate)) return false;
+          if (toDate && reportDate > new Date(toDate)) return false;
+          if (plant && r.plant !== plant) return false;
+          if (shift && r.shift !== shift) return false;
+          return true;
+        });
+
+        const formatted = filtered.map(r => [
+          r.date || "",
+          r.plant || "",
+          r.shift || "",
+          r.shiftPerson || "",
+          r.woodReceived || 0,
+          r.woodSAP || 0,
+          r.woodPending || 0,
+          r.storeReceived || 0,
+          r.storeSAP || 0,
+          r.storePending || 0,
+          r.dispatchReceived || 0,
+          r.dispatchSAP || 0,
+          r.dispatchPending || 0,
+          (r.woodSAP || 0) + (r.storeSAP || 0) + (r.dispatchSAP || 0),
+          r.inStockTokens || 0,
+          r.issuedTokens || 0,
+          (r.inStockTokens || 0) + (r.issuedTokens || 0),
+          r.lossTokens || 0,
+          r.remarks || ""
+        ]);
+
+        const header = [
+          "DATE",
+          "PLANT",
+          "SHIFT",
+          "SHIFT PERSON",
+          "WOOD (RECEIVED BY SECURITY)",
+          "WOOD (SAP DONE)",
+          "WOOD (PENDING)",
+          "STORE (RECEIVED BY SECURITY)",
+          "STORE (SAP DONE)",
+          "STORE (PENDING)",
+          "DISPATCH (RECEIVED BY SECURITY)",
+          "DISPATCH (SAP DONE)",
+          "DISPATCH (PENDING)",
+          "TOTAL SAP DONE",
+          "IN STOCK TOKEN CARD",
+          "ISSUED TOKEN CARD",
+          "TOTAL TOKEN CARD",
+          "LOSS/DAMAGE TOKEN",
+          "REMARKS"
+        ];
+
+        const ws = XLSX.utils.aoa_to_sheet([header, ...formatted]);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "Shift Reports");
+        XLSX.writeFile(wb, "shift_reports.xlsx");
+      })
+      .catch(err => {
+        console.error("Excel export error:", err);
+        alert("Failed to export Excel");
+      });
+  }
+
+  function printShiftReports() {
+    const printContainer = document.getElementById("printContainer");
+    if (!printContainer) {
+      alert("Please generate the report first");
+      return;
+    }
+    
+    const printContent = printContainer.cloneNode(true);
+    printContent.style.display = "block";
+    printContent.style.position = "absolute";
+    printContent.style.left = "0";
+    printContent.style.top = "0";
+    
+    const printWindow = window.open('', '', 'width=800,height=600');
+    printWindow.document.write('<html><head><title>Shift Reports</title>');
+    printWindow.document.write('<link rel="stylesheet" href="styles.css">');
+    printWindow.document.write('</head><body>');
+    printWindow.document.write(printContent.innerHTML);
+    printWindow.document.write('</body></html>');
+    printWindow.document.close();
+    
+    printWindow.onload = function() {
+      printWindow.print();
+      printWindow.close();
+    };
+  }
+
+  async function fetchMethanolReports() {
+    const fromDate = document.getElementById('methanolFromDate').value;
+    const toDate = document.getElementById('methanolToDate').value;
+    const submittedBy = document.getElementById('methanolNameFilter').value.toLowerCase();
+    const tbody = document.querySelector("#methanolReportTable tbody");
+
+    try {
+      let url = '/api/methanol';
+      const params = new URLSearchParams();
+      if (fromDate) params.append('from', fromDate);
+      if (toDate) params.append('to', toDate);
+      
+      if (params.toString()) {
+        url += `?${params.toString()}`;
+      }
+
+      const res = await fetch(url);
+      const data = await res.json();
+
+      tbody.innerHTML = "";
+      
+      const nameSet = new Set();
+      
+      data.forEach((entry, index) => {
+        if (submittedBy && (!entry.name || !entry.name.toLowerCase().includes(submittedBy))) {
+          return;
+        }
+        
+        const row = document.createElement("tr");
+        row.innerHTML = `
+          <td>${index + 1}</td>
+          <td>${entry.date || "-"}</td>
+          <td>${entry.vehicleNo || "-"}</td>
+          <td>${entry.material || "METHANOL"}</td>
+          <td>${entry.outsideWeight || "-"}</td>
+          <td>${entry.mtWeight || "-"}</td>
+          <td>${entry.difference || (entry.outsideWeight - entry.mtWeight).toFixed(2) || "-"}</td>
+          <td>${entry.name || "-"}</td>
+        `;
+        tbody.appendChild(row);
+        
+        if (entry.name) nameSet.add(entry.name);
+      });
+
+      const nameFilter = document.getElementById("methanolNameFilter");
+      nameFilter.innerHTML = '<option value="">All</option>' + 
+        [...nameSet].map(name => `<option value="${name}">${name}</option>`).join('');
+
+    } catch (err) {
+      console.error("Fetch methanol reports error:", err);
+      alert("Failed to load methanol reports");
+    }
+  }
+
+  function exportMethanolToExcel() {
+    const table = document.getElementById("methanolReportTable");
+    const wb = XLSX.utils.table_to_book(table, { sheet: "MethanolReport" });
+    XLSX.writeFile(wb, "methanol_weight_reports.xlsx");
+  }
+
+  async function fetchLongBodyReports() {
+    const fromDate = document.getElementById('longBodyFromDate').value;
+    const toDate = document.getElementById('longBodyToDate').value;
+    const vehicleFilter = document.getElementById('longBodyVehicleFilter').value.toLowerCase();
+    const nameFilter = document.getElementById('longBodyNameFilter').value.toLowerCase();
+    const tbody = document.querySelector("#longBodyReportTable tbody");
+
+    try {
+      let url = '/api/long-body';
+      const params = new URLSearchParams();
+      if (fromDate) params.append('from', fromDate);
+      if (toDate) params.append('to', toDate);
+      
+      if (params.toString()) {
+        url += `?${params.toString()}`;
+      }
+
+      const res = await fetch(url);
+      const data = await res.json();
+
+      tbody.innerHTML = "";
+      
+      const nameSet = new Set();
+      let serial = 1;
+      
+      data.forEach(entry => {
+        if (vehicleFilter && (!entry.vehicle || !entry.vehicle.toLowerCase().includes(vehicleFilter))) {
+          return;
+        }
+        if (nameFilter && (!entry.name || !entry.name.toLowerCase().includes(nameFilter))) {
+          return;
+        }
+        
+        const row = document.createElement("tr");
+        row.innerHTML = `
+          <td>${serial++}</td>
+          <td>${entry.date || "-"}</td>
+          <td>${entry.vehicle || "-"}</td>
+          <td>${entry.material || "-"}</td>
+          <td>${entry.outsideWeight || "-"}</td>
+          <td>${entry.old80 || "-"}</td>
+          <td>${entry.new80 || "-"}</td>
+          <td>${entry.difference || "-"}</td>
+          <td>${entry.name || "-"}</td>
+        `;
+        tbody.appendChild(row);
+        
+        if (entry.name) nameSet.add(entry.name);
+      });
+
+      const nameFilterDropdown = document.getElementById("longBodyNameFilter");
+      nameFilterDropdown.innerHTML = '<option value="">All</option>' + 
+        [...nameSet].map(name => `<option value="${name}">${name}</option>`).join('');
+
+    } catch (err) {
+      console.error("Fetch long body reports error:", err);
+      alert("Failed to load long body reports");
+    }
+  }
+
+  function exportLongBodyToExcel() {
+    const table = document.getElementById("longBodyReportTable");
+    const wb = XLSX.utils.table_to_book(table, { sheet: "LongBodyReport" });
+    XLSX.writeFile(wb, "long_body_reports.xlsx");
+  }
+
+  function printLongBodyReports() {
+    const printContent = document.getElementById("longBodyWeightReport").cloneNode(true);
+    printContent.style.width = "100%";
+    
+    // Remove buttons from print
+    const buttons = printContent.querySelectorAll('.long-body-actions');
+    buttons.forEach(btn => btn.remove());
+    
+    const printWindow = window.open('', '', 'width=800,height=600');
+    printWindow.document.write('<html><head><title>Long Body Weight Reports</title>');
+    printWindow.document.write('<style>body { font-family: Arial; } table { width: 100%; border-collapse: collapse; } th, td { border: 1px solid #000; padding: 8px; text-align: center; }</style>');
+    printWindow.document.write('</head><body>');
+    printWindow.document.write('<h1>Long Body Weight Reports</h1>');
+    printWindow.document.write(printContent.innerHTML);
+    printWindow.document.write('</body></html>');
+    printWindow.document.close();
+    
+    printWindow.onload = function() {
+      printWindow.print();
+      printWindow.close();
+    };
+  }
+
+  async function fetchWoodBillReports() {
+    const fromDate = document.getElementById('woodBillFromDate').value;
+    const toDate = document.getElementById('woodBillToDate').value;
+    const receiver = document.getElementById('woodBillReceiverFilter').value.toLowerCase();
+    const submittedBy = document.getElementById('woodBillSubmittedByFilter').value.toLowerCase();
+    const plant = document.getElementById('woodBillPlantFilter').value.toLowerCase();
+    
+    const tbody = document.querySelector("#woodBillReportTable tbody");
+
+    try {
+      let url = '/api/wood-bill';
+      const params = new URLSearchParams();
+      if (fromDate) params.append('from', fromDate);
+      if (toDate) params.append('to', toDate);
+      
+      if (params.toString()) {
+        url += `?${params.toString()}`;
+      }
+
+      const res = await fetch(url);
+      const data = await res.json();
+
+      tbody.innerHTML = "";
+      
+      const receiverSet = new Set();
+      const submittedBySet = new Set();
+      let serial = 1;
+      
+      data.forEach(entry => {
+        if (receiver && (!entry.receiverName || !entry.receiverName.toLowerCase().includes(receiver))) {
+          return;
+        }
+        if (submittedBy && (!entry.submittedBy || !entry.submittedBy.toLowerCase().includes(submittedBy))) {
+          return;
+        }
+        if (plant && (!entry.plant || !entry.plant.toLowerCase().includes(plant))) {
+          return;
+        }
+        
+        const row = document.createElement("tr");
+        row.innerHTML = `
+          <td>${serial++}</td>
+          <td>${entry.sapDate || "-"}</td>
+          <td>${entry.billDate || "-"}</td>
+          <td>${entry.quantity || "-"}</td>
+          <td>${entry.submitTime || "-"}</td>
+          <td>${entry.receiverName || "-"}</td>
+          <td>${entry.submittedBy || "-"}</td>
+          <td>${entry.plant || "-"}</td>
+        `;
+        tbody.appendChild(row);
+        
+        if (entry.receiverName) receiverSet.add(entry.receiverName);
+        if (entry.submittedBy) submittedBySet.add(entry.submittedBy);
+      });
+
+      // Populate filter dropdowns
+      const receiverFilter = document.getElementById("woodBillReceiverFilter");
+      receiverFilter.innerHTML = '<option value="">All</option>' + 
+        [...receiverSet].map(name => `<option value="${name}">${name}</option>`).join('');
+
+      const submittedByFilter = document.getElementById("woodBillSubmittedByFilter");
+      submittedByFilter.innerHTML = '<option value="">All</option>' + 
+        [...submittedBySet].map(name => `<option value="${name}">${name}</option>`).join('');
+
+    } catch (err) {
+      console.error("Fetch wood bill reports error:", err);
+      alert("Failed to load wood bill reports");
+    }
+  }
+
+  function exportWoodBillToExcel() {
+    const table = document.getElementById("woodBillReportTable");
+    const wb = XLSX.utils.table_to_book(table, { sheet: "WoodBillReport" });
+    XLSX.writeFile(wb, "wood_bill_reports.xlsx");
+  }
+
+  function printWoodBillReports() {
+    const printContent = document.getElementById("woodBillReport").cloneNode(true);
+    printContent.style.width = "100%";
+    
+    // Remove buttons from print
+    const buttons = printContent.querySelectorAll('.wood-bill-actions');
+    buttons.forEach(btn => btn.remove());
+    
+    const printWindow = window.open('', '', 'width=800,height=600');
+    printWindow.document.write('<html><head><title>Wood Bill Reports</title>');
+    printWindow.document.write('<style>body { font-family: Arial; } table { width: 100%; border-collapse: collapse; } th, td { border: 1px solid #000; padding: 8px; text-align: center; }</style>');
+    printWindow.document.write('</head><body>');
+    printWindow.document.write('<h1>Wood Bill Submit Reports</h1>');
+    printWindow.document.write(printContent.innerHTML);
+    printWindow.document.write('</body></html>');
+    printWindow.document.close();
+    
+    printWindow.onload = function() {
+      printWindow.print();
+      printWindow.close();
+    };
+  }
+
+  window.onload = function() {
+    loadProfile();
+    hideAllSections();
+    
+    // Initialize date filters
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById('woodBillFromDate').value = today;
+    document.getElementById('woodBillToDate').value = today;
+    document.getElementById('methanolFromDate').value = today;
+    document.getElementById('methanolToDate').value = today;
+    document.getElementById('longBodyFromDate').value = today;
+    document.getElementById('longBodyToDate').value = today;
+    
+    // Set initial dates for shift report if needed
+    if (document.getElementById('fromDate')) {
+      document.getElementById('fromDate').value = today;
+      document.getElementById('toDate').value = today;
+    }
+  };
+
+    // Global variables
+        let currentPlant = '';
+        let tokenCards = [];
+        let inactiveTokens = [];
+        let lossTokens = [];
+        let activatedTokens = [];
+        
+        // Initialize DataTables
+        $(document).ready(function() {
+            $('#tokenCardTable').DataTable();
+            $('#inactiveTokenTable').DataTable();
+            $('#lossTokenTable').DataTable();
+            $('#activatedTokenTable').DataTable();
+            
+            // Plant selection change handler
+            $('#plantSelect').change(function() {
+                currentPlant = $(this).val();
+                if (currentPlant) {
+                    $('#mainContent').show();
+                    loadPlantData(currentPlant);
+                } else {
+                    $('#mainContent').hide();
+                }
+            });
+        });
+        
+        // Load data for selected plant
+        function loadPlantData(plant) {
+            // In a real application, this would be an AJAX call to your backend
+            console.log(`Loading data for plant: ${plant}`);
+            
+            // Simulate loading data from server
+            setTimeout(() => {
+                // Sample data - replace with actual API calls
+                tokenCards = [
+                    { id: 1, cardNumber: 'TC-'+plant+'-001', status: 'Active' },
+                    { id: 2, cardNumber: 'TC-'+plant+'-002', status: 'Active' },
+                    { id: 3, cardNumber: 'TC-'+plant+'-003', status: 'Active' },
+                    { id: 4, cardNumber: 'TC-'+plant+'-004', status: 'Inactive' },
+                    { id: 5, cardNumber: 'TC-'+plant+'-005', status: 'Lost' }
+                ];
+                
+                inactiveTokens = [
+                    { id: 1, tokenId: 4, cardNumber: 'TC-'+plant+'-004', problem: 'Damaged chip', reportedDate: '2023-07-15' }
+                ];
+                
+                lossTokens = [
+                    { id: 1, tokenId: 5, cardNumber: 'TC-'+plant+'-005', status: 'Lost', reportedDate: '2023-07-10' }
+                ];
+                
+                activatedTokens = [];
+                
+                // Update UI with loaded data
+                updateTokenCardTable();
+                updateInactiveTokenTable();
+                updateLossTokenTable();
+                updateActivatedTokenTable();
+                updateTotalQuantity();
+                
+            }, 500);
+        }
+        
+        // Show/hide sections
+        function showSection(sectionId) {
+            $('.card-section').hide();
+            $('#' + sectionId).show();
+        }
+        
+        // Update token card table
+        function updateTokenCardTable() {
+            const table = $('#tokenCardTable').DataTable();
+            table.clear();
+            
+            tokenCards.forEach(token => {
+                let statusClass = '';
+                if (token.status === 'Active') statusClass = 'status-active';
+                else if (token.status === 'Inactive') statusClass = 'status-inactive';
+                else if (token.status === 'Lost') statusClass = 'status-lost';
+                
+                table.row.add([
+                    `<input type="text" class="form-control token-card-number" value="${token.cardNumber}" data-id="${token.id}">`,
+                    `<span class="${statusClass}">${token.status}</span>`,
+                    `<button class="btn btn-sm btn-danger" onclick="deleteTokenCard(${token.id})">Delete</button>`
+                ]);
+            });
+            
+            table.draw();
+        }
+        
+        // Update inactive token table
+        function updateInactiveTokenTable() {
+            const table = $('#inactiveTokenTable').DataTable();
+            table.clear();
+            
+            inactiveTokens.forEach(token => {
+                table.row.add([
+                    `<select class="form-select inactive-token-select" data-id="${token.id}">
+                        ${tokenCards.map(t => 
+                            `<option value="${t.id}" ${t.id === token.tokenId ? 'selected' : ''}>${t.cardNumber}</option>`
+                        ).join('')}
+                    </select>`,
+                    `<input type="text" class="form-control problem-description" value="${token.problem}" data-id="${token.id}">`,
+                    token.reportedDate,
+                    `<button class="btn btn-sm btn-danger" onclick="deleteInactiveToken(${token.id})">Delete</button>`
+                ]);
+            });
+            
+            table.draw();
+        }
+
+// Update the sample data in loadPlantData function
+lossTokens = [
+    { 
+        id: 1, 
+        tokenId: 5, 
+        cardNumber: 'TC-'+plant+'-005', 
+        status: 'Lost', 
+        reportedDate: '2023-07-10',
+        reportedBy: 'John Doe (Shift A)'  // Added shift person info
+    }
+];
+
+// Update the updateLossTokenTable function
+function updateLossTokenTable() {
+    const table = $('#lossTokenTable').DataTable();
+    table.clear();
+    
+    lossTokens.forEach(token => {
+        table.row.add([
+            token.cardNumber,
+            `<span class="status-lost">${token.status}</span>`,
+            token.reportedDate,
+            token.reportedBy || 'N/A',  // Display shift person's name
+            `<button class="btn btn-sm btn-success" onclick="restoreLostToken(${token.id})">Restore</button>`
+        ]);
+    });
+    
+    table.draw();
+}
+        
+        // Update activated token table
+        function updateActivatedTokenTable() {
+            const table = $('#activatedTokenTable').DataTable();
+            table.clear();
+            
+            activatedTokens.forEach(token => {
+                table.row.add([
+                    `<select class="form-select activated-token-select" data-id="${token.id}">
+                        ${inactiveTokens.map(t => 
+                            `<option value="${t.id}" ${t.id === token.tokenId ? 'selected' : ''}>${t.cardNumber}</option>`
+                        ).join('')}
+                    </select>`,
+                    new Date().toISOString().split('T')[0],
+                    `<input type="text" class="form-control activation-notes" value="${token.notes || ''}" data-id="${token.id}">`,
+                    `<button class="btn btn-sm btn-danger" onclick="deleteActivatedToken(${token.id})">Delete</button>`
+                ]);
+            });
+            
+            table.draw();
+        }
+        
+        // Update total quantity display
+        function updateTotalQuantity() {
+            const activeCount = tokenCards.filter(t => t.status === 'Active').length;
+            $('#totalQuantity').text(activeCount);
+        }
+        
+        // Add new token row
+        function addNewTokenRow() {
+            const newId = tokenCards.length > 0 ? Math.max(...tokenCards.map(t => t.id)) + 1 : 1;
+            tokenCards.push({
+                id: newId,
+                cardNumber: 'TC-'+currentPlant+'-'+(100 + newId).toString().substring(1),
+                status: 'Active'
+            });
+            updateTokenCardTable();
+        }
+        
+        // Add new activated token row
+        function addNewActivatedTokenRow() {
+            const newId = activatedTokens.length > 0 ? Math.max(...activatedTokens.map(t => t.id)) + 1 : 1;
+            activatedTokens.push({
+                id: newId,
+                tokenId: inactiveTokens.length > 0 ? inactiveTokens[0].id : null,
+                notes: ''
+            });
+            updateActivatedTokenTable();
+        }
+        
+        // Delete token card
+        function deleteTokenCard(id) {
+            if (confirm('Are you sure you want to delete this token card?')) {
+                tokenCards = tokenCards.filter(t => t.id !== id);
+                updateTokenCardTable();
+                updateTotalQuantity();
+            }
+        }
+        
+        // Delete inactive token
+        function deleteInactiveToken(id) {
+            if (confirm('Are you sure you want to delete this inactive token record?')) {
+                inactiveTokens = inactiveTokens.filter(t => t.id !== id);
+                updateInactiveTokenTable();
+            }
+        }
+        
+        // Delete activated token
+        function deleteActivatedToken(id) {
+            if (confirm('Are you sure you want to delete this activation record?')) {
+                activatedTokens = activatedTokens.filter(t => t.id !== id);
+                updateActivatedTokenTable();
+            }
+        }
+        
+        // Restore lost token
+        function restoreLostToken(id) {
+            const token = lossTokens.find(t => t.id === id);
+            if (token) {
+                const mainToken = tokenCards.find(t => t.id === token.tokenId);
+                if (mainToken) {
+                    mainToken.status = 'Active';
+                    lossTokens = lossTokens.filter(t => t.id !== id);
+                    updateTokenCardTable();
+                    updateLossTokenTable();
+                    updateTotalQuantity();
+                }
+            }
+        }
+        
+        // Save token cards
+        function saveTokenCards() {
+            // In a real app, this would send data to the server
+            alert('Token cards saved successfully!');
+            console.log('Saved token cards:', tokenCards);
+        }
+        
+        // Save inactive tokens
+        function saveInactiveTokens() {
+            // In a real app, this would send data to the server
+            alert('Inactive tokens saved successfully!');
+            console.log('Saved inactive tokens:', inactiveTokens);
+        }
+        
+        // Save activated tokens
+        function saveActivatedTokens() {
+            // In a real app, this would send data to the server
+            alert('Activated tokens saved successfully!');
+            console.log('Saved activated tokens:', activatedTokens);
+        }
+        
+        // View functions
+        function viewTokenQuantity() {
+            const activeCount = tokenCards.filter(t => t.status === 'Active').length;
+            const inactiveCount = tokenCards.filter(t => t.status === 'Inactive').length;
+            const lostCount = tokenCards.filter(t => t.status === 'Lost').length;
+            
+            const content = `
+                <h4>Token Card Quantities</h4>
+                <table class="table">
+                    <tr><th>Active Tokens:</th><td>${activeCount}</td></tr>
+                    <tr><th>Inactive Tokens:</th><td>${inactiveCount}</td></tr>
+                    <tr><th>Lost Tokens:</th><td>${lostCount}</td></tr>
+                    <tr><th>Total Tokens:</th><td>${tokenCards.length}</td></tr>
+                </table>
+            `;
+            
+            $('#viewDataModalTitle').text('Token Card Quantity Report');
+            $('#viewDataModalBody').html(content);
+            $('#viewDataModal').modal('show');
+        }
+        
+        function viewTotalTokens() {
+            const content = `
+                <h4>All Token Cards</h4>
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Token Card Number</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${tokenCards.map(t => `
+                            <tr>
+                                <td>${t.cardNumber}</td>
+                                <td class="${t.status === 'Active' ? 'status-active' : t.status === 'Inactive' ? 'status-inactive' : 'status-lost'}">
+                                    ${t.status}
+                                </td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            `;
+            
+            $('#viewDataModalTitle').text('All Token Cards');
+            $('#viewDataModalBody').html(content);
+            $('#viewDataModal').modal('show');
+        }
+        
+        function viewInactiveTokens() {
+            const content = `
+                <h4>Inactive Token Cards</h4>
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Token Card Number</th>
+                            <th>Problem Description</th>
+                            <th>Reported Date</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${inactiveTokens.map(t => `
+                            <tr>
+                                <td>${t.cardNumber}</td>
+                                <td>${t.problem}</td>
+                                <td>${t.reportedDate}</td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            `;
+            
+            $('#viewDataModalTitle').text('Inactive Token Cards');
+            $('#viewDataModalBody').html(content);
+            $('#viewDataModal').modal('show');
+        }
+        
+      function viewLostTokens() {
+    const content = `
+        <h4>Lost Token Cards</h4>
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Token Card Number</th>
+                    <th>Status</th>
+                    <th>Reported Date</th>
+                    <th>Reported By</th>
+                </tr>
+            </thead>
+            <tbody>
+                ${lossTokens.map(t => `
+                    <tr>
+                        <td>${t.cardNumber}</td>
+                        <td class="status-lost">${t.status}</td>
+                        <td>${t.reportedDate}</td>
+                        <td>${t.reportedBy || 'N/A'}</td>
+                    </tr>
+                `).join('')}
+            </tbody>
+        </table>
+    `;
+    
+    $('#viewDataModalTitle').text('Lost Token Cards');
+    $('#viewDataModalBody').html(content);
+    $('#viewDataModal').modal('show');
+}        
+        function viewActivatedTokens() {
+            const content = `
+                <h4>Activated Token Cards</h4>
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Token Card Number</th>
+                            <th>Activated Date</th>
+                            <th>Notes</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${activatedTokens.map(t => `
+                            <tr>
+                                <td>${t.cardNumber}</td>
+                                <td>${t.activatedDate || new Date().toISOString().split('T')[0]}</td>
+                                <td>${t.notes || ''}</td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            `;
+            
+            $('#viewDataModalTitle').text('Activated Token Cards');
+            $('#viewDataModalBody').html(content);
+            $('#viewDataModal').modal('show');
+        }
+</script>
 </body>
 </html>
