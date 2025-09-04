@@ -385,7 +385,6 @@ app.post("/api/send-otp", async (req, res) => {
   }
 });
 app.post("/api/reset-password", async (req, res) => {
-app.post("/api/reset-password", async (req, res) => {
   const { userId, otp, newPassword } = req.body;
   const stored = otpStore.get(userId);
 
