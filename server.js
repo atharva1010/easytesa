@@ -347,26 +347,49 @@ app.get("/api/excel-data/:category", async (req, res) => {
 
 // OTP Endpoints
 app.post("/api/send-otp", async (req, res) => {
-  const { userId } = req.body;
-  const user = await User.findOne({ userId });
-  if (!user) return res.json({ success: false, message: "User ID not found" });
-
-  const otp = Math.floor(100000 + Math.random() * 900000);
-  otpStore.set(userId, { otp, expires: Date.now() + 5 * 60 * 1000 });
-
   try {
-    await twilioClient.messages.create({
-      body: `Hi ${user.username}, Your OTP for password reset is ${otp}. Do not share this anyone. Valid for 10 mins. support easyTESA`,
+    const { userId } = req.body;
+    console.log("👉 Received OTP request for userId:", userId);
+
+    // Find user
+    const user = await User.findOne({ userId });
+    if (!user) {
+      console.warn("⚠️ User not found for userId:", userId);
+      return res.json({ success: false, message: "User ID not found" });
+    }
+
+    console.log("✅ User found:", user.username, "Mobile:", user.mobile);
+
+    // Generate OTP
+    const otp = Math.floor(100000 + Math.random() * 900000);
+    otpStore.set(userId, { otp, expires: Date.now() + 5 * 60 * 1000 });
+    console.log(`🔑 OTP generated for ${user.username}:`, otp);
+
+    // Debug environment variables
+    console.log("📞 Twilio FROM number:", process.env.TWILIO_PHONE);
+    console.log("📞 Sending TO number:", `+91${user.mobile}`);
+
+    // Send OTP
+    const message = await twilioClient.messages.create({
+      body: `Hi ${user.username}, Your OTP for password reset is ${otp}. Do not share with anyone. Valid for 10 mins. support easyTESA`,
       from: process.env.TWILIO_PHONE,
       to: `+91${user.mobile}`
     });
+
+    console.log("✅ Twilio message sent. SID:", message.sid);
+
     res.json({ success: true, message: "OTP sent to registered mobile" });
+
   } catch (err) {
-    console.error("Twilio Error:", err);
-    res.json({ success: false, message: "Failed to send OTP" });
+    console.error("❌ Twilio Error:", err);
+    res.json({
+      success: false,
+      message: "Failed to send OTP",
+      error: err.message,   // extra detail
+      code: err.code || null // Twilio error code if available
+    });
   }
 });
-
 app.post("/api/reset-password", async (req, res) => {
   const { userId, otp, newPassword } = req.body;
   const stored = otpStore.get(userId);
