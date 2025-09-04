@@ -385,10 +385,9 @@ app.post("/api/send-otp", async (req, res) => {
   }
 });
 app.post("/api/reset-password", async (req, res) => {
+app.post("/api/reset-password", async (req, res) => {
   const { userId, otp, newPassword } = req.body;
   const stored = otpStore.get(userId);
-
-  console.log("👉 Reset Password - User:", userId, "Entered OTP:", otp, "Stored:", stored);
 
   if (!stored || String(stored.otp) !== String(otp) || stored.expires < Date.now()) {
     return res.json({ success: false, message: "Invalid or expired OTP" });
@@ -397,8 +396,12 @@ app.post("/api/reset-password", async (req, res) => {
   const user = await User.findOne({ userId });
   if (!user) return res.json({ success: false, message: "User not found" });
 
-  user.password = await bcrypt.hash(newPassword, 10);
+  // ✅ always hash password
+  const hashedPassword = await bcrypt.hash(newPassword, 10);
+  user.password = hashedPassword;
   await user.save();
+
+  console.log("✅ Password reset done for:", user.username, "| Hash:", hashedPassword);
 
   otpStore.delete(userId);
   res.json({ success: true, message: "Password reset successful" });
