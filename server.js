@@ -385,10 +385,13 @@ app.post("/api/send-otp", async (req, res) => {
   }
 });
 app.post("/api/reset-password", async (req, res) => {
+app.post("/api/reset-password", async (req, res) => {
   const { userId, otp, newPassword } = req.body;
   const stored = otpStore.get(userId);
 
-  if (!stored || stored.otp != otp || stored.expires < Date.now()) {
+  console.log("👉 Reset Password - User:", userId, "Entered OTP:", otp, "Stored:", stored);
+
+  if (!stored || String(stored.otp) !== String(otp) || stored.expires < Date.now()) {
     return res.json({ success: false, message: "Invalid or expired OTP" });
   }
 
@@ -406,17 +409,18 @@ app.post("/api/verify-otp", (req, res) => {
   const { userId, otp } = req.body;
   const stored = otpStore.get(userId);
 
+  console.log("👉 Verify OTP - User:", userId, "Entered:", otp, "Stored:", stored);
+
   if (!stored) {
     return res.json({ success: false, message: "OTP not found" });
   }
 
-  if (stored.otp != otp || stored.expires < Date.now()) {
+  if (String(stored.otp) !== String(otp) || stored.expires < Date.now()) {
     return res.json({ success: false, message: "Invalid or expired OTP" });
   }
 
   return res.json({ success: true, message: "OTP verified successfully" });
 });
-
 app.post("/api/update-password", async (req, res) => {
   try {
     const { userId, newPassword } = req.body;
