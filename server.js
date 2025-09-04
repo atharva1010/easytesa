@@ -344,14 +344,16 @@ app.get("/api/excel-data/:category", async (req, res) => {
     res.json({ success: false, message: "Failed to fetch data" });
   }
 });
+// ===================== OTP STORE =====================
+const otpStore = new Map(); // In-memory store
 
-// OTP Endpoints
+// ===================== SEND OTP =====================
 app.post("/api/send-otp", async (req, res) => {
   try {
     const { userId } = req.body;
     console.log("👉 OTP request for userId:", userId);
 
-    const user = await User.findOne({ userId }).lean(); // ✅ lean() added
+    const user = await User.findOne({ userId }).lean();
     if (!user) {
       return res.json({ success: false, message: "User ID not found" });
     }
@@ -359,15 +361,14 @@ app.post("/api/send-otp", async (req, res) => {
     console.log("✅ User found:", user.username, "| Mobile:", user.mobile);
 
     if (!user.mobile) {
-      console.warn("⚠️ Mobile missing for user:", user.username);
       return res.json({ success: false, message: "Mobile number not registered for this user" });
     }
 
     const otp = Math.floor(100000 + Math.random() * 900000);
-    otpStore.set(userId, { otp, expires: Date.now() + 5 * 60 * 1000 });
+    otpStore.set(userId, { otp, expires: Date.now() + 10 * 60 * 1000 }); // 10 mins expiry
 
     const phone = `+91${user.mobile}`;
-    console.log(`📞 Sending OTP to ${user.username} at ${phone}`);
+    console.log(`📞 Sending OTP to ${user.username} at ${phone}, OTP = ${otp}`);
 
     const message = await twilioClient.messages.create({
       body: `Hi ${user.username}, Your OTP for password reset is ${otp}. Do not share with anyone. Valid for 10 mins. support easyTESA`,
@@ -376,7 +377,6 @@ app.post("/api/send-otp", async (req, res) => {
     });
 
     console.log("✅ OTP sent successfully. SID:", message.sid);
-
     res.json({ success: true, message: "OTP sent to registered mobile" });
 
   } catch (err) {
@@ -385,28 +385,7 @@ app.post("/api/send-otp", async (req, res) => {
   }
 });
 
-app.post("/api/reset-password", async (req, res) => {
-  const { userId, otp, newPassword } = req.body;
-  const stored = otpStore.get(userId);
-
-  if (!stored || String(stored.otp) !== String(otp) || stored.expires < Date.now()) {
-    return res.json({ success: false, message: "Invalid or expired OTP" });
-  }
-
-  const user = await User.findOne({ userId });
-  if (!user) return res.json({ success: false, message: "User not found" });
-
-  // ✅ always hash password
-  const hashedPassword = await bcrypt.hash(newPassword, 10);
-  user.password = hashedPassword;
-  await user.save();
-
-  console.log("✅ Password reset done for:", user.username, "| Hash:", hashedPassword);
-
-  otpStore.delete(userId);
-  res.json({ success: true, message: "Password reset successful" });
-});
-
+// ===================== VERIFY OTP =====================
 app.post("/api/verify-otp", (req, res) => {
   const { userId, otp } = req.body;
   const stored = otpStore.get(userId);
@@ -423,6 +402,36 @@ app.post("/api/verify-otp", (req, res) => {
 
   return res.json({ success: true, message: "OTP verified successfully" });
 });
+
+// ===================== RESET PASSWORD VIA OTP =====================
+app.post("/api/reset-password", async (req, res) => {
+  try {
+    const { userId, otp, newPassword } = req.body;
+    const stored = otpStore.get(userId);
+
+    if (!stored || String(stored.otp) !== String(otp) || stored.expires < Date.now()) {
+      return res.json({ success: false, message: "Invalid or expired OTP" });
+    }
+
+    const user = await User.findOne({ userId });
+    if (!user) return res.json({ success: false, message: "User not found" });
+
+    // ✅ Hash password always
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    user.password = hashedPassword;
+    await user.save();
+
+    console.log("✅ Password reset done for:", user.username, "| Hash:", hashedPassword);
+
+    otpStore.delete(userId);
+    res.json({ success: true, message: "Password reset successful" });
+  } catch (err) {
+    console.error("Reset password error:", err);
+    res.status(500).json({ success: false, message: "Internal server error" });
+  }
+});
+
+// ===================== UPDATE PASSWORD WITHOUT OTP (ADMIN/USER) =====================
 app.post("/api/update-password", async (req, res) => {
   try {
     const { userId, newPassword } = req.body;
@@ -434,6 +443,8 @@ app.post("/api/update-password", async (req, res) => {
     user.password = hashedPassword;
     await user.save();
 
+    console.log("✅ Password updated manually for:", user.username);
+
     res.json({ success: true, message: "Password updated successfully" });
   } catch (err) {
     console.error("Update password error:", err);
@@ -441,6 +452,38 @@ app.post("/api/update-password", async (req, res) => {
   }
 });
 
+// ===================== LOGIN =====================
+app.post("/api/login", async (req, res) => {
+  const { userId, password } = req.body;
+
+  try {
+    const user = await User.findOne({ userId });
+    if (!user) return res.json({ success: false, message: "Invalid User ID" });
+
+    console.log("👉 Login attempt:", userId, "Entered password:", password);
+    console.log("👉 Stored hash:", user.password);
+
+    const match = await bcrypt.compare(password, user.password);
+    console.log("👉 Compare result:", match);
+
+    if (!match) return res.json({ success: false, message: "Incorrect password" });
+
+    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: "1d" });
+
+    res.json({
+      success: true,
+      token,
+      userId: user.userId,
+      username: user.username,
+      role: user.role
+    });
+
+  } catch (err) {
+    console.error("Login Error:", err);
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+});
+        
 // Message Endpoints
 app.get("/api/messages/unread-count/:userId", async (req, res) => {
   try {
