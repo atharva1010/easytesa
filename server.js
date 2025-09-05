@@ -475,11 +475,9 @@ app.post("/api/login", async (req, res) => {
     const user = await User.findOne({ userId });
     if (!user) return res.json({ success: false, message: "Invalid User ID" });
 
-    console.log("👉 Login attempt", {
-      userId,
-      enteredPassword: password,
-      storedHash: user.password
-    });
+    console.log("👉 Login attempt:", userId);
+console.log("👉 Entered password:", password);
+console.log("👉 Stored hash:", user.password);
 
     const match = await bcrypt.compare(password, user.password);
     console.log("👉 Compare result:", match);
@@ -503,6 +501,7 @@ app.post("/api/login", async (req, res) => {
     res.status(500).json({ success: false, message: "Server error" });
   }
 });
+
         
 // Message Endpoints
 app.get("/api/messages/unread-count/:userId", async (req, res) => {
