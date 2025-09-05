@@ -344,8 +344,7 @@ app.get("/api/excel-data/:category", async (req, res) => {
     res.json({ success: false, message: "Failed to fetch data" });
   }
 });
-// ===================== OTP STORE =====================
-const otpStore = new Map(); // In-memory store
+
 
 // ===================== SEND OTP =====================
 app.post("/api/send-otp", async (req, res) => {
