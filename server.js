@@ -435,36 +435,23 @@ app.post("/api/reset-password", async (req, res) => {
 });
 // ===================== UPDATE PASSWORD WITHOUT OTP (ADMIN/USER) =====================
 app.post("/api/update-password", async (req, res) => {
+app.post("/api/update-password", async (req, res) => {
+  const { userId, newPassword } = req.body;
+
   try {
-    const { userId, oldPassword, newPassword } = req.body;
-
-    // Find user
     const user = await User.findOne({ userId });
-    if (!user) {
-      return res.json({ success: false, message: "User not found" });
-    }
+    if (!user) return res.json({ success: false, message: "User not found" });
 
-    // ✅ If oldPassword is provided, verify it before updating
-    if (oldPassword) {
-      const match = await bcrypt.compare(oldPassword, user.password);
-      if (!match) {
-        return res.json({ success: false, message: "Old password is incorrect" });
-      }
-    }
-
-    // ✅ Always hash the new password
-    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    const hashedPassword = await bcrypt.hash(newPassword, 10); // ✅ Always hash
     user.password = hashedPassword;
-
     await user.save();
 
-    console.log("✅ Password updated for:", user.username);
+    console.log("✅ Password updated & hashed for:", user.username);
 
     res.json({ success: true, message: "Password updated successfully" });
-
   } catch (err) {
-    console.error("Update password error:", err);
-    res.status(500).json({ success: false, message: "Internal server error" });
+    console.error("Update Password Error:", err);
+    res.status(500).json({ success: false, message: "Server error" });
   }
 });
 // ===================== LOGIN =====================
