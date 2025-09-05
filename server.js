@@ -415,38 +415,21 @@ app.post("/api/reset-password", async (req, res) => {
     const user = await User.findOne({ userId });
     if (!user) return res.json({ success: false, message: "User not found" });
 
-    // ✅ Hash password always
+    // ✅ Always hash password
     const hashedPassword = await bcrypt.hash(newPassword, 10);
     user.password = hashedPassword;
     await user.save();
 
-    console.log("✅ Password reset done for:", user.username, "| Hash:", hashedPassword);
+    console.log("✅ Password reset successful", {
+      userId: user.userId,
+      enteredPassword: newPassword,
+      storedHash: hashedPassword
+    });
 
     otpStore.delete(userId);
     res.json({ success: true, message: "Password reset successful" });
   } catch (err) {
     console.error("Reset password error:", err);
-    res.status(500).json({ success: false, message: "Internal server error" });
-  }
-});
-
-// ===================== UPDATE PASSWORD WITHOUT OTP (ADMIN/USER) =====================
-app.post("/api/update-password", async (req, res) => {
-  try {
-    const { userId, newPassword } = req.body;
-
-    const user = await User.findOne({ userId });
-    if (!user) return res.json({ success: false, message: "User not found" });
-
-    const hashedPassword = await bcrypt.hash(newPassword, 10);
-    user.password = hashedPassword;
-    await user.save();
-
-    console.log("✅ Password updated manually for:", user.username);
-
-    res.json({ success: true, message: "Password updated successfully" });
-  } catch (err) {
-    console.error("Update password error:", err);
     res.status(500).json({ success: false, message: "Internal server error" });
   }
 });
@@ -459,13 +442,18 @@ app.post("/api/login", async (req, res) => {
     const user = await User.findOne({ userId });
     if (!user) return res.json({ success: false, message: "Invalid User ID" });
 
-    console.log("👉 Login attempt:", userId, "Entered password:", password);
-    console.log("👉 Stored hash:", user.password);
+    console.log("👉 Login attempt", {
+      userId,
+      enteredPassword: password,
+      storedHash: user.password
+    });
 
     const match = await bcrypt.compare(password, user.password);
     console.log("👉 Compare result:", match);
 
-    if (!match) return res.json({ success: false, message: "Incorrect password" });
+    if (!match) {
+      return res.json({ success: false, message: "Incorrect password" });
+    }
 
     const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: "1d" });
 
