@@ -435,7 +435,6 @@ app.post("/api/reset-password", async (req, res) => {
 });
 // ===================== UPDATE PASSWORD WITHOUT OTP (ADMIN/USER) =====================
 app.post("/api/update-password", async (req, res) => {
-app.post("/api/update-password", async (req, res) => {
   const { userId, newPassword } = req.body;
 
   try {
