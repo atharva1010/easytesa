@@ -386,6 +386,8 @@ app.get("/api/get-redirect-path", authMiddleware, async (req, res) => {
       case "Gate Entry":
         redirectPath = "/gate_entry.html";
         break;
+      case "H R":
+        redirectPath = "/hr.html";
       // Add more departments as needed
       default:
         redirectPath = "/dashboard.html"; // Default page for other departments
