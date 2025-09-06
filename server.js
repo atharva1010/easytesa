@@ -89,51 +89,99 @@ const onlineUsers = {};
 io.on("connection", (socket) => {
   console.log("🔌 User connected:", socket.id);
 
+  // ✅ User join
   socket.on("join", async (userId) => {
     onlineUsers[userId] = socket.id;
     socket.userId = userId;
-    
+
+    // Load all messages involving this user
     const messages = await Message.find({
       $or: [{ from: userId }, { to: userId }]
     }).sort({ timestamp: 1 });
+
+    // Update undelivered messages to delivered (for offline → online case)
+    const undelivered = messages.filter(msg => msg.to === userId && !msg.delivered);
+    if (undelivered.length > 0) {
+      const ids = undelivered.map(m => m._id);
+      await Message.updateMany(
+        { _id: { $in: ids } },
+        { $set: { delivered: true, deliveredTimestamp: Date.now() } }
+      );
+
+      // Notify sender(s) that messages are delivered
+      undelivered.forEach(msg => {
+        if (onlineUsers[msg.from]) {
+          io.to(onlineUsers[msg.from]).emit("messageDelivered", {
+            messageId: msg._id,
+            delivered: true
+          });
+        }
+      });
+    }
 
     socket.emit("loadMessages", messages);
     io.emit("onlineUsers", Object.keys(onlineUsers));
   });
 
+  // ✅ New message send
   socket.on("chatMessage", async (data) => {
     const { from, to, message } = data;
-    const newMsg = new Message({ from, to, message });
+    const newMsg = new Message({
+      from,
+      to,
+      message,
+      delivered: false,
+      deliveredTimestamp: null,
+      seen: false,
+      seenTimestamp: null
+    });
     await newMsg.save();
 
+    // अगर receiver online है → delivered कर दो
     if (onlineUsers[to]) {
+      newMsg.delivered = true;
+      newMsg.deliveredTimestamp = Date.now();
+      await newMsg.save();
+
       io.to(onlineUsers[to]).emit("chatMessage", newMsg);
+
+      // sender को बताओ कि delivered हो गया
+      socket.emit("messageDelivered", {
+        messageId: newMsg._id,
+        delivered: true
+      });
     }
 
+    // sender को भेजो (offline case में भी दिखेगा)
     socket.emit("chatMessage", newMsg);
   });
 
+  // ✅ Mark as Seen
   socket.on("markAsSeen", async ({ messageIds, senderId }) => {
+    if (!messageIds || messageIds.length === 0) return;
+
     await Message.updateMany(
       { _id: { $in: messageIds } },
       { $set: { seen: true, seenTimestamp: Date.now() } }
     );
-    
+
+    // sender को notify करो कि message seen हो गए
     if (onlineUsers[senderId]) {
-      io.to(onlineUsers[senderId]).emit("messageSeen", { 
+      io.to(onlineUsers[senderId]).emit("messageSeen", {
         messageIds,
-        seenBy: socket.userId 
+        seenBy: socket.userId
       });
     }
   });
 
+  // ✅ Edit Message
   socket.on("editMessage", async ({ messageId, newMessage }) => {
     const updated = await Message.findByIdAndUpdate(
       messageId,
       { $set: { message: newMessage, edited: true } },
       { new: true }
     );
-    
+
     if (updated) {
       const recipients = [updated.from, updated.to].filter(id => id !== socket.userId);
       recipients.forEach(id => {
@@ -147,6 +195,7 @@ io.on("connection", (socket) => {
     }
   });
 
+  // ✅ Delete Message
   socket.on("deleteMessage", async ({ messageId }) => {
     const deleted = await Message.findByIdAndDelete(messageId);
     if (deleted) {
@@ -161,6 +210,7 @@ io.on("connection", (socket) => {
     }
   });
 
+  // ✅ Disconnect
   socket.on("disconnect", () => {
     if (socket.userId) {
       delete onlineUsers[socket.userId];
@@ -169,6 +219,7 @@ io.on("connection", (socket) => {
     }
   });
 });
+
 
 // Twilio
 const twilioClient = twilio(process.env.TWILIO_SID, process.env.TWILIO_AUTH_TOKEN);
@@ -629,6 +680,24 @@ app.get('/api/unread-counts/:userId', authMiddleware, async (req, res) => {
     });
   } catch (error) {
     res.status(500).json({ error: "Failed to get unread counts" });
+  }
+});
+
+// server.js या routes/chat.js में
+app.get("/api/chat-history/:userId/:chatId", async (req, res) => {
+  try {
+    const { userId, chatId } = req.params;
+    const { page = 1 } = req.query;
+
+    // Example DB fetch (pagination logic जोड़ सकते हैं)
+    const history = await Chat.find({ userId, chatId })
+                              .skip((page - 1) * 10)
+                              .limit(10);
+
+    res.json(history);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Server error" });
   }
 });
 
