@@ -209,8 +209,9 @@ app.post("/api/create-user", uploadUser.single("profilePic"), async (req, res) =
       password
     } = req.body;
 
-    const profilePic = req.file ? req.file.path : null;
+    const profilePic = req.file ? req.file.path : "";
 
+    // ✅ If userIdUpdate exists → Update user
     if (userIdUpdate) {
       const user = await User.findById(userIdUpdate);
       if (!user) return res.json({ success: false, message: "User not found" });
@@ -220,34 +221,50 @@ app.post("/api/create-user", uploadUser.single("profilePic"), async (req, res) =
       user.designation = designation;
       user.mobile = mobile;
       user.email = email;
-      user.role = role;
+      user.role = role || "user";
 
       if (profilePic) user.profilePic = profilePic;
       if (password) user.password = await bcrypt.hash(password, 10);
 
       await user.save();
-      return res.json({ success: true, message: "User updated successfully" });
-    } else {
-      const existing = await User.findOne({ userId });
-      if (existing) return res.json({ success: false, message: "User ID already exists" });
-
-      const hashedPassword = await bcrypt.hash(password, 10);
-
-      const newUser = new User({
-        username,
-        userId,
-        department,
-        designation,
-        mobile,
-        email,
-        role,
-        password: hashedPassword,
-        profilePic: profilePic || ""
-      });
-
-      await newUser.save();
-      res.json({ success: true, message: "User created successfully" });
+      return res.json({ success: true, message: "User updated successfully", user });
     }
+
+    // ✅ Check if userId already exists
+    const existing = await User.findOne({ userId });
+    if (existing) {
+      return res.json({ success: false, message: "User ID already exists" });
+    }
+
+    // ✅ Check if email or mobile already exists
+    const existingEmail = await User.findOne({ email });
+    if (existingEmail) {
+      return res.json({ success: false, message: "Email already exists" });
+    }
+    const existingMobile = await User.findOne({ mobile });
+    if (existingMobile) {
+      return res.json({ success: false, message: "Mobile already exists" });
+    }
+
+    // ✅ Hash password
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    // ✅ Create new user
+    const newUser = new User({
+      username,
+      userId,
+      department,
+      designation,
+      mobile,
+      email,
+      role: role || "user",
+      password: hashedPassword,
+      profilePic: profilePic
+    });
+
+    await newUser.save();
+    res.json({ success: true, message: "User created successfully", user: newUser });
+
   } catch (err) {
     console.error("Create/Update User Error:", err);
     res.status(500).json({ success: false, message: "Server error" });
@@ -484,6 +501,23 @@ console.log("👉 Stored hash:", user.password);
 
   } catch (err) {
     console.error("Login Error:", err);
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+});
+
+// Delete User by ID
+app.delete("/api/delete-user/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const deletedUser = await User.findByIdAndDelete(id);
+
+    if (!deletedUser) {
+      return res.status(404).json({ success: false, message: "User not found" });
+    }
+
+    return res.json({ success: true, message: "User deleted successfully" });
+  } catch (err) {
+    console.error("Delete User Error:", err);
     res.status(500).json({ success: false, message: "Server error" });
   }
 });
