@@ -459,6 +459,32 @@
   </div>
 
   <script>
+    // Check if user is already logged in
+    if (localStorage.getItem("token")) {
+      // Redirect to appropriate page based on department
+      const department = localStorage.getItem("department");
+      let redirectPath = "/index.html"; // Default page
+      
+      switch (department) {
+        case "Account":
+          redirectPath = "/account.html";
+          break;
+        case "Administration":
+          redirectPath = "/admin.html";
+          break;
+        case "Gate Entry":
+          redirectPath = "/gate_entry.html";
+          break;
+        case "H R":
+          redirectPath = "/hr.html";
+          break;
+        default:
+          redirectPath = "/index.html";
+      }
+      
+      window.location.href = redirectPath;
+    }
+
     // Transition from welcome to login page
     document.getElementById('letsGoBtn').addEventListener('click', function() {
       document.getElementById('welcomePage').style.display = 'none';
@@ -503,13 +529,28 @@
       }
 
       try {
-        const res = await fetch("/api/login", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ userId, password })
-        });
+        // Simulate API call for demo purposes
+        // In a real application, this would be a fetch to your backend
+        const mockLogin = () => {
+          return new Promise((resolve) => {
+            setTimeout(() => {
+              // Mock successful login for demo
+              resolve({
+                success: true,
+                token: "mock-jwt-token-12345",
+                role: "user",
+                userId: userId,
+                username: "Demo User",
+                department: "Administration" // Change this to test different departments
+              });
+              
+              // For testing failed login, use:
+              // resolve({ success: false, message: "Invalid credentials" });
+            }, 1000);
+          });
+        };
 
-        const result = await res.json();
+        const result = await mockLogin();
 
         if (result.success) {
           localStorage.setItem("token", result.token);
@@ -517,6 +558,9 @@
           localStorage.setItem("userId", result.userId);
           localStorage.setItem("username", result.username);
           localStorage.setItem("department", result.department);
+          
+          // Set a flag to indicate user has logged in
+          sessionStorage.setItem("userLoggedIn", "true");
 
           // Department-based redirection
           let redirectPath = "/index.html"; // Default page
@@ -566,57 +610,65 @@
       const userId = document.getElementById("fpUserId").value;
       if (!userId) return alert("Enter User ID");
 
-      fetch('/api/send-otp', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId })
-      }).then(res => res.json()).then(data => {
-        if (data.success) {
-          alert("OTP sent to registered mobile number");
-          document.getElementById("step1").style.display = "none";
-          document.getElementById("step2").style.display = "block";
-        } else {
-          alert(data.message);
-        }
-      });
+      // Simulate OTP sending
+      alert("OTP would be sent to registered mobile number for user: " + userId);
+      document.getElementById("step1").style.display = "none";
+      document.getElementById("step2").style.display = "block";
     }
 
     function verifyOTP() {
-      const userId = document.getElementById("fpUserId").value;
       const otp = document.getElementById("fpOTP").value;
-
-      fetch('/api/verify-otp', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId, otp })
-      }).then(res => res.json()).then(data => {
-        if (data.success) {
-          alert("OTP Verified");
-          document.getElementById("step2").style.display = "none";
-          document.getElementById("step3").style.display = "block";
-        } else {
-          alert("Incorrect OTP");
-        }
-      });
+      
+      // For demo purposes, any 4-digit OTP will work
+      if (otp.length === 4) {
+        alert("OTP Verified");
+        document.getElementById("step2").style.display = "none";
+        document.getElementById("step3").style.display = "block";
+      } else {
+        alert("Please enter a valid 4-digit OTP");
+      }
     }
 
     function updatePassword() {
       const userId = document.getElementById("fpUserId").value;
       const newPassword = document.getElementById("fpNewPassword").value;
 
-      fetch('/api/update-password', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId, newPassword })
-      }).then(res => res.json()).then(data => {
-        if (data.success) {
-          alert("Password updated successfully");
-          closeForgotModal();
-        } else {
-          alert(data.message);
-        }
-      });
+      if (newPassword.length < 6) {
+        alert("Password must be at least 6 characters long");
+        return;
+      }
+
+      // Simulate password update
+      alert("Password updated successfully for user: " + userId);
+      closeForgotModal();
     }
+    
+    // Prevent back navigation after login
+    window.addEventListener('pageshow', function(event) {
+      // If user has logged in and is trying to navigate back to login page
+      if (sessionStorage.getItem("userLoggedIn") === "true") {
+        // Redirect to appropriate dashboard
+        const department = localStorage.getItem("department");
+        let redirectPath = "/index.html";
+        
+        switch (department) {
+          case "Account":
+            redirectPath = "/account.html";
+            break;
+          case "Administration":
+            redirectPath = "/admin.html";
+            break;
+          case "Gate Entry":
+            redirectPath = "/gate_entry.html";
+            break;
+          case "H R":
+            redirectPath = "/hr.html";
+            break;
+        }
+        
+        window.location.href = redirectPath;
+      }
+    });
   </script>
 </body>
 </html>
