@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
@@ -11,369 +12,12 @@
       -webkit-tap-highlight-color: transparent;
     }
 
-    body {
-      margin: 0;
-      padding: 0;
-      min-height: 100vh;
-      font-family: 'Segoe UI', sans-serif;
-      background: linear-gradient(135deg, #f0f9ff, #fffbe6);
-      overflow-x: hidden;
-    }
-
-    /* Welcome Page Styles */
-    .welcome-container {
-      text-align: center;
-      position: relative;
-      padding: 20px;
-      animation: fadeIn 1s ease-in-out;
-      width: 100%;
-      height: 100vh;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-    }
-
-    .typing-wrapper {
-      font-size: clamp(32px, 6vw, 54px);
-      font-weight: bold;
-      white-space: nowrap;
-      overflow: hidden;
-      display: inline-block;
-      position: relative;
-      z-index: 1;
-      animation: typing 3s steps(8, end) forwards;
-    }
-
-    .highlight {
-      color: #FF8C00;
-    }
-
-    .tick-circle {
-      position: absolute;
-      left: 50%;
-      top: 50%;
-      transform: translate(-50%, -60%) scale(1.5);
-      opacity: 0.25;
-      z-index: 0;
-      width: clamp(80px, 20vw, 120px);
-      height: clamp(80px, 20vw, 120px);
-    }
-
-    .circle {
-      fill: #FFD700;
-    }
-
-    .tick-path {
-      stroke: #333;
-      stroke-width: 10;
-      fill: none;
-      stroke-linecap: round;
-      stroke-linejoin: round;
-      stroke-dasharray: 100;
-      stroke-dashoffset: 100;
-      animation: drawTick 1.2s ease-out forwards;
-      animation-delay: 0.4s;
-    }
-
-    .tagline {
-      font-size: clamp(16px, 4vw, 20px);
-      color: #666;
-      margin-top: 14px;
-      opacity: 0;
-      animation: fadeInTagline 1.5s ease forwards;
-      animation-delay: 3.2s;
-    }
-
-    .bottom-button {
-      position: absolute;
-      bottom: 30px;
-      width: 100%;
-      text-align: center;
-      opacity: 0;
-      animation: fadeInButton 1.2s ease forwards;
-      animation-delay: 3.8s;
-    }
-
-    .bottom-button a {
-      padding: 14px 32px;
-      font-size: 18px;
-      background-color: #3AAFA9;
-      color: white;
-      text-decoration: none;
-      border-radius: 8px;
-      transition: background 0.3s ease;
-      display: inline-block;
-      cursor: pointer;
-    }
-
-    .bottom-button a:hover {
-      background-color: #2f9c93;
-    }
-
-    @keyframes typing {
-      from { width: 0; }
-      to { width: 15ch; }
-    }
-
-    @keyframes drawTick {
-      to {
-        stroke-dashoffset: 0;
-      }
-    }
-
-    @keyframes fadeInTagline {
-      to {
-        opacity: 1;
-      }
-    }
-
-    @keyframes fadeInButton {
-      to {
-        opacity: 1;
-      }
-    }
-
-    @keyframes fadeIn {
-      from {
-        opacity: 0;
-        transform: translateY(-20px);
-      }
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
-    }
-
-    /* Login Page Styles - Initially Hidden */
-    .login-container {
-      display: none;
-      width: 100%;
-      min-height: 100vh;
-      font-family: 'Orbitron', sans-serif;
-      flex-direction: column;
-      align-items: center;
-      color: #333;
-      touch-action: manipulation;
-    }
-
-    /* Desktop Header */
-    header {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      background: rgba(0, 20, 30, 0.8);
-      padding: 10px 20px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
-      z-index: 100;
-    }
-
-    .logo {
-      height: 40px;
-      margin-right: 10px;
-      filter: drop-shadow(0 0 5px rgba(0, 0, 0, 0.3));
-    }
-
-    .left {
-      display: flex;
-      align-items: center;
-      color: #3AAFA9;
-      font-weight: bold;
-      text-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
-    }
-
-    /* Mobile Header (logo only) */
-    .mobile-header {
-      display: none;
-      width: 100%;
-      text-align: center;
-      padding: 15px 0;
-      background: rgba(0, 20, 30, 0.8);
-      box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
-    }
-
-    .mobile-logo {
-      height: 60px;
-      filter: drop-shadow(0 0 5px rgba(0, 0, 0, 0.3));
-    }
-
-    h2 {
-      margin-bottom: 20px;
-      color: #3AAFA9;
-      text-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-      text-align: center;
-    }
-
-    form {
-      background: rgba(255, 255, 255, 0.9);
-      padding: 30px;
-      border-radius: 15px;
-      box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
-      backdrop-filter: blur(8px);
-      border: 1px solid rgba(0, 0, 0, 0.1);
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      width: 90%;
-      max-width: 400px;
-      margin-top: 100px;
-    }
-
-    .input-container {
-      position: relative;
-      width: 100%;
-      margin: 10px 0;
-    }
-
-    input {
-      padding: 12px 40px 12px 12px;
-      width: 100%;
-      border: 1px solid #ddd;
-      border-radius: 5px;
-      background: rgba(255, 255, 255, 0.9);
-      color: #333;
-      outline: none;
-      font-family: 'Segoe UI', sans-serif;
-      font-size: 16px;
-    }
-
-    input::placeholder {
-      color: #999;
-      opacity: 1;
-    }
-
-    input:-ms-input-placeholder {
-      color: #999;
-    }
-
-    input::-ms-input-placeholder {
-      color: #999;
-    }
-
-    input:focus {
-      box-shadow: 0 0 15px rgba(58, 175, 169, 0.3);
-      border-color: #3AAFA9;
-    }
-
-    .toggle-password {
-      position: absolute;
-      right: 12px;
-      top: 50%;
-      transform: translateY(-50%);
-      background: none;
-      border: none;
-      color: #666;
-      cursor: pointer;
-      font-size: 18px;
-      padding: 0;
-      width: 24px;
-      height: 24px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    button {
-      padding: 12px;
-      background: #3AAFA9;
-      color: white;
-      font-weight: bold;
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
-      transition: all 0.3s ease;
-      width: 100%;
-      font-family: 'Segoe UI', sans-serif;
-      margin-top: 10px;
-    }
-
-    button:hover {
-      background: #2f9c93;
-    }
-
-    #msg {
-      color: #ff4444;
-      margin: 10px 0;
-      text-align: center;
-      min-height: 20px;
-    }
-
-    .link {
-      margin-top: 15px;
-    }
-
-    .link a {
-      color: #3AAFA9;
-      text-decoration: underline;
-      cursor: pointer;
-    }
-
-    #forgotPasswordModal {
-      display: none;
-      position: fixed;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      background: rgba(255, 255, 255, 0.95);
-      border: 2px solid #3AAFA9;
-      padding: 20px;
-      z-index: 1000;
-      border-radius: 10px;
-      width: 90%;
-      max-width: 320px;
-      box-shadow: 0 0 20px rgba(0, 0, 0, 0.2);
-      color: #333;
-    }
-
-    /* Mobile App-like Styles */
-    @media screen and (max-width: 768px) {
-      body {
-        -webkit-user-select: none;
-        user-select: none;
-        height: 100vh;
-      }
-
-      header {
-        display: none;
-      }
-
-      .mobile-header {
-        display: block;
-        position: fixed;
-        top: 0;
-      }
-
-      form {
-        margin-top: 150px;
-        padding: 25px;
-        width: 95%;
-        max-width: 350px;
-      }
-    }
-
-    @media screen and (max-width: 480px) {
-      .mobile-logo {
-        height: 50px;
-      }
-
-      form {
-        margin-top: 120px;
-        padding: 20px;
-      }
-
-      h2 {
-        font-size: 18px;
-      }
-    }
   </style>
 </head>
 <body>
 
   <!-- Welcome Page Container -->
+
   <div class="welcome-container" id="welcomePage">
     <!-- Background circle with tick -->
     <svg class="tick-circle" viewBox="0 0 100 100">
@@ -381,21 +25,10 @@
       <polyline class="tick-path" points="30,50 45,65 75,30"/>
     </svg>
 
-    <!-- Typing text -->
-    <div class="typing-wrapper">
-      <span style="color:#3AAFA9">easy</span><span class="highlight">TESA</span>
-    </div>
-
-    <!-- Tagline -->
-    <div class="tagline">"Forever easy. Forever Efficient"</div>
-
-    <!-- Bottom Proceed Button -->
-    <div class="bottom-button">
-      <a id="letsGoBtn">Let's Get 🚀</a>
-    </div>
   </div>
 
   <!-- Login Page Container -->
+
   <div class="login-container" id="loginPage">
     <!-- Desktop Header -->
     <header>
@@ -405,86 +38,9 @@
       </div>
     </header>
 
-    <!-- Mobile Header (Logo only) -->
-    <div class="mobile-header">
-      <img src="assets/logo.png" alt="Logo" class="mobile-logo">
-    </div>
-
-    <form id="loginForm">
-      <h2>User Login</h2>
-      
-      <div class="input-container">
-        <input type="text" id="userId" placeholder="User ID" required>
-      </div>
-      
-      <div class="input-container">
-        <input type="password" id="password" placeholder="Password" required>
-        <button type="button" class="toggle-password" onclick="togglePassword()">👁️</button>
-      </div>
-      
-      <button type="submit">Login</button>
-      <p id="msg"></p>
-      <div class="link">
-        <a href="#" onclick="showForgotModal()">Forgot Password?</a>
-      </div>
-    </form>
-
-    <!-- Forgot Password Modal -->
-    <div id="forgotPasswordModal">
-      <h3>Forgot Password</h3>
-
-      <div id="step1">
-        <label for="fpUserId">User ID:</label>
-        <input type="text" id="fpUserId" placeholder="Enter your User ID">
-        <button onclick="sendOTP()">Send OTP</button>
-      </div>
-
-      <div id="step2" style="display:none;">
-        <label for="fpOTP">Enter OTP:</label>
-        <input type="text" id="fpOTP" placeholder="Enter OTP">
-        <button onclick="verifyOTP()">Verify OTP</button>
-      </div>
-
-      <div id="step3" style="display:none;">
-        <label for="fpNewPassword">New Password:</label>
-        <div class="input-container">
-          <input type="password" id="fpNewPassword" placeholder="Enter new password">
-          <button type="button" class="toggle-password" onclick="toggleNewPassword()">👁️</button>
-        </div>
-        <button onclick="updatePassword()">Update Password</button>
-      </div>
-
-      <button onclick="closeForgotModal()" style="background:#ff4444;">Close</button>
-    </div>
   </div>
 
   <script>
-    // Check if user is already logged in
-    if (localStorage.getItem("token")) {
-      // Redirect to appropriate page based on department
-      const department = localStorage.getItem("department");
-      let redirectPath = "/index.html"; // Default page
-      
-      switch (department) {
-        case "Account":
-          redirectPath = "/account.html";
-          break;
-        case "Administration":
-          redirectPath = "/admin.html";
-          break;
-        case "Gate Entry":
-          redirectPath = "/gate_entry.html";
-          break;
-        case "H R":
-          redirectPath = "/hr.html";
-          break;
-        default:
-          redirectPath = "/index.html";
-      }
-      
-      window.location.href = redirectPath;
-    }
-
     // Transition from welcome to login page
     document.getElementById('letsGoBtn').addEventListener('click', function() {
       document.getElementById('welcomePage').style.display = 'none';
@@ -529,28 +85,13 @@
       }
 
       try {
-        // Simulate API call for demo purposes
-        // In a real application, this would be a fetch to your backend
-        const mockLogin = () => {
-          return new Promise((resolve) => {
-            setTimeout(() => {
-              // Mock successful login for demo
-              resolve({
-                success: true,
-                token: "mock-jwt-token-12345",
-                role: "user",
-                userId: userId,
-                username: "Demo User",
-                department: "Administration" // Change this to test different departments
-              });
-              
-              // For testing failed login, use:
-              // resolve({ success: false, message: "Invalid credentials" });
-            }, 1000);
-          });
-        };
+        const res = await fetch("/api/login", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ userId, password })
+        });
 
-        const result = await mockLogin();
+        const result = await res.json();
 
         if (result.success) {
           localStorage.setItem("token", result.token);
@@ -558,9 +99,6 @@
           localStorage.setItem("userId", result.userId);
           localStorage.setItem("username", result.username);
           localStorage.setItem("department", result.department);
-          
-          // Set a flag to indicate user has logged in
-          sessionStorage.setItem("userLoggedIn", "true");
 
           // Department-based redirection
           let redirectPath = "/index.html"; // Default page
@@ -610,65 +148,58 @@
       const userId = document.getElementById("fpUserId").value;
       if (!userId) return alert("Enter User ID");
 
-      // Simulate OTP sending
-      alert("OTP would be sent to registered mobile number for user: " + userId);
-      document.getElementById("step1").style.display = "none";
-      document.getElementById("step2").style.display = "block";
+      fetch('/api/send-otp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId })
+      }).then(res => res.json()).then(data => {
+        if (data.success) {
+          alert("OTP sent to registered mobile number");
+          document.getElementById("step1").style.display = "none";
+          document.getElementById("step2").style.display = "block";
+        } else {
+          alert(data.message);
+        }
+      });
     }
 
     function verifyOTP() {
+      const userId = document.getElementById("fpUserId").value;
       const otp = document.getElementById("fpOTP").value;
-      
-      // For demo purposes, any 4-digit OTP will work
-      if (otp.length === 4) {
-        alert("OTP Verified");
-        document.getElementById("step2").style.display = "none";
-        document.getElementById("step3").style.display = "block";
-      } else {
-        alert("Please enter a valid 4-digit OTP");
-      }
+
+      fetch('/api/verify-otp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId, otp })
+      }).then(res => res.json()).then(data => {
+        if (data.success) {
+          alert("OTP Verified");
+          document.getElementById("step2").style.display = "none";
+          document.getElementById("step3").style.display = "block";
+        } else {
+          alert("Incorrect OTP");
+        }
+      });
     }
 
     function updatePassword() {
       const userId = document.getElementById("fpUserId").value;
       const newPassword = document.getElementById("fpNewPassword").value;
 
-      if (newPassword.length < 6) {
-        alert("Password must be at least 6 characters long");
-        return;
-      }
-
-      // Simulate password update
-      alert("Password updated successfully for user: " + userId);
-      closeForgotModal();
-    }
-    
-    // Prevent back navigation after login
-    window.addEventListener('pageshow', function(event) {
-      // If user has logged in and is trying to navigate back to login page
-      if (sessionStorage.getItem("userLoggedIn") === "true") {
-        // Redirect to appropriate dashboard
-        const department = localStorage.getItem("department");
-        let redirectPath = "/index.html";
-        
-        switch (department) {
-          case "Account":
-            redirectPath = "/account.html";
-            break;
-          case "Administration":
-            redirectPath = "/admin.html";
-            break;
-          case "Gate Entry":
-            redirectPath = "/gate_entry.html";
-            break;
-          case "H R":
-            redirectPath = "/hr.html";
-            break;
+      fetch('/api/update-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId, newPassword })
+      }).then(res => res.json()).then(data => {
+        if (data.success) {
+          alert("Password updated successfully");
+          closeForgotModal();
+        } else {
+          alert(data.message);
         }
-        
-        window.location.href = redirectPath;
-      }
-    });
+      });
+    }
   </script>
+
 </body>
 </html>
