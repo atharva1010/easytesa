@@ -23,6 +23,7 @@ const io = new Server(server, {
 });
 const PORT = process.env.PORT || 3000;
 
+
 // Models
 const User = require("./models/User");
 const Update = require("./models/Update");
@@ -705,4 +706,5 @@ app.get('/api/unread-counts/:userId', authMiddleware, async (req, res) => {
 // Start Server
 server.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);
+
 });
