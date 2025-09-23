@@ -321,6 +321,13 @@ app.post("/api/create-user", uploadUser.single("profilePic"), async (req, res) =
   }
 });
 
+app.get('/:page', (req, res) => {
+  const page = req.params.page;
+  res.sendFile(path.join(__dirname, 'public', `${page}.html`), err => {
+    if (err) res.status(404).send('Page not found');
+  });
+});
+
 app.get("/api/users", async (req, res) => {
   try {
     const users = await User.find().select("-password");
