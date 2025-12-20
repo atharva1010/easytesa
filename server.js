@@ -84,6 +84,47 @@ mongoose.connect(process.env.MONGODB_URI || "mongodb://127.0.0.1:27017/bab_syste
 .then(() => console.log("✅ MongoDB Connected"))
 .catch(err => console.error("❌ MongoDB connection error:", err));
 
+
+// ================= WOOD BILL REGISTER =================
+const WoodBill = require("./models/WoodBill");
+
+// ➤ SAVE NEW BILL
+app.post("/api/wood-bill", async (req, res) => {
+  try {
+    console.log("📥 SAVE WOOD BILL:", req.body);
+
+    const bill = new WoodBill(req.body);
+    await bill.save();
+
+    res.json({ success: true, id: bill._id });
+  } catch (err) {
+    console.error("❌ Save Error:", err);
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// ➤ GET ALL BILLS
+app.get("/api/wood-bill", async (req, res) => {
+  try {
+    const bills = await WoodBill.find().sort({ createdAt: -1 });
+    res.json(bills);
+  } catch (err) {
+    res.status(500).json({ success: false });
+  }
+});
+
+// ➤ UPDATE BILL
+app.put("/api/wood-bill/:id", async (req, res) => {
+  try {
+    console.log("✏️ UPDATE:", req.params.id, req.body);
+
+    await WoodBill.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    res.json({ success: true });
+  } catch (err) {
+    console.error("❌ Update Error:", err);
+    res.status(500).json({ success: false });
+  }
+});
 // Socket.io Setup
 const onlineUsers = {};
 io.on("connection", (socket) => {
@@ -705,4 +746,5 @@ app.get('/api/unread-counts/:userId', authMiddleware, async (req, res) => {
 // Start Server
 server.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);
+
 });
