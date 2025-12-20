@@ -203,33 +203,45 @@
 }
 
   async function saveRow(btn) {
-    const row = btn.closest("tr");
-    const inputs = row.querySelectorAll("input, select");
+  const row = btn.closest("tr");
 
-    let status = "RECEIVED";
-    if (inputs[6].value === "C3") status = "PENDING";
+  const sapDate = row.querySelector('td:nth-child(2) input').value;
+  const billDate = row.querySelector('td:nth-child(3) input').value;
+  const quantity = row.querySelector('td:nth-child(4) input').value;
+  const submitTime = row.querySelector('td:nth-child(5) input').value;
+  const receiverInput = row.querySelector('td:nth-child(6) input');
+  const plantSelect = row.querySelector('td:nth-child(8) select');
 
-    const data = {
-      sapDate: inputs[0].value,
-      billDate: inputs[1].value,
-      quantity: inputs[2].value,
-      submitTime: inputs[3].value,
-      receiverName: inputs[4].value.toUpperCase(),
-      submittedBy: currentUser,
-      plant: inputs[6].value.toUpperCase(),
-      status
-    };
+  const plant = plantSelect.value.toUpperCase();
+  const receiverName = receiverInput.value
+    ? receiverInput.value.toUpperCase()
+    : "";
 
+  let status = plant === "C3" ? "PENDING" : "RECEIVED";
 
-if (!data.sapDate || !data.billDate || !data.quantity || !data.submitTime || !data.plant) {
-  alert("Please fill all required fields.");
-  return;
-}
+  // ✅ VALIDATION
+  if (!sapDate || !billDate || !quantity || !submitTime || !plant) {
+    alert("Please fill all required fields.");
+    return;
+  }
 
-if (data.plant !== "C3" && !data.receiverName) {
-  alert("Receiver name required for this plant.");
-  return;
-}
+  if (plant !== "C3" && !receiverName) {
+    alert("Receiver name required for this plant.");
+    return;
+  }
+
+  const data = {
+    sapDate,
+    billDate,
+    quantity,
+    submitTime,
+    receiverName: receiverName || "PENDING",
+    submittedBy: currentUser,
+    plant,
+    status
+  };
+
+  try {
     const res = await fetch("/api/wood-bill", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -238,30 +250,34 @@ if (data.plant !== "C3" && !data.receiverName) {
 
     const result = await res.json();
 
-    if (result.success) {
-      row.style.background = status === "PENDING" ? "#FFD70055" : "#00ff8855";
+    if (!result.success) throw new Error("API failed");
 
-      row.innerHTML = `
-        <td class="status">${status === "PENDING" ? "⏳" : "✅"}</td>
-        <td>${data.sapDate}</td>
-        <td>${data.billDate}</td>
-        <td>${data.quantity}</td>
-        <td>${data.submitTime}</td>
-        <td>${data.receiverName}</td>
-        <td>${data.submittedBy}</td>
-        <td>${data.plant}</td>
-        <td>
-          ${data.billDate === todayDate
-            ? `<button onclick="editRow(this)" data-id="${result.id}">Edit</button>
-               <button onclick="deleteRow('${result.id}')">Delete</button>`
-            : `<span style="color:gray">Locked</span>`}
-        </td>
-      `;
+    row.style.background = status === "PENDING" ? "#FFD70055" : "#00ff8855";
 
-      unsavedRowExists = false;
-    } else {
-      alert("Save failed.");
-    }
+    row.innerHTML = `
+      <td>${status === "PENDING" ? "⏳" : "✅"}</td>
+      <td>${sapDate}</td>
+      <td>${billDate}</td>
+      <td>${quantity}</td>
+      <td>${submitTime}</td>
+      <td>${receiverName || "PENDING"}</td>
+      <td>${currentUser}</td>
+      <td>${plant}</td>
+      <td>
+        ${billDate === todayDate
+          ? `<button onclick="editRow(this)" data-id="${result.id}">Edit</button>
+             <button onclick="deleteRow('${result.id}')">Delete</button>`
+          : `<span style="color:gray">Locked</span>`}
+      </td>
+    `;
+
+    unsavedRowExists = false;
+
+  } catch (err) {
+    console.error(err);
+    alert("Save failed. Check console.");
+  }
+}
   }
 
   async function deleteRow(id) {
