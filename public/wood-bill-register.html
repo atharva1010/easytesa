@@ -220,11 +220,16 @@
       status
     };
 
-    if (!data.sapDate || !data.billDate || !data.quantity || !data.submitTime || !data.plant) {
-      alert("Please fill all fields.");
-      return;
-    }
 
+if (!data.sapDate || !data.billDate || !data.quantity || !data.submitTime || !data.plant) {
+  alert("Please fill all required fields.");
+  return;
+}
+
+if (data.plant !== "C3" && !data.receiverName) {
+  alert("Receiver name required for this plant.");
+  return;
+}
     const res = await fetch("/api/wood-bill", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
