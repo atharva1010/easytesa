@@ -203,37 +203,34 @@
 }
 
 async function saveRow(btn) {
-  console.log("🔵 saveRow() triggered");
+  console.log("🔵 saveRow triggered");
 
   try {
     const row = btn.closest("tr");
-    console.log("Row found:", row);
 
-    const sapDate = row.querySelector('td:nth-child(2) input')?.value;
-    const billDate = row.querySelector('td:nth-child(3) input')?.value;
-    const quantity = row.querySelector('td:nth-child(4) input')?.value;
-    const submitTime = row.querySelector('td:nth-child(5) input')?.value;
+    const sapDateInput = row.querySelector('td:nth-child(2) input');
+    const billDateInput = row.querySelector('td:nth-child(3) input');
+    const quantityInput = row.querySelector('td:nth-child(4) input');
+    const submitTimeInput = row.querySelector('td:nth-child(5) input');
     const receiverInput = row.querySelector('td:nth-child(6) input');
     const plantSelect = row.querySelector('td:nth-child(8) select');
 
-    console.log("Values:", {
-      sapDate,
-      billDate,
-      quantity,
-      submitTime,
-      receiver: receiverInput?.value,
-      plant: plantSelect?.value
-    });
-
-    if (!sapDate || !billDate || !quantity || !submitTime || !plantSelect?.value) {
-      alert("❌ Validation failed – empty fields");
+    if (!sapDateInput || !billDateInput || !quantityInput || !submitTimeInput || !plantSelect) {
+      alert("❌ HTML structure mismatch");
       return;
     }
 
+    const sapDate = sapDateInput.value;
+    const billDate = billDateInput.value;
+    const quantity = quantityInput.value;
+    const submitTime = submitTimeInput.value;
     const plant = plantSelect.value.toUpperCase();
-    const receiverName = receiverInput?.value
-      ? receiverInput.value.toUpperCase()
-      : "";
+    const receiverName = receiverInput.value.toUpperCase();
+
+    if (!sapDate || !billDate || !quantity || !submitTime || !plant) {
+      alert("❌ Fill all fields");
+      return;
+    }
 
     const status = plant === "C3" ? "PENDING" : "RECEIVED";
 
@@ -248,7 +245,7 @@ async function saveRow(btn) {
       status
     };
 
-    console.log("📦 Payload sending to API:", data);
+    console.log("📦 Sending:", data);
 
     const res = await fetch("/api/wood-bill", {
       method: "POST",
@@ -256,17 +253,13 @@ async function saveRow(btn) {
       body: JSON.stringify(data)
     });
 
-    console.log("🔁 API response status:", res.status);
-
     const result = await res.json();
-    console.log("✅ API response body:", result);
+    console.log("✅ API result:", result);
 
     if (!result.success) {
-      alert("❌ API returned failure");
+      alert("❌ Save failed (API)");
       return;
     }
-
-    row.style.background = status === "PENDING" ? "#FFD70055" : "#00ff8855";
 
     row.innerHTML = `
       <td>${status === "PENDING" ? "⏳" : "✅"}</td>
@@ -277,15 +270,15 @@ async function saveRow(btn) {
       <td>${receiverName || "PENDING"}</td>
       <td>${currentUser}</td>
       <td>${plant}</td>
-      <td>Saved</td>
+      <td>SAVED</td>
     `;
 
     unsavedRowExists = false;
-    console.log("🟢 Row saved successfully");
+    console.log("🟢 Saved successfully");
 
-  } catch (error) {
-    console.error("🔥 saveRow crashed:", error);
-    alert("JS Error – Check Console");
+  } catch (err) {
+    console.error("🔥 JS crash:", err);
+    alert("JS Error – check console");
   }
 }
 
