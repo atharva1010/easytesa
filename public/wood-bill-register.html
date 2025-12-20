@@ -60,7 +60,7 @@
     }
   </style>
 </head>
-<body onload="initPage()">
+<body>
 
   <h2>WOOD BILL SUBMIT REGISTER</h2>
 
@@ -187,17 +187,20 @@
   }
 
   function handlePlantChange(select) {
-    const row = select.closest("tr");
-    const receiverInput = row.querySelectorAll("input")[4];
+  const row = select.closest("tr");
+  const receiverInput = row.querySelector('td:nth-child(6) input');
 
-    if (select.value === "C2" || select.value === "C34A") {
-      receiverInput.value = "BY SECURITY";
-      receiverInput.readOnly = true;
-    } else if (select.value === "C3") {
-      receiverInput.value = "";
-      receiverInput.readOnly = true;
-    }
+  if (select.value === "C2" || select.value === "C34A") {
+    receiverInput.value = "BY SECURITY";
+    receiverInput.readOnly = true;
+  } else if (select.value === "C3") {
+    receiverInput.value = "";
+    receiverInput.readOnly = true;
+  } else {
+    receiverInput.value = "";
+    receiverInput.readOnly = false;
   }
+}
 
   async function saveRow(btn) {
     const row = btn.closest("tr");
@@ -292,7 +295,7 @@
       `;
     });
   }
-  }
+  
 
   function editRow(btn) {
     const row = btn.closest("tr");
