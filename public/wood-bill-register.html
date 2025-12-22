@@ -44,10 +44,6 @@
       background: #00ffe7;
       color: #0f2027;
     }
-    .receive-btn {
-      background: rgba(0, 255, 0, 0.2);
-      border-color: #00ff00;
-    }
     table {
       width: 100%;
       margin-top: 20px;
@@ -129,19 +125,6 @@
       from { transform: translateX(100%); opacity: 0; }
       to { transform: translateX(0); opacity: 1; }
     }
-    .tab {
-      padding: 10px 20px;
-      border: 1px solid #00ffe7;
-      background: transparent;
-      color: #00ffe7;
-      cursor: pointer;
-      border-radius: 5px;
-      margin-right: 10px;
-    }
-    .tab.active {
-      background: #00ffe7;
-      color: #0f2027;
-    }
   </style>
 </head>
 <body>
@@ -149,9 +132,6 @@
   <div class="header">
     <h2>WOOD BILL SUBMIT REGISTER</h2>
     <div class="nav-buttons">
-      <button class="receive-btn" onclick="window.open('wood-bill-receive-panel.html', '_blank')">
-        OPEN RECEIVE PANEL
-      </button>
       <button onclick="showFill()">FILL REPORT</button>
       <button id="addRowBtn" onclick="addNewRow()">ADD NEW ROW</button>
       <button onclick="showView()">VIEW REPORT</button>
@@ -365,6 +345,9 @@
         return;
       }
 
+      // Sort by date (newest first)
+      allData.sort((a, b) => new Date(b.sapDate) - new Date(a.sapDate));
+
       allData.forEach((d, index) => {
         const sapDate = d.sapDate ? d.sapDate.split('T')[0] : '';
         const billDate = d.billDate ? d.billDate.split('T')[0] : '';
@@ -423,6 +406,9 @@
         console.error("Expected array but got:", rows);
         return;
       }
+
+      // Sort by date (newest first)
+      rows.sort((a, b) => new Date(b.sapDate) - new Date(a.sapDate));
 
       rows.forEach((d, i) => {
         const sapDate = d.sapDate ? d.sapDate.split('T')[0] : '';
