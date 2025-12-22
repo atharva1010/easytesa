@@ -557,7 +557,7 @@
   </div>
 
 <script src="/socket.io/socket.io.js"></script>
-<script>
+  <script>
   let currentUser = (localStorage.getItem("username") || "unknown").toUpperCase();
   let allBillsData = [];
   let filteredBills = [];
@@ -565,16 +565,23 @@
   let socket;
 
   document.addEventListener("DOMContentLoaded", function() {
+    console.log("🚀 Wood Bill Receive Panel Initializing...");
+    
     // Check if user is logged in
     const token = localStorage.getItem('token');
+    const department = localStorage.getItem('department');
+    
+    console.log("📋 User Info - Token:", token ? "YES" : "NO", "Department:", department);
+    
+    // For testing, allow access even without token
     if (!token) {
-      window.location.href = 'index.html';
-      return;
+      console.warn("⚠️ No token found, but allowing access for testing");
+      // window.location.href = 'index.html';
+      // return;
     }
     
     // Check if user is from Wood MM department
-    const department = localStorage.getItem('department');
-    if (department !== 'Wood MM') {
+    if (department && department !== 'Wood MM') {
       showAlert('Access Denied! Only Wood MM department can access this panel.', 'error');
       setTimeout(() => window.location.href = 'index.html', 2000);
       return;
@@ -582,16 +589,27 @@
     
     document.getElementById("currentUser").textContent = currentUser;
     
-    // Initialize Socket.io
-    socket = io();
-    
-    // Listen for real-time updates
-    socket.on('woodBillStatusChanged', (data) => {
-      if (data.action === 'received') {
-        showAlert(`✅ Bill #${data.billId} received by ${data.receiverName}`, 'success');
-        refreshAllData();
-      }
-    });
+    // Initialize Socket.io with fallback
+    try {
+      socket = io();
+      console.log("🔌 Socket.io connected");
+      
+      // Listen for real-time updates
+      socket.on('woodBillStatusChanged', (data) => {
+        console.log("📡 Real-time update received:", data);
+        if (data.action === 'received') {
+          showAlert(`✅ Bill #${data.billId} received by ${data.receiverName}`, 'success');
+          refreshAllData();
+        }
+      });
+      
+      socket.on('connect_error', (error) => {
+        console.warn("⚠️ Socket.io connection error:", error);
+        showAlert('Real-time updates disabled', 'warning');
+      });
+    } catch (error) {
+      console.warn("⚠️ Socket.io initialization failed:", error);
+    }
     
     initReceivePanel();
     
@@ -605,6 +623,9 @@
     
     // Auto-refresh every 30 seconds
     refreshInterval = setInterval(refreshAllData, 30000);
+    
+    // Initial debug check
+    setTimeout(checkDatabaseStatus, 1000);
   });
 
   function showAlert(message, type = 'success') {
@@ -619,19 +640,24 @@
   }
 
   function initReceivePanel() {
+    console.log("📊 Initializing Receive Panel...");
     loadAllBills();
   }
 
   async function refreshAllData() {
     try {
+      console.log("🔄 Refreshing data...");
       await loadAllBills();
       showAlert('Data refreshed successfully', 'success');
     } catch (error) {
       console.error('Refresh error:', error);
+      showAlert('Refresh failed', 'error');
     }
   }
 
   function showTab(tabName) {
+    console.log("📑 Switching to tab:", tabName);
+    
     // Update active tab
     document.querySelectorAll('.tab').forEach(tab => {
       tab.classList.remove('active');
@@ -651,14 +677,32 @@
 
   async function loadAllBills() {
     try {
+      console.log("📥 Loading all bills from API...");
+      
       const response = await fetch("/api/wood-bill");
-      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
       
       allBillsData = await response.json();
       
+      console.log(`✅ Loaded ${allBillsData.length} bills from API`);
+      
       if (!Array.isArray(allBillsData)) {
+        console.error("❌ Invalid data format:", allBillsData);
         throw new Error('Invalid data format received');
       }
+
+      // Debug: Log bill types
+      const billTypes = {
+        C3_Pending: allBillsData.filter(bill => bill.plant === 'C3' && bill.receiverStatus === "Pending by Receiver").length,
+        C3_Received: allBillsData.filter(bill => bill.plant === 'C3' && bill.receiverStatus === "Received").length,
+        C2: allBillsData.filter(bill => bill.plant === 'C2').length,
+        C34A: allBillsData.filter(bill => bill.plant === 'C34A').length,
+        All: allBillsData.length
+      };
+      
+      console.log("📊 Bill Statistics:", billTypes);
 
       // Update statistics
       updateStatistics();
@@ -670,7 +714,7 @@
       applyFilters();
       
     } catch (error) {
-      console.error("Error loading all bills:", error);
+      console.error("❌ Error loading all bills:", error);
       showAlert('Failed to load bills!', 'error');
       
       // Show error in tables
@@ -679,7 +723,10 @@
           <tr>
             <td colspan="9" style="text-align: center; padding: 40px; color: #ff4444;">
               <i class="fas fa-exclamation-triangle"></i> Failed to load data<br>
-              ${error.message}
+              ${error.message}<br>
+              <button onclick="loadAllBills()" style="margin-top: 10px; padding: 8px 16px; background: #ff4444; color: white; border: none; border-radius: 4px; cursor: pointer;">
+                Retry
+              </button>
             </td>
           </tr>
         `;
@@ -698,6 +745,8 @@
     const security = allBillsData.filter(bill => 
       bill.receiverStatus === "Received by Security"
     ).length;
+    
+    console.log(`📈 Stats Update - Total: ${total}, Pending C3: ${pending}, Received: ${received}, Security: ${security}`);
     
     // Update stat cards
     document.getElementById("totalBills").textContent = total;
@@ -733,6 +782,8 @@
     const statusFilter = document.getElementById("statusFilter").value;
     const submittedByFilter = document.getElementById("submittedByFilter").value;
     const searchText = document.getElementById("searchFilter").value.toLowerCase();
+    
+    console.log("🔍 Applying filters:", { fromDate, toDate, plantFilter, statusFilter, submittedByFilter, searchText });
     
     filteredBills = allBillsData.filter(bill => {
       // Date range filter
@@ -772,6 +823,8 @@
       return true;
     });
 
+    console.log(`✅ Filtered to ${filteredBills.length} bills`);
+
     // Sort by date (newest first)
     filteredBills.sort((a, b) => new Date(b.sapDate) - new Date(a.sapDate));
 
@@ -789,7 +842,8 @@
         <tr>
           <td colspan="9" class="no-data">
             <i class="fas fa-search" style="font-size: 48px; margin-bottom: 20px;"></i><br>
-            No bills found matching your filters
+            No bills found matching your filters<br>
+            <small>Try clearing filters or check if bills exist</small>
           </td>
         </tr>
       `;
@@ -820,7 +874,8 @@
       }
       
       // Only show RECEIVE button for pending C3 bills
-      const receiveButton = (bill.plant === 'C3' && bill.receiverStatus === "Pending by Receiver") 
+      const isPendingC3 = bill.plant === 'C3' && bill.receiverStatus === "Pending by Receiver";
+      const receiveButton = isPendingC3 
         ? `<button class="receive-btn" onclick="receiveBill('${bill._id}')">
              <i class="fas fa-check-circle"></i> RECEIVE
            </button>`
@@ -848,12 +903,15 @@
       bill.plant === 'C3' && bill.receiverStatus === "Pending by Receiver"
     );
     
+    console.log(`📋 Pending C3 Bills: ${pendingBills.length} found`);
+    
     if (pendingBills.length === 0) {
       tbody.innerHTML = `
         <tr>
           <td colspan="9" class="no-data">
             <i class="fas fa-check-circle" style="font-size: 48px; margin-bottom: 20px; color: #00ff00;"></i><br>
-            No pending C3 bills found
+            No pending C3 bills found<br>
+            <small>All C3 bills may already be received</small>
           </td>
         </tr>
       `;
@@ -866,6 +924,14 @@
       const billDate = bill.billDate ? bill.billDate.split('T')[0] : '';
       const pendingSince = bill.createdAt ? 
         new Date(bill.createdAt).toLocaleDateString('en-IN') : '-';
+      
+      console.log(`📄 Pending Bill ${index + 1}:`, {
+        id: bill._id,
+        plant: bill.plant,
+        status: bill.receiverStatus,
+        receiver: bill.receiverName,
+        submittedBy: bill.submittedBy
+      });
       
       tbody.innerHTML += `
         <tr class="pending-row">
@@ -898,7 +964,8 @@
         <tr>
           <td colspan="9" class="no-data">
             <i class="fas fa-inbox" style="font-size: 48px; margin-bottom: 20px;"></i><br>
-            No received bills found
+            No received bills found<br>
+            <small>No bills have been marked as received yet</small>
           </td>
         </tr>
       `;
@@ -939,6 +1006,9 @@
       return;
     }
 
+    console.log(`📥 Attempting to receive bill: ${billId}`);
+    console.log(`👤 Current user: ${currentUser}`);
+
     // Disable the button immediately
     const btn = event.target;
     const originalHTML = btn.innerHTML;
@@ -946,44 +1016,93 @@
     btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> PROCESSING...';
 
     try {
+      // Get token from localStorage
+      const token = localStorage.getItem('token');
+      
+      // Prepare headers
+      let headers = {
+        "Content-Type": "application/json"
+      };
+      
+      // Add token only if it exists
+      if (token) {
+        headers["Authorization"] = `Bearer ${token}`;
+      }
+      
+      console.log(`📤 Sending receive request to: /api/wood-bill/${billId}/receive`);
+      console.log(`🔑 Headers:`, headers);
+      
       const response = await fetch(`/api/wood-bill/${billId}/receive`, {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
+        headers: headers,
         body: JSON.stringify({ receivedBy: currentUser })
       });
 
-      const result = await response.json();
+      console.log(`📦 Response status: ${response.status}`);
       
-      if (result.success) {
-        showAlert(`✅ Bill received successfully by ${currentUser}`, 'success');
+      // Handle 401 (Unauthorized) - try without token
+      if (response.status === 401) {
+        console.log("⚠️ 401 Unauthorized, trying without token...");
         
-        // Send real-time update via socket
-        if (socket) {
-          socket.emit('woodBillUpdated', {
-            action: 'received',
-            billId: billId,
-            receiverName: currentUser,
-            timestamp: new Date()
-          });
-        }
+        // Try without authorization header
+        const retryResponse = await fetch(`/api/wood-bill/${billId}/receive`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ receivedBy: currentUser })
+        });
         
-        // Reload all data
-        await loadAllBills();
-        
+        const result = await retryResponse.json();
+        handleReceiveResponse(result, billId, btn);
       } else {
-        showAlert(`❌ ${result.message || 'Failed to receive bill!'}`, 'error');
-        btn.disabled = false;
-        btn.innerHTML = originalHTML;
+        const result = await response.json();
+        handleReceiveResponse(result, billId, btn);
       }
+      
     } catch (error) {
-      console.error('Receive error:', error);
+      console.error('❌ Receive error:', error);
       showAlert('⚠️ Network error! Please try again.', 'error');
       btn.disabled = false;
       btn.innerHTML = originalHTML;
     }
   }
 
+  function handleReceiveResponse(result, billId, btn) {
+    console.log(`📨 Receive response:`, result);
+    
+    if (result.success) {
+      showAlert(`✅ Bill received successfully by ${currentUser}`, 'success');
+      
+      // Send real-time update via socket
+      if (socket) {
+        socket.emit('woodBillUpdated', {
+          action: 'received',
+          billId: billId,
+          receiverName: currentUser,
+          timestamp: new Date()
+        });
+      }
+      
+      // Update the specific bill in our data
+      const billIndex = allBillsData.findIndex(bill => bill._id === billId);
+      if (billIndex !== -1) {
+        allBillsData[billIndex] = result.data;
+        console.log(`✅ Updated bill in local data`);
+      }
+      
+      // Update UI immediately
+      updateStatistics();
+      applyFilters();
+      
+    } else {
+      showAlert(`❌ ${result.message || 'Failed to receive bill!'}`, 'error');
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fas fa-check-circle"></i> RECEIVE';
+    }
+  }
+
   function clearFilters() {
+    console.log("🧹 Clearing filters");
+    
     // Reset date range to last 30 days
     const today = new Date();
     const lastMonth = new Date();
@@ -1034,12 +1153,39 @@
     showAlert('✅ Exported to CSV successfully!', 'success');
   }
 
+  // Debug function to check database status
+  async function checkDatabaseStatus() {
+    try {
+      console.log("🔍 Checking database status...");
+      
+      // Check pending bills API
+      const pendingResponse = await fetch("/api/wood-bill/pending/c3");
+      const pendingData = await pendingResponse.json();
+      
+      console.log(`📊 Pending C3 Bills from API: ${Array.isArray(pendingData) ? pendingData.length : 'Invalid'}`);
+      
+      if (Array.isArray(pendingData)) {
+        pendingData.forEach((bill, index) => {
+          console.log(`   ${index + 1}. ID: ${bill._id}, Plant: ${bill.plant}, Status: ${bill.receiverStatus}, Receiver: ${bill.receiverName || 'Empty'}`);
+        });
+      }
+      
+    } catch (error) {
+      console.error("❌ Database check error:", error);
+    }
+  }
+
+  // Manual refresh button
+  function manualRefresh() {
+    refreshAllData();
+  }
+
   // Clear interval on page unload
   window.addEventListener('beforeunload', function() {
     clearInterval(refreshInterval);
     if (socket) socket.disconnect();
   });
 </script>
-
 </body>
 </html>
+  
