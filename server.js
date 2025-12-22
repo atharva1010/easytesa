@@ -306,6 +306,31 @@ app.put("/api/wood-bill/:id", async (req, res) => {
     });
   }
 });
+// DELETE wood bill
+app.delete("/api/wood-bill/:id", async (req, res) => {
+  try {
+    const deletedWoodBill = await WoodBill.findByIdAndDelete(req.params.id);
+    
+    if (!deletedWoodBill) {
+      return res.status(404).json({ 
+        success: false, 
+        message: "Wood bill not found" 
+      });
+    }
+    
+    res.json({ 
+      success: true, 
+      message: "Wood bill deleted successfully" 
+    });
+    
+  } catch (error) {
+    console.error("Delete wood bill error:", error);
+    res.status(500).json({ 
+      success: false, 
+      message: "Failed to delete wood bill" 
+    });
+  }
+});
 // User Management Endpoints
 app.post("/api/create-user", uploadUser.single("profilePic"), async (req, res) => {
   try {
@@ -768,4 +793,5 @@ app.get('/api/unread-counts/:userId', authMiddleware, async (req, res) => {
 server.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);
 });
+
 
