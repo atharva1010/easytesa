@@ -80,7 +80,7 @@
       text-align: center;
     }
     .pending-row {
-      background: rgba(255, 153, 0, 0.1);
+      background: rgba(255, 153, 0, 0.15);
       animation: pulse 2s infinite;
     }
     .received-row {
@@ -88,6 +88,9 @@
     }
     .security-row {
       background: rgba(0, 204, 255, 0.1);
+    }
+    .all-row {
+      background: rgba(255, 255, 255, 0.05);
     }
     .status-pending {
       color: #ff9900;
@@ -159,9 +162,9 @@
       to { transform: translateX(0); opacity: 1; }
     }
     @keyframes pulse {
-      0% { box-shadow: 0 0 0 0 rgba(255, 153, 0, 0.4); }
-      70% { box-shadow: 0 0 0 10px rgba(255, 153, 0, 0); }
-      100% { box-shadow: 0 0 0 0 rgba(255, 153, 0, 0); }
+      0% { box-shadow: inset 0 0 0 0 rgba(255, 153, 0, 0.4); }
+      70% { box-shadow: inset 0 0 0 10px rgba(255, 153, 0, 0); }
+      100% { box-shadow: inset 0 0 0 0 rgba(255, 153, 0, 0); }
     }
     .no-data {
       text-align: center;
@@ -182,36 +185,87 @@
       background: #00ffe7;
       color: #0f2027;
     }
+    .back-btn {
+      background: rgba(0, 255, 231, 0.1);
+      border: 1px solid #00ffe7;
+      color: #00ffe7;
+      padding: 8px 16px;
+      border-radius: 5px;
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-block;
+    }
+    .back-btn:hover {
+      background: #00ffe7;
+      color: #0f2027;
+    }
+    .filters {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+    .filters select, .filters input {
+      padding: 8px 12px;
+      background: #111;
+      color: #00ffe7;
+      border: 1px solid #00ffe7;
+      border-radius: 5px;
+      min-width: 150px;
+    }
+    .count-badge {
+      background: #ff9900;
+      color: #000;
+      padding: 2px 8px;
+      border-radius: 10px;
+      font-size: 12px;
+      margin-left: 5px;
+    }
   </style>
 </head>
 <body>
 
   <div class="header">
-    <div>
-      <button class="refresh-btn" onclick="refreshAllData()">
-        🔄 REFRESH
-      </button>
-    </div>
+    <a href="index.html" class="back-btn">← BACK TO HOME</a>
     <h1>WOOD MM BILL RECEIVE PANEL</h1>
     <div class="user-info">
       USER: <span id="currentUser">LOADING...</span>
+      <button class="refresh-btn" onclick="refreshAllData()">🔄 REFRESH</button>
     </div>
   </div>
 
+  <div class="filters">
+    <select id="plantFilter" onchange="applyFilters()">
+      <option value="">ALL PLANTS</option>
+      <option value="C34A">C34A</option>
+      <option value="C2">C2</option>
+      <option value="C3">C3</option>
+    </select>
+    <select id="statusFilter" onchange="applyFilters()">
+      <option value="">ALL STATUS</option>
+      <option value="Pending by Receiver">PENDING</option>
+      <option value="Received by Security">SECURITY</option>
+      <option value="Received">RECEIVED</option>
+    </select>
+    <input type="date" id="dateFilter" onchange="applyFilters()">
+    <input type="text" id="searchFilter" placeholder="Search..." oninput="applyFilters()">
+  </div>
+
   <div class="tabs">
-    <button class="tab active" onclick="showTab('pending')">
-      📋 PENDING C3 BILLS
+    <button class="tab active" onclick="showTab('all')">
+      📊 ALL BILLS
+    </button>
+    <button class="tab" onclick="showTab('pending')">
+      📋 PENDING C3 BILLS <span id="pendingCount" class="count-badge">0</span>
     </button>
     <button class="tab" onclick="showTab('received')">
-      ✅ RECEIVED BILLS
-    </button>
-    <button class="tab" onclick="showTab('all')">
-      📊 ALL BILLS
+      ✅ RECEIVED BILLS <span id="receivedCount" class="count-badge">0</span>
     </button>
   </div>
 
-  <!-- Pending C3 Bills -->
-  <div id="pendingTab" class="tab-content">
+  <!-- All Bills Tab -->
+  <div id="allTab" class="tab-content">
     <table>
       <thead>
         <tr>
@@ -219,7 +273,30 @@
           <th>SAP DATE</th>
           <th>BILL DATE</th>
           <th>QUANTITY</th>
-          <th>SUBMIT TIME</th>
+          <th>RECEIVER NAME</th>
+          <th>SUBMITTED BY</th>
+          <th>PLANT</th>
+          <th>STATUS</th>
+          <th>ACTION</th>
+        </tr>
+      </thead>
+      <tbody id="allTableBody">
+        <tr>
+          <td colspan="9" class="no-data">Loading all bills...</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Pending C3 Bills Tab -->
+  <div id="pendingTab" class="tab-content" style="display: none;">
+    <table>
+      <thead>
+        <tr>
+          <th>S.NO</th>
+          <th>SAP DATE</th>
+          <th>BILL DATE</th>
+          <th>QUANTITY</th>
           <th>SUBMITTED BY</th>
           <th>PLANT</th>
           <th>STATUS</th>
@@ -228,13 +305,13 @@
       </thead>
       <tbody id="pendingTableBody">
         <tr>
-          <td colspan="9" class="no-data">Loading pending bills...</td>
+          <td colspan="8" class="no-data">Loading pending bills...</td>
         </tr>
       </tbody>
     </table>
   </div>
 
-  <!-- Received Bills -->
+  <!-- Received Bills Tab -->
   <div id="receivedTab" class="tab-content" style="display: none;">
     <table>
       <thead>
@@ -258,39 +335,21 @@
     </table>
   </div>
 
-  <!-- All Bills -->
-  <div id="allTab" class="tab-content" style="display: none;">
-    <table>
-      <thead>
-        <tr>
-          <th>S.NO</th>
-          <th>SAP DATE</th>
-          <th>BILL DATE</th>
-          <th>QUANTITY</th>
-          <th>RECEIVER NAME</th>
-          <th>SUBMITTED BY</th>
-          <th>PLANT</th>
-          <th>STATUS</th>
-        </tr>
-      </thead>
-      <tbody id="allTableBody">
-        <tr>
-          <td colspan="8" class="no-data">Loading all bills...</td>
-        </tr>
-      </tbody>
-    </table>
-  </div>
-
 <script>
   let currentUser = (localStorage.getItem("username") || "unknown").toUpperCase();
+  let allBillsData = [];
+  let filteredBills = [];
   let refreshInterval;
 
   document.addEventListener("DOMContentLoaded", function() {
     document.getElementById("currentUser").textContent = currentUser;
     initReceivePanel();
     
-    // Auto-refresh every 10 seconds
-    refreshInterval = setInterval(refreshAllData, 10000);
+    // Set today's date in date filter
+    document.getElementById("dateFilter").value = new Date().toISOString().split('T')[0];
+    
+    // Auto-refresh every 15 seconds
+    refreshInterval = setInterval(refreshAllData, 15000);
   });
 
   function showAlert(message, type = 'success') {
@@ -305,18 +364,11 @@
   }
 
   function initReceivePanel() {
-    loadPendingC3Bills();
+    loadAllBills();
   }
 
   function refreshAllData() {
-    const activeTab = document.querySelector('.tab.active');
-    if (activeTab.textContent.includes('PENDING')) {
-      loadPendingC3Bills();
-    } else if (activeTab.textContent.includes('RECEIVED')) {
-      loadReceivedBills();
-    } else if (activeTab.textContent.includes('ALL')) {
-      loadAllBills();
-    }
+    loadAllBills();
     showAlert('Data refreshed', 'success');
   }
 
@@ -334,138 +386,8 @@
     
     document.getElementById(tabName + 'Tab').style.display = 'block';
     
-    // Load data for tab
-    if (tabName === 'pending') {
-      loadPendingC3Bills();
-    } else if (tabName === 'received') {
-      loadReceivedBills();
-    } else if (tabName === 'all') {
-      loadAllBills();
-    }
-  }
-
-  async function loadPendingC3Bills() {
-    try {
-      const res = await fetch("/api/wood-bill/pending/c3");
-      if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
-      
-      const bills = await res.json();
-      const tbody = document.getElementById("pendingTableBody");
-      
-      if (!Array.isArray(bills)) {
-        tbody.innerHTML = `
-          <tr>
-            <td colspan="9" class="no-data">Error loading data</td>
-          </tr>
-        `;
-        return;
-      }
-
-      if (bills.length === 0) {
-        tbody.innerHTML = `
-          <tr>
-            <td colspan="9" class="no-data">No pending C3 bills found</td>
-          </tr>
-        `;
-        return;
-      }
-
-      tbody.innerHTML = "";
-      bills.forEach((bill, index) => {
-        const sapDate = bill.sapDate ? bill.sapDate.split('T')[0] : '';
-        const billDate = bill.billDate ? bill.billDate.split('T')[0] : '';
-        
-        tbody.innerHTML += `
-          <tr class="pending-row">
-            <td>${index + 1}</td>
-            <td>${sapDate}</td>
-            <td>${billDate}</td>
-            <td>${bill.quantity}</td>
-            <td>${bill.submitTime}</td>
-            <td>${bill.submittedBy}</td>
-            <td>${bill.plant}</td>
-            <td class="status-pending">PENDING</td>
-            <td>
-              <button class="receive-btn" onclick="receiveBill('${bill._id}')">
-                ✅ RECEIVE
-              </button>
-            </td>
-          </tr>
-        `;
-      });
-    } catch (error) {
-      console.error("Error loading pending bills:", error);
-      const tbody = document.getElementById("pendingTableBody");
-      tbody.innerHTML = `
-        <tr>
-          <td colspan="9" class="no-data">Failed to load pending bills</td>
-        </tr>
-      `;
-    }
-  }
-
-  async function loadReceivedBills() {
-    try {
-      const res = await fetch("/api/wood-bill/received");
-      if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
-      
-      const bills = await res.json();
-      const tbody = document.getElementById("receivedTableBody");
-      
-      if (!Array.isArray(bills)) {
-        tbody.innerHTML = `
-          <tr>
-            <td colspan="9" class="no-data">Error loading data</td>
-          </tr>
-        `;
-        return;
-      }
-
-      if (bills.length === 0) {
-        tbody.innerHTML = `
-          <tr>
-            <td colspan="9" class="no-data">No received bills found</td>
-          </tr>
-        `;
-        return;
-      }
-
-      tbody.innerHTML = "";
-      bills.forEach((bill, index) => {
-        const sapDate = bill.sapDate ? bill.sapDate.split('T')[0] : '';
-        const billDate = bill.billDate ? bill.billDate.split('T')[0] : '';
-        const receivedAt = bill.receivedAt ? 
-          new Date(bill.receivedAt).toLocaleString('en-IN', {
-            day: '2-digit',
-            month: '2-digit',
-            year: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit'
-          }) : '-';
-        
-        tbody.innerHTML += `
-          <tr class="received-row">
-            <td>${index + 1}</td>
-            <td>${sapDate}</td>
-            <td>${billDate}</td>
-            <td>${bill.quantity}</td>
-            <td>${bill.receiverName}</td>
-            <td>${bill.submittedBy}</td>
-            <td>${bill.plant}</td>
-            <td class="status-received">RECEIVED</td>
-            <td>${receivedAt}</td>
-          </tr>
-        `;
-      });
-    } catch (error) {
-      console.error("Error loading received bills:", error);
-      const tbody = document.getElementById("receivedTableBody");
-      tbody.innerHTML = `
-        <tr>
-          <td colspan="9" class="no-data">Failed to load received bills</td>
-        </tr>
-      `;
-    }
+    // Apply filters to current tab
+    applyFilters();
   }
 
   async function loadAllBills() {
@@ -473,63 +395,215 @@
       const res = await fetch("/api/wood-bill");
       if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
       
-      const bills = await res.json();
-      const tbody = document.getElementById("allTableBody");
+      allBillsData = await res.json();
       
-      if (!Array.isArray(bills)) {
-        tbody.innerHTML = `
-          <tr>
-            <td colspan="8" class="no-data">Error loading data</td>
-          </tr>
-        `;
+      if (!Array.isArray(allBillsData)) {
+        showAlert('Error loading data', 'error');
         return;
       }
 
-      tbody.innerHTML = "";
-      bills.forEach((bill, index) => {
-        const sapDate = bill.sapDate ? bill.sapDate.split('T')[0] : '';
-        const billDate = bill.billDate ? bill.billDate.split('T')[0] : '';
-        
-        let rowClass = "";
-        let statusText = "";
-        let statusClass = "";
-        
-        if (bill.receiverStatus === "Pending by Receiver") {
-          rowClass = "pending-row";
-          statusText = "PENDING";
-          statusClass = "status-pending";
-        } else if (bill.receiverStatus === "Received by Security") {
-          rowClass = "security-row";
-          statusText = "SECURITY";
-          statusClass = "status-security";
-        } else if (bill.receiverStatus === "Received") {
-          rowClass = "received-row";
-          statusText = "RECEIVED";
-          statusClass = "status-received";
-        }
-        
-        tbody.innerHTML += `
-          <tr class="${rowClass}">
-            <td>${index + 1}</td>
-            <td>${sapDate}</td>
-            <td>${billDate}</td>
-            <td>${bill.quantity}</td>
-            <td>${bill.receiverName || '-'}</td>
-            <td>${bill.submittedBy}</td>
-            <td>${bill.plant}</td>
-            <td class="${statusClass}">${statusText}</td>
-          </tr>
-        `;
-      });
+      // Update counts
+      const pendingCount = allBillsData.filter(bill => 
+        bill.plant === 'C3' && bill.receiverStatus === "Pending by Receiver"
+      ).length;
+      
+      const receivedCount = allBillsData.filter(bill => 
+        bill.receiverStatus === "Received"
+      ).length;
+
+      document.getElementById("pendingCount").textContent = pendingCount;
+      document.getElementById("receivedCount").textContent = receivedCount;
+
+      // Apply current filters
+      applyFilters();
     } catch (error) {
       console.error("Error loading all bills:", error);
-      const tbody = document.getElementById("allTableBody");
+      showAlert('Failed to load bills!', 'error');
+    }
+  }
+
+  function applyFilters() {
+    const plantFilter = document.getElementById("plantFilter").value;
+    const statusFilter = document.getElementById("statusFilter").value;
+    const dateFilter = document.getElementById("dateFilter").value;
+    const searchFilter = document.getElementById("searchFilter").value.toLowerCase();
+    
+    filteredBills = allBillsData.filter(bill => {
+      // Plant filter
+      if (plantFilter && bill.plant !== plantFilter) return false;
+      
+      // Status filter
+      if (statusFilter && bill.receiverStatus !== statusFilter) return false;
+      
+      // Date filter
+      if (dateFilter) {
+        const sapDate = bill.sapDate ? bill.sapDate.split('T')[0] : '';
+        if (sapDate !== dateFilter) return false;
+      }
+      
+      // Search filter
+      if (searchFilter) {
+        const searchStr = searchFilter.toLowerCase();
+        const receiverName = (bill.receiverName || '').toLowerCase();
+        const submittedBy = (bill.submittedBy || '').toLowerCase();
+        const plant = (bill.plant || '').toLowerCase();
+        
+        if (!receiverName.includes(searchStr) && 
+            !submittedBy.includes(searchStr) && 
+            !plant.includes(searchStr)) {
+          return false;
+        }
+      }
+      
+      return true;
+    });
+
+    // Sort by date (newest first)
+    filteredBills.sort((a, b) => new Date(b.sapDate) - new Date(a.sapDate));
+
+    // Update all tabs based on filtered data
+    updateAllBillsTab();
+    updatePendingTab();
+    updateReceivedTab();
+  }
+
+  function updateAllBillsTab() {
+    const tbody = document.getElementById("allTableBody");
+    
+    if (filteredBills.length === 0) {
       tbody.innerHTML = `
         <tr>
-          <td colspan="8" class="no-data">Failed to load all bills</td>
+          <td colspan="9" class="no-data">No bills found with current filters</td>
         </tr>
       `;
+      return;
     }
+
+    tbody.innerHTML = "";
+    filteredBills.forEach((bill, index) => {
+      const sapDate = bill.sapDate ? bill.sapDate.split('T')[0] : '';
+      const billDate = bill.billDate ? bill.billDate.split('T')[0] : '';
+      
+      let rowClass = "all-row";
+      let statusText = "";
+      let statusClass = "";
+      
+      if (bill.receiverStatus === "Pending by Receiver") {
+        rowClass = "pending-row";
+        statusText = "PENDING";
+        statusClass = "status-pending";
+      } else if (bill.receiverStatus === "Received by Security") {
+        rowClass = "security-row";
+        statusText = "SECURITY";
+        statusClass = "status-security";
+      } else if (bill.receiverStatus === "Received") {
+        rowClass = "received-row";
+        statusText = "RECEIVED";
+        statusClass = "status-received";
+      }
+      
+      // Only show RECEIVE button for pending C3 bills
+      const receiveButton = (bill.plant === 'C3' && bill.receiverStatus === "Pending by Receiver") 
+        ? `<button class="receive-btn" onclick="receiveBill('${bill._id}')">✅ RECEIVE</button>`
+        : '<span style="color:#888">-</span>';
+      
+      tbody.innerHTML += `
+        <tr class="${rowClass}">
+          <td>${index + 1}</td>
+          <td>${sapDate}</td>
+          <td>${billDate}</td>
+          <td>${bill.quantity}</td>
+          <td>${bill.receiverName || '-'}</td>
+          <td>${bill.submittedBy}</td>
+          <td>${bill.plant}</td>
+          <td class="${statusClass}">${statusText}</td>
+          <td>${receiveButton}</td>
+        </tr>
+      `;
+    });
+  }
+
+  function updatePendingTab() {
+    const tbody = document.getElementById("pendingTableBody");
+    const pendingBills = filteredBills.filter(bill => 
+      bill.plant === 'C3' && bill.receiverStatus === "Pending by Receiver"
+    );
+    
+    if (pendingBills.length === 0) {
+      tbody.innerHTML = `
+        <tr>
+          <td colspan="8" class="no-data">No pending C3 bills found</td>
+        </tr>
+      `;
+      return;
+    }
+
+    tbody.innerHTML = "";
+    pendingBills.forEach((bill, index) => {
+      const sapDate = bill.sapDate ? bill.sapDate.split('T')[0] : '';
+      const billDate = bill.billDate ? bill.billDate.split('T')[0] : '';
+      
+      tbody.innerHTML += `
+        <tr class="pending-row">
+          <td>${index + 1}</td>
+          <td>${sapDate}</td>
+          <td>${billDate}</td>
+          <td>${bill.quantity}</td>
+          <td>${bill.submittedBy}</td>
+          <td>${bill.plant}</td>
+          <td class="status-pending">PENDING</td>
+          <td>
+            <button class="receive-btn" onclick="receiveBill('${bill._id}')">
+              ✅ RECEIVE
+            </button>
+          </td>
+        </tr>
+      `;
+    });
+  }
+
+  function updateReceivedTab() {
+    const tbody = document.getElementById("receivedTableBody");
+    const receivedBills = filteredBills.filter(bill => 
+      bill.receiverStatus === "Received"
+    );
+    
+    if (receivedBills.length === 0) {
+      tbody.innerHTML = `
+        <tr>
+          <td colspan="9" class="no-data">No received bills found</td>
+        </tr>
+      `;
+      return;
+    }
+
+    tbody.innerHTML = "";
+    receivedBills.forEach((bill, index) => {
+      const sapDate = bill.sapDate ? bill.sapDate.split('T')[0] : '';
+      const billDate = bill.billDate ? bill.billDate.split('T')[0] : '';
+      const receivedAt = bill.receivedAt ? 
+        new Date(bill.receivedAt).toLocaleString('en-IN', {
+          day: '2-digit',
+          month: '2-digit',
+          year: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit'
+        }) : '-';
+      
+      tbody.innerHTML += `
+        <tr class="received-row">
+          <td>${index + 1}</td>
+          <td>${sapDate}</td>
+          <td>${billDate}</td>
+          <td>${bill.quantity}</td>
+          <td>${bill.receiverName}</td>
+          <td>${bill.submittedBy}</td>
+          <td>${bill.plant}</td>
+          <td class="status-received">RECEIVED</td>
+          <td>${receivedAt}</td>
+        </tr>
+      `;
+    });
   }
 
   async function receiveBill(billId) {
@@ -553,9 +627,7 @@
       
       if (result.success) {
         showAlert('✅ Bill received successfully!', 'success');
-        // Refresh all tabs
-        loadPendingC3Bills();
-        loadReceivedBills();
+        // Reload all data
         loadAllBills();
       } else {
         showAlert(result.message || '❌ Failed to receive bill!', 'error');
