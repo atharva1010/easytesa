@@ -1,21 +1,29 @@
-const express = require('express');
-const router = express.Router();
-const tokenController = require('../controllers/tokenController');
-const auth = require('../middleware/auth');
+const router = require("express").Router();
+const Token = require("../models/Token");
 
-// Get tokens by plant
-router.get('/plant/:plant', auth.authenticate, tokenController.getTokensByPlant);
+// GET tokens (by plant)
+router.get("/:plant", async (req, res) => {
+  const data = await Token.find({ plant: req.params.plant });
+  res.json(data);
+});
 
-// Get token counts
-router.get('/counts/:plant', auth.authenticate, tokenController.getTokenCounts);
+// SAVE token
+router.post("/", async (req, res) => {
+  const token = new Token(req.body);
+  await token.save();
+  res.json({ success: true });
+});
 
-// Get lost tokens from shift reports
-router.get('/lost-from-reports/:plant', auth.authenticate, tokenController.getLostTokensFromReports);
+// UPDATE token
+router.put("/:id", async (req, res) => {
+  await Token.findByIdAndUpdate(req.params.id, req.body);
+  res.json({ success: true });
+});
 
-// Create new token
-router.post('/', auth.authenticate, auth.authorize(['admin']), tokenController.createToken);
-
-// Update token status
-router.put('/:id/status', auth.authenticate, tokenController.updateTokenStatus);
+// DELETE token
+router.delete("/:id", async (req, res) => {
+  await Token.findByIdAndDelete(req.params.id);
+  res.json({ success: true });
+});
 
 module.exports = router;
