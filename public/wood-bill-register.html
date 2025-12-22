@@ -420,58 +420,73 @@
     }
   }
 
-  async function saveRow(btn) {
-    const row = btn.closest("tr");
-    const inputs = row.querySelectorAll("input, select");
-    
-    const data = {
-      sapDate: inputs[0].value,
-      billDate: inputs[1].value,
-      quantity: parseFloat(inputs[2].value),
-      submitTime: inputs[3].value,
-      receiverName: inputs[4].value.trim().toUpperCase(),
-      submittedBy: currentUser,
-      plant: inputs[6].value.toUpperCase()
-    };
+async function saveRow(btn) {
+  const row = btn.closest("tr");
+  const inputs = row.querySelectorAll("input, select");
+  
+  const data = {
+    sapDate: inputs[0].value,
+    billDate: inputs[1].value,
+    quantity: parseFloat(inputs[2].value),
+    submitTime: inputs[3].value,
+    receiverName: inputs[4].value.trim().toUpperCase(),
+    submittedBy: currentUser,
+    plant: inputs[6].value.toUpperCase()
+  };
 
-    // Validation
-    if (!data.sapDate || !data.billDate || !data.quantity || !data.submitTime || 
-        !data.plant) {
-      showAlert('Please fill all fields!', 'error');
-      return;
-    }
-
-    if (isNaN(data.quantity) || data.quantity <= 0) {
-      showAlert('Please enter valid quantity!', 'error');
-      return;
-    }
-
-    try {
-      const res = await fetch("/api/wood-bill", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data)
-      });
-
-      const result = await res.json();
-      
-      if (result.success) {
-        showAlert('Bill saved successfully!', 'success');
-        isEditingMode = false;
-        
-        if (data.plant === 'C3') {
-          showAlert('C3 Bill saved with PENDING status. Wait for receiver to accept in Receive Panel.', 'warning');
-        }
-        
-        loadSavedData();
-      } else {
-        showAlert(result.message || 'Save failed!', 'error');
-      }
-    } catch (error) {
-      console.error('Save error:', error);
-      showAlert('Network error! Please try again.', 'error');
-    }
+  // Validation
+  if (!data.sapDate || !data.billDate || !data.quantity || !data.submitTime || 
+      !data.plant) {
+    showAlert('Please fill all fields!', 'error');
+    return;
   }
+
+  if (isNaN(data.quantity) || data.quantity <= 0) {
+    showAlert('Please enter valid quantity!', 'error');
+    return;
+  }
+
+  try {
+    // Get token from localStorage
+    const token = localStorage.getItem('token');
+    
+    if (!token) {
+      showAlert('Please login again!', 'error');
+      window.location.href = 'index.html';
+      return;
+    }
+    
+    const res = await fetch("/api/wood-bill", {
+      method: "POST",
+      headers: { 
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${token}`
+      },
+      body: JSON.stringify(data)
+    });
+
+    const result = await res.json();
+    
+    if (result.success) {
+      showAlert('Bill saved successfully!', 'success');
+      isEditingMode = false;
+      
+      if (data.plant === 'C3') {
+        showAlert('C3 Bill saved with PENDING status. Wait for receiver to accept in Receive Panel.', 'warning');
+      }
+      
+      loadSavedData();
+    } else {
+      showAlert(result.message || 'Save failed!', 'error');
+    }
+  } catch (error) {
+    console.error('Save error:', error);
+    showAlert('Network error! Please try again.', 'error');
+  }
+  }
+
+
+  
 
   function cancelAdd(btn) {
     const row = btn.closest("tr");
