@@ -390,4 +390,61 @@
             <td>${index + 1}</td>
             <td>${sapDate}</td>
             <td>${billDate}</td>
-            <td>${bill.quantity}</td
+            <td>${bill.quantity}</td>
+            <td>${bill.receiverName || '-'}</td>
+            <td>${bill.submittedBy}</td>
+            <td>${bill.plant}</td>
+            <td class="${statusClass}">${statusText}</td>
+          </tr>
+        `;
+      });
+    } catch (error) {
+      console.error("Error loading all bills:", error);
+      showAlert('Failed to load all bills!', 'error');
+    }
+  }
+
+  async function receiveBill(billId) {
+    if (!confirm('Are you sure you want to receive this bill?')) {
+      return;
+    }
+
+    try {
+      const res = await fetch(`/api/wood-bill/${billId}/receive`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ receivedBy: currentUser })
+      });
+
+      const result = await res.json();
+      
+      if (result.success) {
+        showAlert('Bill received successfully!', 'success');
+        // Refresh all tabs
+        loadPendingC3Bills();
+        loadReceivedBills();
+        loadAllBills();
+      } else {
+        showAlert(result.message || 'Failed to receive bill!', 'error');
+      }
+    } catch (error) {
+      console.error('Receive error:', error);
+      showAlert('Network error! Please try again.', 'error');
+    }
+  }
+
+  // Auto-refresh every 30 seconds
+  setInterval(() => {
+    const activeTab = document.querySelector('.tab.active');
+    if (activeTab) {
+      const tabName = activeTab.textContent.includes('PENDING') ? 'pending' : 
+                     activeTab.textContent.includes('RECEIVED') ? 'received' : 'all';
+      if (tabName === 'pending') loadPendingC3Bills();
+      else if (tabName === 'received') loadReceivedBills();
+      else if (tabName === 'all') loadAllBills();
+    }
+  }, 30000);
+</script>
+
+</body>
+</html>
