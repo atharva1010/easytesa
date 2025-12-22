@@ -25,6 +25,7 @@
       text-align: center;
       text-shadow: 0 0 5px #00ffe7;
       margin: 0;
+      flex-grow: 1;
     }
     .nav-buttons {
       display: flex;
@@ -43,10 +44,9 @@
       background: #00ffe7;
       color: #0f2027;
     }
-    button:disabled {
-      opacity: 0.5;
-      cursor: not-allowed;
-      border-color: #666;
+    .receive-btn {
+      background: rgba(0, 255, 0, 0.2);
+      border-color: #00ff00;
     }
     table {
       width: 100%;
@@ -129,14 +129,29 @@
       from { transform: translateX(100%); opacity: 0; }
       to { transform: translateX(0); opacity: 1; }
     }
+    .tab {
+      padding: 10px 20px;
+      border: 1px solid #00ffe7;
+      background: transparent;
+      color: #00ffe7;
+      cursor: pointer;
+      border-radius: 5px;
+      margin-right: 10px;
+    }
+    .tab.active {
+      background: #00ffe7;
+      color: #0f2027;
+    }
   </style>
 </head>
-<body onload="initPage()">
+<body>
 
   <div class="header">
     <h2>WOOD BILL SUBMIT REGISTER</h2>
     <div class="nav-buttons">
-      <button onclick="window.location.href='wood-bill-receive.html'">RECEIVE PANEL</button>
+      <button class="receive-btn" onclick="window.open('wood-bill-receive-panel.html', '_blank')">
+        OPEN RECEIVE PANEL
+      </button>
       <button onclick="showFill()">FILL REPORT</button>
       <button id="addRowBtn" onclick="addNewRow()">ADD NEW ROW</button>
       <button onclick="showView()">VIEW REPORT</button>
@@ -189,6 +204,13 @@
   let isEditingMode = false;
   let today = new Date().toISOString().split('T')[0];
 
+  document.addEventListener("DOMContentLoaded", initPage);
+
+  function initPage() {
+    loadSavedData();
+    showFill();
+  }
+
   function showAlert(message, type = 'success') {
     const alertDiv = document.createElement('div');
     alertDiv.className = `alert ${type}`;
@@ -198,11 +220,6 @@
     setTimeout(() => {
       alertDiv.remove();
     }, 3000);
-  }
-
-  function initPage() {
-    loadSavedData();
-    showFill();
   }
 
   function showFill() {
@@ -469,6 +486,13 @@
       showAlert('Network error! Please try again.', 'error');
     }
   }
+
+  // Auto-refresh every 30 seconds
+  setInterval(() => {
+    if (!isEditingMode) {
+      loadSavedData();
+    }
+  }, 30000);
 </script>
 
 </body>
