@@ -331,68 +331,96 @@
     isEditingMode = false;
   }
 
-  async function loadSavedData() {
-    try {
-      const res = await fetch("/api/wood-bill");
-      if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
-      
-      const allData = await res.json();
-      const tbody = document.querySelector("#fillTable tbody");
-      tbody.innerHTML = "";
-
-      if (!Array.isArray(allData)) {
-        console.error("Expected array but got:", allData);
-        return;
+async function loadSavedData() {
+  try {
+    // Get token from localStorage
+    const token = localStorage.getItem('token');
+    
+    const response = await fetch('/api/wood-bill', {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
       }
-
-      // Sort by date (newest first)
-      allData.sort((a, b) => new Date(b.sapDate) - new Date(a.sapDate));
-
-      allData.forEach((d, index) => {
-        const sapDate = d.sapDate ? d.sapDate.split('T')[0] : '';
-        const billDate = d.billDate ? d.billDate.split('T')[0] : '';
-        
-        let statusText = "";
-        let statusClass = "";
-        
-        if (d.receiverStatus === "Pending by Receiver") {
-          statusText = "PENDING";
-          statusClass = "status-pending";
-        } else if (d.receiverStatus === "Received by Security") {
-          statusText = "SECURITY";
-          statusClass = "status-security";
-        } else if (d.receiverStatus === "Received") {
-          statusText = "RECEIVED";
-          statusClass = "status-received";
-        }
-        
-        tbody.innerHTML += `
-          <tr>
-            <td>${index + 1}</td>
-            <td>${sapDate}</td>
-            <td>${billDate}</td>
-            <td>${d.quantity}</td>
-            <td>${d.submitTime}</td>
-            <td>${d.receiverName || '-'}</td>
-            <td>${d.submittedBy}</td>
-            <td>${d.plant}</td>
-            <td class="${statusClass}">${statusText}</td>
-            <td class="action-buttons">
-              ${d.submittedBy === currentUser && d.receiverStatus !== "Received" ? 
-                `<button onclick="editRow(this, '${d._id}')">Edit</button>
-                 <button onclick="deleteRow(this, '${d._id}')" style="background:#ff0000;color:#fff">Delete</button>` :
-                `<span style="color:gray;">Locked</span>`
-              }
-            </td>
-          </tr>
-        `;
-      });
-    } catch (error) {
-      console.error("Error loading data:", error);
-      showAlert('Failed to load data!', 'error');
+    });
+    
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
     }
-  }
+    
+    const allData = await response.json();
+    const tbody = document.querySelector("#fillTable tbody");
+    tbody.innerHTML = "";
 
+    if (!Array.isArray(allData)) {
+      console.error("Expected array but got:", allData);
+      showAlert('Invalid data format received from server!', 'error');
+      return;
+    }
+
+    // Sort by date (newest first)
+    allData.sort((a, b) => new Date(b.sapDate) - new Date(a.sapDate));
+
+    allData.forEach((d, index) => {
+      const sapDate = d.sapDate ? d.sapDate.split('T')[0] : '';
+      const billDate = d.billDate ? d.billDate.split('T')[0] : '';
+      
+      let statusText = "";
+      let statusClass = "";
+      
+      if (d.receiverStatus === "Pending by Receiver") {
+        statusText = "PENDING";
+        statusClass = "status-pending";
+      } else if (d.receiverStatus === "Received by Security") {
+        statusText = "SECURITY";
+        statusClass = "status-security";
+      } else if (d.receiverStatus === "Received") {
+        statusText = "RECEIVED";
+        statusClass = "status-received";
+      }
+      
+      tbody.innerHTML += `
+        <tr>
+          <td>${index + 1}</td>
+          <td>${sapDate}</td>
+          <td>${billDate}</td>
+          <td>${d.quantity}</td>
+          <td>${d.submitTime}</td>
+          <td>${d.receiverName || '-'}</td>
+          <td>${d.submittedBy}</td>
+          <td>${d.plant}</td>
+          <td class="${statusClass}">${statusText}</td>
+          <td class="action-buttons">
+            ${d.submittedBy === currentUser && d.receiverStatus !== "Received" ? 
+              `<button onclick="editRow(this, '${d._id}')">Edit</button>
+               <button onclick="deleteRow(this, '${d._id}')" style="background:#ff0000;color:#fff">Delete</button>` :
+              `<span style="color:gray;">Locked</span>`
+            }
+          </td>
+        </tr>
+      `;
+    });
+    
+    // Show success message if data loaded
+    if (allData.length > 0) {
+      console.log(`Loaded ${allData.length} wood bills successfully`);
+    }
+    
+  } catch (error) {
+    console.error("Error loading data:", error);
+    showAlert(`Failed to load data: ${error.message}`, 'error');
+    
+    // Show empty state in table
+    const tbody = document.querySelector("#fillTable tbody");
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="10" style="text-align: center; padding: 20px; color: #ff9900;">
+          ❌ Failed to load data. Please check your connection and try again.<br>
+          Error: ${error.message}
+        </td>
+      </tr>
+    `;
+  }
+}
   async function loadViewData() {
     try {
       const res = await fetch("/api/wood-bill");
