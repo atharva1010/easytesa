@@ -1,1191 +1,766 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>WOOD BILL RECEIVE PANEL</title>
-  <style>
-    * {
-      text-transform: uppercase;
-      box-sizing: border-box;
-    }
-    body {
-      background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
-      color: #00ffe7;
-      font-family: 'Segoe UI', sans-serif;
-      padding: 20px;
-      margin: 0;
-      min-height: 100vh;
-    }
-    .header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 25px;
-      padding: 15px 20px;
-      background: rgba(0, 255, 231, 0.1);
-      border-radius: 10px;
-      border: 2px solid #00ffe7;
-      box-shadow: 0 0 20px rgba(0, 255, 231, 0.3);
-    }
-    h1 {
-      text-align: center;
-      text-shadow: 0 0 15px #00ffe7;
-      margin: 0;
-      color: #00ffe7;
-      font-size: 32px;
-      letter-spacing: 1px;
-      flex-grow: 1;
-    }
-    .user-info {
-      background: rgba(0, 255, 231, 0.15);
-      padding: 12px 20px;
-      border-radius: 8px;
-      border: 1px solid #00ffe7;
-      font-weight: bold;
-      display: flex;
-      align-items: center;
-      gap: 15px;
-    }
-    .tabs {
-      display: flex;
-      gap: 10px;
-      margin-bottom: 25px;
-      justify-content: center;
-      background: rgba(0, 255, 231, 0.05);
-      padding: 15px;
-      border-radius: 10px;
-      border: 1px solid #00ffe7;
-    }
-    .tab {
-      padding: 14px 28px;
-      border: 2px solid #00ffe7;
-      background: transparent;
-      color: #00ffe7;
-      cursor: pointer;
-      border-radius: 8px;
-      font-weight: bold;
-      transition: all 0.3s;
-      min-width: 180px;
-      text-align: center;
-      font-size: 16px;
-      position: relative;
-    }
-    .tab:hover {
-      background: rgba(0, 255, 231, 0.2);
-      transform: translateY(-2px);
-      box-shadow: 0 5px 15px rgba(0, 255, 231, 0.3);
-    }
-    .tab.active {
-      background: linear-gradient(45deg, #00ffe7, #00ccff);
-      color: #0f2027;
-      box-shadow: 0 0 20px #00ffe7;
-      border-color: #00ffe7;
-    }
-    .filters-section {
-      background: rgba(0, 255, 231, 0.08);
-      padding: 20px;
-      border-radius: 10px;
-      margin-bottom: 25px;
-      border: 1px solid #00ffe7;
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-      gap: 15px;
-    }
-    .filter-group {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
-    .filter-group label {
-      color: #00ccff;
-      font-weight: bold;
-      font-size: 14px;
-    }
-    input, select {
-      padding: 12px;
-      background: rgba(0, 0, 0, 0.5);
-      color: #00ffe7;
-      border: 1px solid #00ffe7;
-      border-radius: 6px;
-      width: 100%;
-      font-size: 14px;
-    }
-    input:focus, select:focus {
-      outline: none;
-      box-shadow: 0 0 10px #00ffe7;
-      border-color: #00ffe7;
-    }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      box-shadow: 0 0 25px rgba(0, 255, 231, 0.2);
-      border-radius: 10px;
-      overflow: hidden;
-      margin-top: 20px;
-    }
-    th {
-      background: linear-gradient(45deg, rgba(0, 255, 231, 0.3), rgba(0, 204, 255, 0.3));
-      padding: 18px;
-      border: 2px solid #00ffe7;
-      font-size: 16px;
-      text-align: center;
-      position: sticky;
-      top: 0;
-    }
-    td {
-      padding: 15px;
-      border: 1px solid #00ffe7;
-      text-align: center;
-      vertical-align: middle;
-    }
-    .pending-row {
-      background: linear-gradient(45deg, rgba(255, 153, 0, 0.1), rgba(255, 165, 0, 0.15));
-      animation: pulse 2s infinite;
-      border-left: 5px solid #ff9900;
-    }
-    .received-row {
-      background: linear-gradient(45deg, rgba(0, 255, 0, 0.1), rgba(0, 200, 0, 0.15));
-      border-left: 5px solid #00ff00;
-    }
-    .security-row {
-      background: linear-gradient(45deg, rgba(0, 204, 255, 0.1), rgba(0, 150, 255, 0.15));
-      border-left: 5px solid #00ccff;
-    }
-    .status-pending {
-      color: #ff9900;
-      font-weight: bold;
-      background: rgba(255, 153, 0, 0.2);
-      padding: 8px 16px;
-      border-radius: 20px;
-      display: inline-block;
-      border: 1px solid #ff9900;
-    }
-    .status-received {
-      color: #00ff00;
-      font-weight: bold;
-      background: rgba(0, 255, 0, 0.2);
-      padding: 8px 16px;
-      border-radius: 20px;
-      display: inline-block;
-      border: 1px solid #00ff00;
-    }
-    .status-security {
-      color: #00ccff;
-      font-weight: bold;
-      background: rgba(0, 204, 255, 0.2);
-      padding: 8px 16px;
-      border-radius: 20px;
-      display: inline-block;
-      border: 1px solid #00ccff;
-    }
-    button {
-      padding: 10px 20px;
-      border: none;
-      border-radius: 6px;
-      cursor: pointer;
-      transition: all 0.3s;
-      font-weight: bold;
-      font-size: 14px;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-    }
-    .receive-btn {
-      background: linear-gradient(45deg, #00ff00, #00cc00);
-      color: #000;
-      border: 1px solid #00ff00;
-      min-width: 120px;
-    }
-    .receive-btn:hover {
-      background: linear-gradient(45deg, #00cc00, #009900);
-      box-shadow: 0 0 15px #00ff00;
-      transform: scale(1.05);
-    }
-    .receive-btn:disabled {
-      background: #666;
-      cursor: not-allowed;
-      opacity: 0.5;
-      transform: none;
-    }
-    .action-buttons {
-      display: flex;
-      gap: 10px;
-      justify-content: center;
-    }
-    .refresh-btn {
-      background: linear-gradient(45deg, #00ffe7, #00aaff);
-      color: #000;
-      border: 1px solid #00ffe7;
-      padding: 10px 20px;
-    }
-    .refresh-btn:hover {
-      background: linear-gradient(45deg, #00aaff, #0088cc);
-      box-shadow: 0 0 15px #00ffe7;
-    }
-    .back-btn {
-      background: linear-gradient(45deg, #ff9900, #ff6600);
-      color: #000;
-      border: 1px solid #ff9900;
-      padding: 10px 20px;
-      text-decoration: none;
-    }
-    .back-btn:hover {
-      background: linear-gradient(45deg, #ff6600, #cc5500);
-      box-shadow: 0 0 15px #ff9900;
-    }
-    .alert {
-      position: fixed;
-      top: 30px;
-      right: 30px;
-      padding: 20px;
-      border-radius: 10px;
-      z-index: 1000;
-      animation: slideIn 0.3s;
-      font-weight: bold;
-      min-width: 300px;
-      backdrop-filter: blur(10px);
-    }
-    .success {
-      background: rgba(0, 255, 0, 0.2);
-      border: 2px solid #00ff00;
-      color: #00ff00;
-      box-shadow: 0 0 20px #00ff00;
-    }
-    .error {
-      background: rgba(255, 0, 0, 0.2);
-      border: 2px solid #ff0000;
-      color: #ff0000;
-      box-shadow: 0 0 20px #ff0000;
-    }
-    .warning {
-      background: rgba(255, 255, 0, 0.2);
-      border: 2px solid #ffff00;
-      color: #ffff00;
-      box-shadow: 0 0 20px #ffff00;
-    }
-    @keyframes slideIn {
-      from { transform: translateX(100%); opacity: 0; }
-      to { transform: translateX(0); opacity: 1; }
-    }
-    @keyframes pulse {
-      0% { box-shadow: inset 0 0 0 0 rgba(255, 153, 0, 0.4); }
-      70% { box-shadow: inset 0 0 0 15px rgba(255, 153, 0, 0); }
-      100% { box-shadow: inset 0 0 0 0 rgba(255, 153, 0, 0); }
-    }
-    .no-data {
-      text-align: center;
-      padding: 50px;
-      font-size: 18px;
-      color: #888;
-      grid-column: 1 / -1;
-    }
-    .stats-container {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 15px;
-      margin-bottom: 25px;
-    }
-    .stat-card {
-      background: rgba(0, 255, 231, 0.1);
-      padding: 20px;
-      border-radius: 10px;
-      border: 1px solid #00ffe7;
-      text-align: center;
-    }
-    .stat-value {
-      font-size: 36px;
-      font-weight: bold;
-      margin: 10px 0;
-    }
-    .stat-pending .stat-value {
-      color: #ff9900;
-      text-shadow: 0 0 10px rgba(255, 153, 0, 0.5);
-    }
-    .stat-received .stat-value {
-      color: #00ff00;
-      text-shadow: 0 0 10px rgba(0, 255, 0, 0.5);
-    }
-    .stat-security .stat-value {
-      color: #00ccff;
-      text-shadow: 0 0 10px rgba(0, 204, 255, 0.5);
-    }
-    .stat-total .stat-value {
-      color: #ffffff;
-      text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
-    }
-    .clear-btn {
-      background: linear-gradient(45deg, #ff4444, #cc0000);
-      color: #fff;
-      border: 1px solid #ff4444;
-      width: 100%;
-      margin-top: 10px;
-    }
-    .clear-btn:hover {
-      background: linear-gradient(45deg, #cc0000, #990000);
-      box-shadow: 0 0 15px #ff4444;
-    }
-    .export-btn {
-      background: linear-gradient(45deg, #9933ff, #6600cc);
-      color: #fff;
-      border: 1px solid #9933ff;
-      width: 100%;
-      margin-top: 10px;
-    }
-    .export-btn:hover {
-      background: linear-gradient(45deg, #6600cc, #440099);
-      box-shadow: 0 0 15px #9933ff;
-    }
-    .filter-actions {
-      grid-column: 1 / -1;
-      display: flex;
-      gap: 15px;
-      margin-top: 10px;
-    }
-    .tab-badge {
-      position: absolute;
-      top: -8px;
-      right: -8px;
-      background: #ff4444;
-      color: white;
-      border-radius: 50%;
-      width: 24px;
-      height: 24px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 12px;
-      font-weight: bold;
-    }
-    .loading {
-      text-align: center;
-      padding: 40px;
-      color: #00ffe7;
-      font-size: 18px;
-    }
-    .loading::after {
-      content: '...';
-      animation: dots 1.5s infinite;
-    }
-    @keyframes dots {
-      0%, 20% { content: '.'; }
-      40% { content: '..'; }
-      60%, 100% { content: '...'; }
-    }
-  </style>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bill Register System - Receive Panel</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        :root {
+            --primary: #2c3e50;
+            --secondary: #3498db;
+            --accent: #e74c3c;
+            --success: #2ecc71;
+            --warning: #f39c12;
+            --light: #f8f9fa;
+            --dark: #343a40;
+        }
+
+        body {
+            background-color: #f5f7fa;
+            color: #333;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--dark) 100%);
+            color: white;
+            padding: 25px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        .header h1 {
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            opacity: 0.9;
+        }
+
+        .system-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding: 15px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+
+        .date-time-display {
+            display: flex;
+            gap: 20px;
+            font-weight: 500;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        .panel {
+            background: white;
+            border-radius: 10px;
+            padding: 25px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+        }
+
+        .panel-title {
+            font-size: 20px;
+            color: var(--primary);
+            margin-bottom: 25px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid var(--light);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .panel-title i {
+            color: var(--secondary);
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: var(--dark);
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 16px;
+            transition: border 0.3s;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: var(--secondary);
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+        }
+
+        .time-input-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .btn {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background-color: var(--secondary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: #2980b9;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(52, 152, 219, 0.3);
+        }
+
+        .btn-success {
+            background-color: var(--success);
+            color: white;
+        }
+
+        .btn-success:hover {
+            background-color: #27ae60;
+            transform: translateY(-2px);
+        }
+
+        .btn-warning {
+            background-color: var(--warning);
+            color: white;
+        }
+
+        .btn-warning:hover {
+            background-color: #e67e22;
+            transform: translateY(-2px);
+        }
+
+        .button-group {
+            display: flex;
+            gap: 15px;
+            margin-top: 30px;
+        }
+
+        .receive-panel {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border: 2px dashed #dee2e6;
+        }
+
+        .bill-list {
+            background: white;
+            border-radius: 10px;
+            padding: 25px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+            margin-top: 30px;
+        }
+
+        .bill-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+
+        .bill-table th {
+            background-color: var(--primary);
+            color: white;
+            padding: 15px;
+            text-align: left;
+        }
+
+        .bill-table td {
+            padding: 12px 15px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .bill-table tr:hover {
+            background-color: #f8f9fa;
+        }
+
+        .status-badge {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .status-received {
+            background-color: #d4edda;
+            color: #155724;
+        }
+
+        .status-pending {
+            background-color: #fff3cd;
+            color: #856404;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            max-width: 500px;
+            width: 90%;
+        }
+
+        .alert {
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .alert-success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .alert-error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        @media (max-width: 992px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 15px;
+            }
+            
+            .header {
+                padding: 20px;
+            }
+            
+            .system-info {
+                flex-direction: column;
+                gap: 15px;
+                text-align: center;
+            }
+            
+            .date-time-display {
+                flex-direction: column;
+                gap: 10px;
+            }
+            
+            .button-group {
+                flex-direction: column;
+            }
+            
+            .btn {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+    </style>
 </head>
 <body>
+    <div class="container">
+        <div class="header">
+            <h1><i class="fas fa-file-invoice-dollar"></i> Bill Register System</h1>
+            <p>Complete bill management with time tracking in receive panel</p>
+        </div>
 
-  <div class="header">
-    <a href="index.html" class="back-btn">
-      <i class="fas fa-home"></i> HOME
-    </a>
-    <h1><i class="fas fa-truck-loading"></i> WOOD BILL RECEIVE PANEL</h1>
-    <div class="user-info">
-      <span><i class="fas fa-user"></i> USER: <span id="currentUser">LOADING...</span></span>
-      <button class="refresh-btn" onclick="refreshAllData()">
-        <i class="fas fa-sync-alt"></i> REFRESH
-      </button>
+        <div class="system-info">
+            <div>
+                <h3>Current Session</h3>
+                <p>User: Admin | Role: Administrator</p>
+            </div>
+            <div class="date-time-display">
+                <div id="currentDate"></div>
+                <div id="currentTime"></div>
+            </div>
+        </div>
+
+        <div class="main-content">
+            <!-- Bill Entry Panel -->
+            <div class="panel">
+                <h2 class="panel-title"><i class="fas fa-edit"></i> Bill Entry Form</h2>
+                
+                <form id="billEntryForm">
+                    <div class="form-group">
+                        <label for="billNumber"><i class="fas fa-hashtag"></i> Bill Number *</label>
+                        <input type="text" id="billNumber" class="form-control" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="vendorName"><i class="fas fa-user-tie"></i> Vendor Name *</label>
+                        <input type="text" id="vendorName" class="form-control" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="billAmount"><i class="fas fa-rupee-sign"></i> Bill Amount *</label>
+                        <input type="number" id="billAmount" class="form-control" step="0.01" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="billDate"><i class="fas fa-calendar"></i> Bill Date *</label>
+                        <input type="date" id="billDate" class="form-control" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="description"><i class="fas fa-file-alt"></i> Description</label>
+                        <textarea id="description" class="form-control" rows="3"></textarea>
+                    </div>
+                    
+                    <div class="button-group">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save"></i> Save Bill
+                        </button>
+                        <button type="reset" class="btn btn-warning">
+                            <i class="fas fa-redo"></i> Clear Form
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Receive Panel with Time Field -->
+            <div class="panel receive-panel">
+                <h2 class="panel-title"><i class="fas fa-download"></i> Receive Bill</h2>
+                
+                <div class="alert" id="receiveAlert"></div>
+                
+                <form id="receiveForm">
+                    <div class="form-group">
+                        <label for="selectBill"><i class="fas fa-search"></i> Select Bill *</label>
+                        <select id="selectBill" class="form-control" required>
+                            <option value="">-- Select a bill --</option>
+                            <!-- Bills will be populated by JavaScript -->
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="receiveDate"><i class="fas fa-calendar-check"></i> Receive Date *</label>
+                        <input type="date" id="receiveDate" class="form-control" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label><i class="fas fa-clock"></i> Receive Time *</label>
+                        <div class="time-input-group">
+                            <input type="time" id="receiveTime" class="form-control" required>
+                            <select id="timeFormat" class="form-control">
+                                <option value="24">24-hour format</option>
+                                <option value="12">12-hour format</option>
+                            </select>
+                        </div>
+                        <small class="text-muted">Select the exact time when bill was received</small>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="receivedBy"><i class="fas fa-user-check"></i> Received By *</label>
+                        <input type="text" id="receivedBy" class="form-control" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="receiveNotes"><i class="fas fa-sticky-note"></i> Notes</label>
+                        <textarea id="receiveNotes" class="form-control" rows="2"></textarea>
+                    </div>
+                    
+                    <div class="button-group">
+                        <button type="submit" class="btn btn-success">
+                            <i class="fas fa-check-circle"></i> Mark as Received
+                        </button>
+                        <button type="button" class="btn btn-primary" onclick="viewBillDetails()">
+                            <i class="fas fa-eye"></i> View Details
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Bills List -->
+        <div class="bill-list">
+            <h2 class="panel-title"><i class="fas fa-list"></i> Recent Bills</h2>
+            
+            <div class="table-responsive">
+                <table class="bill-table">
+                    <thead>
+                        <tr>
+                            <th>Bill No.</th>
+                            <th>Vendor</th>
+                            <th>Amount</th>
+                            <th>Date</th>
+                            <th>Received Time</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="billsTableBody">
+                        <!-- Bills will be populated by JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Bill Details Modal -->
+        <div id="billDetailsModal" class="modal">
+            <div class="modal-content">
+                <h3>Bill Details</h3>
+                <div id="billDetailsContent">
+                    <!-- Bill details will be populated here -->
+                </div>
+                <div class="button-group" style="margin-top: 20px;">
+                    <button onclick="closeModal()" class="btn btn-warning">
+                        <i class="fas fa-times"></i> Close
+                    </button>
+                </div>
+            </div>
+        </div>
     </div>
-  </div>
 
-  <!-- Statistics Cards -->
-  <div class="stats-container">
-    <div class="stat-card stat-total">
-      <div><i class="fas fa-file-invoice"></i> TOTAL BILLS</div>
-      <div class="stat-value" id="totalBills">0</div>
-      <div>All Plants</div>
-    </div>
-    <div class="stat-card stat-pending">
-      <div><i class="fas fa-clock"></i> PENDING C3</div>
-      <div class="stat-value" id="pendingBills">0</div>
-      <div>Awaiting Receipt</div>
-    </div>
-    <div class="stat-card stat-received">
-      <div><i class="fas fa-check-circle"></i> RECEIVED</div>
-      <div class="stat-value" id="receivedBills">0</div>
-      <div>Completed</div>
-    </div>
-    <div class="stat-card stat-security">
-      <div><i class="fas fa-shield-alt"></i> SECURITY</div>
-      <div class="stat-value" id="securityBills">0</div>
-      <div>C2/C34A</div>
-    </div>
-  </div>
-
-  <!-- Filters Section -->
-  <div class="filters-section" id="filtersSection">
-    <div class="filter-group">
-      <label><i class="fas fa-calendar"></i> FROM DATE</label>
-      <input type="date" id="fromDate" onchange="applyFilters()">
-    </div>
-    
-    <div class="filter-group">
-      <label><i class="fas fa-calendar"></i> TO DATE</label>
-      <input type="date" id="toDate" onchange="applyFilters()">
-    </div>
-    
-    <div class="filter-group">
-      <label><i class="fas fa-industry"></i> PLANT</label>
-      <select id="plantFilter" onchange="applyFilters()">
-        <option value="">ALL PLANTS</option>
-        <option value="C34A">C34A</option>
-        <option value="C2">C2</option>
-        <option value="C3">C3</option>
-      </select>
-    </div>
-    
-    <div class="filter-group">
-      <label><i class="fas fa-tag"></i> STATUS</label>
-      <select id="statusFilter" onchange="applyFilters()">
-        <option value="">ALL STATUS</option>
-        <option value="Pending by Receiver">PENDING</option>
-        <option value="Received by Security">SECURITY</option>
-        <option value="Received">RECEIVED</option>
-      </select>
-    </div>
-    
-    <div class="filter-group">
-      <label><i class="fas fa-user"></i> SUBMITTED BY</label>
-      <select id="submittedByFilter" onchange="applyFilters()">
-        <option value="">ALL SUBMITTERS</option>
-      </select>
-    </div>
-    
-    <div class="filter-group">
-      <label><i class="fas fa-search"></i> SEARCH</label>
-      <input type="text" id="searchFilter" placeholder="Search bills..." oninput="applyFilters()">
-    </div>
-    
-    <div class="filter-actions">
-      <button class="clear-btn" onclick="clearFilters()">
-        <i class="fas fa-broom"></i> CLEAR FILTERS
-      </button>
-      <button class="export-btn" onclick="exportToExcel()">
-        <i class="fas fa-file-excel"></i> EXPORT EXCEL
-      </button>
-    </div>
-  </div>
-
-  <!-- Tabs -->
-  <div class="tabs">
-    <button class="tab active" onclick="showTab('all')">
-      <i class="fas fa-list"></i> ALL BILLS
-      <span class="tab-badge" id="allBadge">0</span>
-    </button>
-    <button class="tab" onclick="showTab('pending')">
-      <i class="fas fa-clock"></i> PENDING C3
-      <span class="tab-badge" id="pendingBadge">0</span>
-    </button>
-    <button class="tab" onclick="showTab('received')">
-      <i class="fas fa-check-circle"></i> RECEIVED
-      <span class="tab-badge" id="receivedBadge">0</span>
-    </button>
-  </div>
-
-  <!-- All Bills Tab -->
-  <div id="allTab" class="tab-content">
-    <table>
-      <thead>
-        <tr>
-          <th>S.NO</th>
-          <th>SAP DATE</th>
-          <th>BILL DATE</th>
-          <th>QUANTITY</th>
-          <th>RECEIVER NAME</th>
-          <th>SUBMITTED BY</th>
-          <th>PLANT</th>
-          <th>STATUS</th>
-          <th>ACTION</th>
-        </tr>
-      </thead>
-      <tbody id="allTableBody">
-        <tr>
-          <td colspan="9" class="loading">Loading all bills</td>
-        </tr>
-      </tbody>
-    </table>
-  </div>
-
-  <!-- Pending C3 Bills Tab -->
-  <div id="pendingTab" class="tab-content" style="display: none;">
-    <table>
-      <thead>
-        <tr>
-          <th>S.NO</th>
-          <th>SAP DATE</th>
-          <th>BILL DATE</th>
-          <th>QUANTITY</th>
-          <th>SUBMITTED BY</th>
-          <th>PLANT</th>
-          <th>STATUS</th>
-          <th>PENDING SINCE</th>
-          <th>ACTION</th>
-        </tr>
-      </thead>
-      <tbody id="pendingTableBody">
-        <tr>
-          <td colspan="9" class="loading">Loading pending bills</td>
-        </tr>
-      </tbody>
-    </table>
-  </div>
-
-  <!-- Received Bills Tab -->
-  <div id="receivedTab" class="tab-content" style="display: none;">
-    <table>
-      <thead>
-        <tr>
-          <th>S.NO</th>
-          <th>SAP DATE</th>
-          <th>BILL DATE</th>
-          <th>QUANTITY</th>
-          <th>RECEIVER NAME</th>
-          <th>SUBMITTED BY</th>
-          <th>PLANT</th>
-          <th>STATUS</th>
-          <th>RECEIVED AT</th>
-        </tr>
-      </thead>
-      <tbody id="receivedTableBody">
-        <tr>
-          <td colspan="9" class="loading">Loading received bills</td>
-        </tr>
-      </tbody>
-    </table>
-  </div>
-
-<script src="/socket.io/socket.io.js"></script>
-  <script>
-  let currentUser = (localStorage.getItem("username") || "unknown").toUpperCase();
-  let allBillsData = [];
-  let filteredBills = [];
-  let refreshInterval;
-  let socket;
-
-  document.addEventListener("DOMContentLoaded", function() {
-    console.log("🚀 Wood Bill Receive Panel Initializing...");
-    
-    // Check if user is logged in
-    const token = localStorage.getItem('token');
-    const department = localStorage.getItem('department');
-    
-    console.log("📋 User Info - Token:", token ? "YES" : "NO", "Department:", department);
-    
-    // For testing, allow access even without token
-    if (!token) {
-      console.warn("⚠️ No token found, but allowing access for testing");
-      // window.location.href = 'index.html';
-      // return;
-    }
-    
-    // Check if user is from Wood MM department
-    if (department && department !== 'Wood MM') {
-      showAlert('Access Denied! Only Wood MM department can access this panel.', 'error');
-      setTimeout(() => window.location.href = 'index.html', 2000);
-      return;
-    }
-    
-    document.getElementById("currentUser").textContent = currentUser;
-    
-    // Initialize Socket.io with fallback
-    try {
-      socket = io();
-      console.log("🔌 Socket.io connected");
-      
-      // Listen for real-time updates
-      socket.on('woodBillStatusChanged', (data) => {
-        console.log("📡 Real-time update received:", data);
-        if (data.action === 'received') {
-          showAlert(`✅ Bill #${data.billId} received by ${data.receiverName}`, 'success');
-          refreshAllData();
-        }
-      });
-      
-      socket.on('connect_error', (error) => {
-        console.warn("⚠️ Socket.io connection error:", error);
-        showAlert('Real-time updates disabled', 'warning');
-      });
-    } catch (error) {
-      console.warn("⚠️ Socket.io initialization failed:", error);
-    }
-    
-    initReceivePanel();
-    
-    // Set default date range (last 30 days)
-    const today = new Date();
-    const lastMonth = new Date();
-    lastMonth.setDate(lastMonth.getDate() - 30);
-    
-    document.getElementById('fromDate').value = lastMonth.toISOString().split('T')[0];
-    document.getElementById('toDate').value = today.toISOString().split('T')[0];
-    
-    // Auto-refresh every 30 seconds
-    refreshInterval = setInterval(refreshAllData, 30000);
-    
-    // Initial debug check
-    setTimeout(checkDatabaseStatus, 1000);
-  });
-
-  function showAlert(message, type = 'success') {
-    const alertDiv = document.createElement('div');
-    alertDiv.className = `alert ${type}`;
-    alertDiv.innerHTML = `<i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : 'exclamation-triangle'}"></i> ${message}`;
-    document.body.appendChild(alertDiv);
-    
-    setTimeout(() => {
-      alertDiv.remove();
-    }, 3000);
-  }
-
-  function initReceivePanel() {
-    console.log("📊 Initializing Receive Panel...");
-    loadAllBills();
-  }
-
-  async function refreshAllData() {
-    try {
-      console.log("🔄 Refreshing data...");
-      await loadAllBills();
-      showAlert('Data refreshed successfully', 'success');
-    } catch (error) {
-      console.error('Refresh error:', error);
-      showAlert('Refresh failed', 'error');
-    }
-  }
-
-  function showTab(tabName) {
-    console.log("📑 Switching to tab:", tabName);
-    
-    // Update active tab
-    document.querySelectorAll('.tab').forEach(tab => {
-      tab.classList.remove('active');
-    });
-    event.target.classList.add('active');
-    
-    // Show selected tab content
-    document.querySelectorAll('.tab-content').forEach(content => {
-      content.style.display = 'none';
-    });
-    
-    document.getElementById(tabName + 'Tab').style.display = 'block';
-    
-    // Apply filters to current tab
-    applyFilters();
-  }
-
-  async function loadAllBills() {
-    try {
-      console.log("📥 Loading all bills from API...");
-      
-      const response = await fetch("/api/wood-bill");
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      
-      allBillsData = await response.json();
-      
-      console.log(`✅ Loaded ${allBillsData.length} bills from API`);
-      
-      if (!Array.isArray(allBillsData)) {
-        console.error("❌ Invalid data format:", allBillsData);
-        throw new Error('Invalid data format received');
-      }
-
-      // Debug: Log bill types
-      const billTypes = {
-        C3_Pending: allBillsData.filter(bill => bill.plant === 'C3' && bill.receiverStatus === "Pending by Receiver").length,
-        C3_Received: allBillsData.filter(bill => bill.plant === 'C3' && bill.receiverStatus === "Received").length,
-        C2: allBillsData.filter(bill => bill.plant === 'C2').length,
-        C34A: allBillsData.filter(bill => bill.plant === 'C34A').length,
-        All: allBillsData.length
-      };
-      
-      console.log("📊 Bill Statistics:", billTypes);
-
-      // Update statistics
-      updateStatistics();
-      
-      // Populate filters
-      populateFilters();
-      
-      // Apply current filters
-      applyFilters();
-      
-    } catch (error) {
-      console.error("❌ Error loading all bills:", error);
-      showAlert('Failed to load bills!', 'error');
-      
-      // Show error in tables
-      document.querySelectorAll('#allTableBody, #pendingTableBody, #receivedTableBody').forEach(tbody => {
-        tbody.innerHTML = `
-          <tr>
-            <td colspan="9" style="text-align: center; padding: 40px; color: #ff4444;">
-              <i class="fas fa-exclamation-triangle"></i> Failed to load data<br>
-              ${error.message}<br>
-              <button onclick="loadAllBills()" style="margin-top: 10px; padding: 8px 16px; background: #ff4444; color: white; border: none; border-radius: 4px; cursor: pointer;">
-                Retry
-              </button>
-            </td>
-          </tr>
-        `;
-      });
-    }
-  }
-
-  function updateStatistics() {
-    const total = allBillsData.length;
-    const pending = allBillsData.filter(bill => 
-      bill.plant === 'C3' && bill.receiverStatus === "Pending by Receiver"
-    ).length;
-    const received = allBillsData.filter(bill => 
-      bill.receiverStatus === "Received"
-    ).length;
-    const security = allBillsData.filter(bill => 
-      bill.receiverStatus === "Received by Security"
-    ).length;
-    
-    console.log(`📈 Stats Update - Total: ${total}, Pending C3: ${pending}, Received: ${received}, Security: ${security}`);
-    
-    // Update stat cards
-    document.getElementById("totalBills").textContent = total;
-    document.getElementById("pendingBills").textContent = pending;
-    document.getElementById("receivedBills").textContent = received;
-    document.getElementById("securityBills").textContent = security;
-    
-    // Update tab badges
-    document.getElementById("allBadge").textContent = total;
-    document.getElementById("pendingBadge").textContent = pending;
-    document.getElementById("receivedBadge").textContent = received;
-  }
-
-  function populateFilters() {
-    const submittedBySet = new Set();
-    
-    allBillsData.forEach(bill => {
-      if (bill.submittedBy) submittedBySet.add(bill.submittedBy);
-    });
-    
-    // Populate Submitted By filter
-    const submittedByFilter = document.getElementById("submittedByFilter");
-    submittedByFilter.innerHTML = '<option value="">ALL SUBMITTERS</option>';
-    submittedBySet.forEach(user => {
-      submittedByFilter.innerHTML += `<option value="${user}">${user}</option>`;
-    });
-  }
-
-  function applyFilters() {
-    const fromDate = document.getElementById("fromDate").value;
-    const toDate = document.getElementById("toDate").value;
-    const plantFilter = document.getElementById("plantFilter").value;
-    const statusFilter = document.getElementById("statusFilter").value;
-    const submittedByFilter = document.getElementById("submittedByFilter").value;
-    const searchText = document.getElementById("searchFilter").value.toLowerCase();
-    
-    console.log("🔍 Applying filters:", { fromDate, toDate, plantFilter, statusFilter, submittedByFilter, searchText });
-    
-    filteredBills = allBillsData.filter(bill => {
-      // Date range filter
-      if (fromDate || toDate) {
-        const billDate = bill.sapDate ? new Date(bill.sapDate).toISOString().split('T')[0] : '';
-        if (fromDate && billDate < fromDate) return false;
-        if (toDate && billDate > toDate) return false;
-      }
-      
-      // Plant filter
-      if (plantFilter && bill.plant !== plantFilter) return false;
-      
-      // Status filter
-      if (statusFilter && bill.receiverStatus !== statusFilter) return false;
-      
-      // Submitted By filter
-      if (submittedByFilter && bill.submittedBy !== submittedByFilter) return false;
-      
-      // Search filter
-      if (searchText) {
-        const searchableFields = [
-          bill.receiverName || '',
-          bill.submittedBy || '',
-          bill.plant || '',
-          bill.quantity?.toString() || '',
-          bill.sapDate || '',
-          bill.billDate || ''
+    <script>
+        // Sample bills data
+        let bills = [
+            {
+                id: 1,
+                billNumber: "BL-2023-001",
+                vendorName: "ABC Suppliers",
+                amount: 15000.00,
+                date: "2023-10-15",
+                receivedDate: "2023-10-16",
+                receivedTime: "14:30",
+                receivedBy: "John Doe",
+                status: "received",
+                description: "Office supplies purchase"
+            },
+            {
+                id: 2,
+                billNumber: "BL-2023-002",
+                vendorName: "XYZ Services",
+                amount: 25000.00,
+                date: "2023-10-18",
+                receivedDate: "",
+                receivedTime: "",
+                receivedBy: "",
+                status: "pending",
+                description: "Monthly maintenance"
+            }
         ];
-        
-        const matches = searchableFields.some(field => 
-          field.toLowerCase().includes(searchText)
-        );
-        
-        if (!matches) return false;
-      }
-      
-      return true;
-    });
 
-    console.log(`✅ Filtered to ${filteredBills.length} bills`);
+        // Update current date and time
+        function updateDateTime() {
+            const now = new Date();
+            const dateStr = now.toLocaleDateString('en-IN', {
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            });
+            const timeStr = now.toLocaleTimeString('en-IN');
+            
+            document.getElementById('currentDate').innerHTML = `<i class="fas fa-calendar"></i> ${dateStr}`;
+            document.getElementById('currentTime').innerHTML = `<i class="fas fa-clock"></i> ${timeStr}`;
+        }
 
-    // Sort by date (newest first)
-    filteredBills.sort((a, b) => new Date(b.sapDate) - new Date(a.sapDate));
-
-    // Update all tabs
-    updateAllBillsTab();
-    updatePendingTab();
-    updateReceivedTab();
-  }
-
-  function updateAllBillsTab() {
-    const tbody = document.getElementById("allTableBody");
-    
-    if (filteredBills.length === 0) {
-      tbody.innerHTML = `
-        <tr>
-          <td colspan="9" class="no-data">
-            <i class="fas fa-search" style="font-size: 48px; margin-bottom: 20px;"></i><br>
-            No bills found matching your filters<br>
-            <small>Try clearing filters or check if bills exist</small>
-          </td>
-        </tr>
-      `;
-      return;
-    }
-
-    tbody.innerHTML = "";
-    filteredBills.forEach((bill, index) => {
-      const sapDate = bill.sapDate ? bill.sapDate.split('T')[0] : '';
-      const billDate = bill.billDate ? bill.billDate.split('T')[0] : '';
-      
-      let rowClass = "";
-      let statusText = "";
-      let statusClass = "";
-      
-      if (bill.receiverStatus === "Pending by Receiver") {
-        rowClass = "pending-row";
-        statusText = "PENDING";
-        statusClass = "status-pending";
-      } else if (bill.receiverStatus === "Received by Security") {
-        rowClass = "security-row";
-        statusText = "SECURITY";
-        statusClass = "status-security";
-      } else if (bill.receiverStatus === "Received") {
-        rowClass = "received-row";
-        statusText = "RECEIVED";
-        statusClass = "status-received";
-      }
-      
-      // Only show RECEIVE button for pending C3 bills
-      const isPendingC3 = bill.plant === 'C3' && bill.receiverStatus === "Pending by Receiver";
-      const receiveButton = isPendingC3 
-        ? `<button class="receive-btn" onclick="receiveBill('${bill._id}')">
-             <i class="fas fa-check-circle"></i> RECEIVE
-           </button>`
-        : '<span style="color:#888">-</span>';
-      
-      tbody.innerHTML += `
-        <tr class="${rowClass}">
-          <td>${index + 1}</td>
-          <td>${sapDate}</td>
-          <td>${billDate}</td>
-          <td>${bill.quantity}</td>
-          <td>${bill.receiverName || (bill.plant === 'C3' ? 'PENDING...' : '-')}</td>
-          <td>${bill.submittedBy}</td>
-          <td>${bill.plant}</td>
-          <td><span class="${statusClass}">${statusText}</span></td>
-          <td>${receiveButton}</td>
-        </tr>
-      `;
-    });
-  }
-
-  function updatePendingTab() {
-    const tbody = document.getElementById("pendingTableBody");
-    const pendingBills = filteredBills.filter(bill => 
-      bill.plant === 'C3' && bill.receiverStatus === "Pending by Receiver"
-    );
-    
-    console.log(`📋 Pending C3 Bills: ${pendingBills.length} found`);
-    
-    if (pendingBills.length === 0) {
-      tbody.innerHTML = `
-        <tr>
-          <td colspan="9" class="no-data">
-            <i class="fas fa-check-circle" style="font-size: 48px; margin-bottom: 20px; color: #00ff00;"></i><br>
-            No pending C3 bills found<br>
-            <small>All C3 bills may already be received</small>
-          </td>
-        </tr>
-      `;
-      return;
-    }
-
-    tbody.innerHTML = "";
-    pendingBills.forEach((bill, index) => {
-      const sapDate = bill.sapDate ? bill.sapDate.split('T')[0] : '';
-      const billDate = bill.billDate ? bill.billDate.split('T')[0] : '';
-      const pendingSince = bill.createdAt ? 
-        new Date(bill.createdAt).toLocaleDateString('en-IN') : '-';
-      
-      console.log(`📄 Pending Bill ${index + 1}:`, {
-        id: bill._id,
-        plant: bill.plant,
-        status: bill.receiverStatus,
-        receiver: bill.receiverName,
-        submittedBy: bill.submittedBy
-      });
-      
-      tbody.innerHTML += `
-        <tr class="pending-row">
-          <td>${index + 1}</td>
-          <td>${sapDate}</td>
-          <td>${billDate}</td>
-          <td>${bill.quantity}</td>
-          <td>${bill.submittedBy}</td>
-          <td>${bill.plant}</td>
-          <td><span class="status-pending">PENDING</span></td>
-          <td>${pendingSince}</td>
-          <td>
-            <button class="receive-btn" onclick="receiveBill('${bill._id}')">
-              <i class="fas fa-check-circle"></i> RECEIVE
-            </button>
-          </td>
-        </tr>
-      `;
-    });
-  }
-
-  function updateReceivedTab() {
-    const tbody = document.getElementById("receivedTableBody");
-    const receivedBills = filteredBills.filter(bill => 
-      bill.receiverStatus === "Received"
-    );
-    
-    if (receivedBills.length === 0) {
-      tbody.innerHTML = `
-        <tr>
-          <td colspan="9" class="no-data">
-            <i class="fas fa-inbox" style="font-size: 48px; margin-bottom: 20px;"></i><br>
-            No received bills found<br>
-            <small>No bills have been marked as received yet</small>
-          </td>
-        </tr>
-      `;
-      return;
-    }
-
-    tbody.innerHTML = "";
-    receivedBills.forEach((bill, index) => {
-      const sapDate = bill.sapDate ? bill.sapDate.split('T')[0] : '';
-      const billDate = bill.billDate ? bill.billDate.split('T')[0] : '';
-      const receivedAt = bill.receivedAt ? 
-        new Date(bill.receivedAt).toLocaleString('en-IN', {
-          day: '2-digit',
-          month: '2-digit',
-          year: 'numeric',
-          hour: '2-digit',
-          minute: '2-digit'
-        }) : '-';
-      
-      tbody.innerHTML += `
-        <tr class="received-row">
-          <td>${index + 1}</td>
-          <td>${sapDate}</td>
-          <td>${billDate}</td>
-          <td>${bill.quantity}</td>
-          <td>${bill.receiverName}</td>
-          <td>${bill.submittedBy}</td>
-          <td>${bill.plant}</td>
-          <td><span class="status-received">RECEIVED</span></td>
-          <td>${receivedAt}</td>
-        </tr>
-      `;
-    });
-  }
-
-  async function receiveBill(billId) {
-    if (!confirm('Are you sure you want to receive this bill?\nThis action cannot be undone.')) {
-      return;
-    }
-
-    console.log(`📥 Attempting to receive bill: ${billId}`);
-    console.log(`👤 Current user: ${currentUser}`);
-
-    // Disable the button immediately
-    const btn = event.target;
-    const originalHTML = btn.innerHTML;
-    btn.disabled = true;
-    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> PROCESSING...';
-
-    try {
-      // Get token from localStorage
-      const token = localStorage.getItem('token');
-      
-      // Prepare headers
-      let headers = {
-        "Content-Type": "application/json"
-      };
-      
-      // Add token only if it exists
-      if (token) {
-        headers["Authorization"] = `Bearer ${token}`;
-      }
-      
-      console.log(`📤 Sending receive request to: /api/wood-bill/${billId}/receive`);
-      console.log(`🔑 Headers:`, headers);
-      
-      const response = await fetch(`/api/wood-bill/${billId}/receive`, {
-        method: "PUT",
-        headers: headers,
-        body: JSON.stringify({ receivedBy: currentUser })
-      });
-
-      console.log(`📦 Response status: ${response.status}`);
-      
-      // Handle 401 (Unauthorized) - try without token
-      if (response.status === 401) {
-        console.log("⚠️ 401 Unauthorized, trying without token...");
-        
-        // Try without authorization header
-        const retryResponse = await fetch(`/api/wood-bill/${billId}/receive`, {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ receivedBy: currentUser })
+        // Initialize page
+        document.addEventListener('DOMContentLoaded', function() {
+            updateDateTime();
+            setInterval(updateDateTime, 1000);
+            populateBillSelect();
+            populateBillsTable();
+            
+            // Set default dates
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('billDate').value = today;
+            document.getElementById('receiveDate').value = today;
+            
+            // Set current time
+            const now = new Date();
+            const hours = now.getHours().toString().padStart(2, '0');
+            const minutes = now.getMinutes().toString().padStart(2, '0');
+            document.getElementById('receiveTime').value = `${hours}:${minutes}`;
         });
-        
-        const result = await retryResponse.json();
-        handleReceiveResponse(result, billId, btn);
-      } else {
-        const result = await response.json();
-        handleReceiveResponse(result, billId, btn);
-      }
-      
-    } catch (error) {
-      console.error('❌ Receive error:', error);
-      showAlert('⚠️ Network error! Please try again.', 'error');
-      btn.disabled = false;
-      btn.innerHTML = originalHTML;
-    }
-  }
 
-  function handleReceiveResponse(result, billId, btn) {
-    console.log(`📨 Receive response:`, result);
-    
-    if (result.success) {
-      showAlert(`✅ Bill received successfully by ${currentUser}`, 'success');
-      
-      // Send real-time update via socket
-      if (socket) {
-        socket.emit('woodBillUpdated', {
-          action: 'received',
-          billId: billId,
-          receiverName: currentUser,
-          timestamp: new Date()
+        // Populate bill select dropdown
+        function populateBillSelect() {
+            const select = document.getElementById('selectBill');
+            select.innerHTML = '<option value="">-- Select a bill --</option>';
+            
+            bills.forEach(bill => {
+                if (bill.status === 'pending') {
+                    const option = document.createElement('option');
+                    option.value = bill.id;
+                    option.textContent = `${bill.billNumber} - ${bill.vendorName} (₹${bill.amount.toFixed(2)})`;
+                    select.appendChild(option);
+                }
+            });
+        }
+
+        // Populate bills table
+        function populateBillsTable() {
+            const tbody = document.getElementById('billsTableBody');
+            tbody.innerHTML = '';
+            
+            bills.forEach(bill => {
+                const row = document.createElement('tr');
+                
+                // Format time display
+                let timeDisplay = bill.receivedTime || '--';
+                if (bill.receivedTime) {
+                    const [hours, minutes] = bill.receivedTime.split(':');
+                    const timeFormat = document.getElementById('timeFormat').value;
+                    
+                    if (timeFormat === '12') {
+                        let hour = parseInt(hours);
+                        const ampm = hour >= 12 ? 'PM' : 'AM';
+                        hour = hour % 12 || 12;
+                        timeDisplay = `${hour}:${minutes} ${ampm}`;
+                    }
+                }
+                
+                row.innerHTML = `
+                    <td>${bill.billNumber}</td>
+                    <td>${bill.vendorName}</td>
+                    <td>₹${bill.amount.toFixed(2)}</td>
+                    <td>${formatDate(bill.date)}</td>
+                    <td>${timeDisplay}</td>
+                    <td><span class="status-badge status-${bill.status}">
+                        ${bill.status === 'received' ? 'Received' : 'Pending'}
+                    </span></td>
+                    <td>
+                        <button onclick="viewBill(${bill.id})" class="btn" style="padding: 5px 10px; font-size: 12px;">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                        ${bill.status === 'pending' ? 
+                            `<button onclick="receiveBill(${bill.id})" class="btn btn-success" style="padding: 5px 10px; font-size: 12px;">
+                                <i class="fas fa-check"></i>
+                            </button>` : ''
+                        }
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        // Format date
+        function formatDate(dateStr) {
+            if (!dateStr) return '--';
+            const date = new Date(dateStr);
+            return date.toLocaleDateString('en-IN');
+        }
+
+        // Handle bill entry form submission
+        document.getElementById('billEntryForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const newBill = {
+                id: bills.length + 1,
+                billNumber: document.getElementById('billNumber').value,
+                vendorName: document.getElementById('vendorName').value,
+                amount: parseFloat(document.getElementById('billAmount').value),
+                date: document.getElementById('billDate').value,
+                receivedDate: '',
+                receivedTime: '',
+                receivedBy: '',
+                status: 'pending',
+                description: document.getElementById('description').value
+            };
+            
+            bills.push(newBill);
+            
+            // Reset form
+            this.reset();
+            document.getElementById('billDate').value = new Date().toISOString().split('T')[0];
+            
+            // Update UI
+            populateBillSelect();
+            populateBillsTable();
+            
+            // Show success message
+            showAlert('Bill saved successfully!', 'success');
         });
-      }
-      
-      // Update the specific bill in our data
-      const billIndex = allBillsData.findIndex(bill => bill._id === billId);
-      if (billIndex !== -1) {
-        allBillsData[billIndex] = result.data;
-        console.log(`✅ Updated bill in local data`);
-      }
-      
-      // Update UI immediately
-      updateStatistics();
-      applyFilters();
-      
-    } else {
-      showAlert(`❌ ${result.message || 'Failed to receive bill!'}`, 'error');
-      btn.disabled = false;
-      btn.innerHTML = '<i class="fas fa-check-circle"></i> RECEIVE';
-    }
-  }
 
-  function clearFilters() {
-    console.log("🧹 Clearing filters");
-    
-    // Reset date range to last 30 days
-    const today = new Date();
-    const lastMonth = new Date();
-    lastMonth.setDate(lastMonth.getDate() - 30);
-    
-    document.getElementById('fromDate').value = lastMonth.toISOString().split('T')[0];
-    document.getElementById('toDate').value = today.toISOString().split('T')[0];
-    document.getElementById('plantFilter').value = '';
-    document.getElementById('statusFilter').value = '';
-    document.getElementById('submittedByFilter').value = '';
-    document.getElementById('searchFilter').value = '';
-    
-    applyFilters();
-    showAlert('Filters cleared successfully', 'success');
-  }
-
-  function exportToExcel() {
-    if (filteredBills.length === 0) {
-      showAlert('No data to export!', 'warning');
-      return;
-    }
-    
-    // Create CSV content
-    let csvContent = "S.No,SAP Date,Bill Date,Quantity,Receiver Name,Submitted By,Plant,Status,Received At\n";
-    
-    filteredBills.forEach((bill, index) => {
-      const sapDate = bill.sapDate ? bill.sapDate.split('T')[0] : '';
-      const billDate = bill.billDate ? bill.billDate.split('T')[0] : '';
-      const status = bill.receiverStatus === "Pending by Receiver" ? "PENDING" :
-                    bill.receiverStatus === "Received by Security" ? "SECURITY" : "RECEIVED";
-      const receivedAt = bill.receivedAt ? 
-        new Date(bill.receivedAt).toLocaleString('en-IN') : '';
-      
-      csvContent += `${index + 1},${sapDate},${billDate},${bill.quantity},"${bill.receiverName || ''}","${bill.submittedBy}",${bill.plant},${status},"${receivedAt}"\n`;
-    });
-    
-    // Create download link
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.setAttribute("href", url);
-    link.setAttribute("download", `Wood_Bills_Receive_${new Date().toISOString().split('T')[0]}.csv`);
-    link.style.visibility = 'hidden';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    
-    showAlert('✅ Exported to CSV successfully!', 'success');
-  }
-
-  // Debug function to check database status
-  async function checkDatabaseStatus() {
-    try {
-      console.log("🔍 Checking database status...");
-      
-      // Check pending bills API
-      const pendingResponse = await fetch("/api/wood-bill/pending/c3");
-      const pendingData = await pendingResponse.json();
-      
-      console.log(`📊 Pending C3 Bills from API: ${Array.isArray(pendingData) ? pendingData.length : 'Invalid'}`);
-      
-      if (Array.isArray(pendingData)) {
-        pendingData.forEach((bill, index) => {
-          console.log(`   ${index + 1}. ID: ${bill._id}, Plant: ${bill.plant}, Status: ${bill.receiverStatus}, Receiver: ${bill.receiverName || 'Empty'}`);
+        // Handle receive form submission
+        document.getElementById('receiveForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const billId = parseInt(document.getElementById('selectBill').value);
+            const receiveDate = document.getElementById('receiveDate').value;
+            const receiveTime = document.getElementById('receiveTime').value;
+            const receivedBy = document.getElementById('receivedBy').value;
+            const notes = document.getElementById('receiveNotes').value;
+            
+            // Find and update bill
+            const billIndex = bills.findIndex(bill => bill.id === billId);
+            if (billIndex !== -1) {
+                bills[billIndex].receivedDate = receiveDate;
+                bills[billIndex].receivedTime = receiveTime;
+                bills[billIndex].receivedBy = receivedBy;
+                bills[billIndex].status = 'received';
+                if (notes) {
+                    bills[billIndex].receiveNotes = notes;
+                }
+                
+                // Reset form
+                this.reset();
+                document.getElementById('receiveDate').value = new Date().toISOString().split('T')[0];
+                
+                // Set current time
+                const now = new Date();
+                const hours = now.getHours().toString().padStart(2, '0');
+                const minutes = now.getMinutes().toString().padStart(2, '0');
+                document.getElementById('receiveTime').value = `${hours}:${minutes}`;
+                
+                // Update UI
+                populateBillSelect();
+                populateBillsTable();
+                
+                // Show success message
+                showAlert('Bill marked as received!', 'success');
+            }
         });
-      }
-      
-    } catch (error) {
-      console.error("❌ Database check error:", error);
-    }
-  }
 
-  // Manual refresh button
-  function manualRefresh() {
-    refreshAllData();
-  }
+        // Receive bill directly from table
+        function receiveBill(billId) {
+            const bill = bills.find(b => b.id === billId);
+            if (!bill) return;
+            
+            // Update bill status
+            bill.receivedDate = new Date().toISOString().split('T')[0];
+            
+            // Set current time
+            const now = new Date();
+            const hours = now.getHours().toString().padStart(2, '0');
+            const minutes = now.getMinutes().toString().padStart(2, '0');
+            bill.receivedTime = `${hours}:${minutes}`;
+            
+            bill.receivedBy = "Admin";
+            bill.status = 'received';
+            
+            // Update UI
+            populateBillSelect();
+            populateBillsTable();
+            
+            showAlert(`Bill ${bill.billNumber} marked as received!`, 'success');
+        }
 
-  // Clear interval on page unload
-  window.addEventListener('beforeunload', function() {
-    clearInterval(refreshInterval);
-    if (socket) socket.disconnect();
-  });
-</script>
+        // View bill details
+        function viewBill(billId) {
+            const bill = bills.find(b => b.id === billId);
+            if (!bill) return;
+            
+            const modal = document.getElementById('billDetailsModal');
+            const content = document.getElementById('billDetailsContent');
+            
+            content.innerHTML = `
+                <div style="background: #f8f9fa; padding: 20px; border-radius: 8px;">
+                    <p><strong>Bill Number:</strong> ${bill.billNumber}</p>
+                    <p><strong>Vendor:</strong> ${bill.vendorName}</p>
+                    <p><strong>Amount:</strong> ₹${bill.amount.toFixed(2)}</p>
+                    <p><strong>Bill Date:</strong> ${formatDate(bill.date)}</p>
+                    <p><strong>Status:</strong> <span class="status-badge status-${bill.status}">
+                        ${bill.status === 'received' ? 'Received' : 'Pending'}
+                    </span></p>
+                    
+                    ${bill.status === 'received' ? `
+                        <hr style="margin: 15px 0;">
+                        <h4>Receive Details:</h4>
+                        <p><strong>Received Date:</strong> ${formatDate(bill.receivedDate)}</p>
+                        <p><strong>Received Time:</strong> ${bill.receivedTime}</p>
+                        <p><strong>Received By:</strong> ${bill.receivedBy}</p>
+                        ${bill.receiveNotes ? `<p><strong>Notes:</strong> ${bill.receiveNotes}</p>` : ''}
+                    ` : ''}
+                    
+                    ${bill.description ? `
+                        <hr style="margin: 15px 0;">
+                        <p><strong>Description:</strong> ${bill.description}</p>
+                    ` : ''}
+                </div>
+            `;
+            
+            modal.style.display = 'flex';
+        }
+
+        // View bill details from receive panel
+        function viewBillDetails() {
+            const billId = document.getElementById('selectBill').value;
+            if (!billId) {
+                showAlert('Please select a bill first', 'error');
+                return;
+            }
+            viewBill(parseInt(billId));
+        }
+
+        // Close modal
+        function closeModal() {
+            document.getElementById('billDetailsModal').style.display = 'none';
+        }
+
+        // Show alert message
+        function showAlert(message, type) {
+            const alertDiv = document.getElementById('receiveAlert');
+            alertDiv.textContent = message;
+            alertDiv.className = `alert alert-${type}`;
+            alertDiv.style.display = 'block';
+            
+            setTimeout(() => {
+                alertDiv.style.display = 'none';
+            }, 5000);
+        }
+
+        // Close modal when clicking outside
+        window.onclick = function(event) {
+            const modal = document.getElementById('billDetailsModal');
+            if (event.target === modal) {
+                modal.style.display = 'none';
+            }
+        }
+    </script>
 </body>
 </html>
-  
