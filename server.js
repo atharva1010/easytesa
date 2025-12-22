@@ -547,7 +547,7 @@ app.get("/api/me", authMiddleware, async (req, res) => {
   res.json({ success: true, user });
 });
 
-// Department-based redirection endpoint - FIXED
+// Department-based redirection endpoint - UPDATED FOR WOOD MM
 app.get("/api/get-redirect-path", authMiddleware, async (req, res) => {
   try {
     const user = await User.findById(req.userId);
@@ -557,12 +557,13 @@ app.get("/api/get-redirect-path", authMiddleware, async (req, res) => {
 
     let redirectPath = "";
     
-    // Department-based redirection logic - FIXED
-    // Debugging ke liye console log add kiya
     console.log("User department:", user.department);
     
     // Department ke basis pe redirect karega
-    if (user.department === "Account") {
+    if (user.department === "Wood MM") {
+      redirectPath = "/wood-bill-receive-panel.html";  // ✅ Wood MM users directly to receive panel
+    }
+    else if (user.department === "Account") {
       redirectPath = "/account.html";
     } 
     else if (user.department === "Administration") {
@@ -879,3 +880,4 @@ app.use((req, res) => {
 server.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);
 });
+
