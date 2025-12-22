@@ -243,13 +243,14 @@ app.use("/api/shift-report", shiftRoutes);
 app.use("/api/updates", updateRoutes);
 app.use("/api/reports/shift", shiftReportRoutes);
 app.use("/api/long-body", longBodyRoutes);
+
 // ===================== WOOD BILL ROUTES =====================
 
 // GET all wood bills
 app.get("/api/wood-bill", async (req, res) => {
   try {
     const woodBills = await WoodBill.find().sort({ sapDate: -1 });
-    res.json(woodBills); // Return array directly for your frontend
+    res.json(woodBills);
   } catch (err) {
     console.error("Get wood bills error:", err);
     res.status(500).json({ error: "Failed to fetch wood bills" });
@@ -260,10 +261,21 @@ app.get("/api/wood-bill", async (req, res) => {
 app.post("/api/wood-bill", async (req, res) => {
   try {
     const woodBillData = req.body;
+    
+    // Auto-fill receiver based on plant
+    if (woodBillData.plant === 'C2' || woodBillData.plant === 'C34A') {
+      woodBillData.receiverName = "SECURITY";
+      woodBillData.receiverStatus = "Received by Security";
+      woodBillData.isReceived = true;
+      woodBillData.receivedAt = new Date();
+    } else if (woodBillData.plant === 'C3') {
+      woodBillData.receiverStatus = "Pending by Receiver";
+      woodBillData.isReceived = false;
+    }
+    
     const newWoodBill = new WoodBill(woodBillData);
     await newWoodBill.save();
     
-    // Return with id field for your frontend
     res.status(201).json({
       success: true,
       id: newWoodBill._id,
@@ -306,6 +318,73 @@ app.put("/api/wood-bill/:id", async (req, res) => {
     });
   }
 });
+
+// PUT receive wood bill (for C3 bills)
+app.put("/api/wood-bill/:id/receive", async (req, res) => {
+  try {
+    const { receivedBy } = req.body;
+    
+    const updatedWoodBill = await WoodBill.findByIdAndUpdate(
+      req.params.id,
+      { 
+        receiverName: receivedBy,
+        receiverStatus: "Received",
+        receivedAt: new Date(),
+        isReceived: true
+      },
+      { new: true }
+    );
+    
+    if (!updatedWoodBill) {
+      return res.status(404).json({ 
+        success: false, 
+        message: "Wood bill not found" 
+      });
+    }
+    
+    res.json({ 
+      success: true, 
+      message: "Wood bill received successfully",
+      data: updatedWoodBill
+    });
+  } catch (error) {
+    console.error("Receive wood bill error:", error);
+    res.status(500).json({ 
+      success: false, 
+      message: "Failed to receive wood bill" 
+    });
+  }
+});
+
+// GET pending C3 bills for receiver panel
+app.get("/api/wood-bill/pending/c3", async (req, res) => {
+  try {
+    const pendingBills = await WoodBill.find({ 
+      plant: 'C3',
+      receiverStatus: "Pending by Receiver"
+    }).sort({ sapDate: -1 });
+    
+    res.json(pendingBills);
+  } catch (err) {
+    console.error("Get pending C3 bills error:", err);
+    res.status(500).json({ error: "Failed to fetch pending bills" });
+  }
+});
+
+// GET all received bills for receiver panel
+app.get("/api/wood-bill/received", async (req, res) => {
+  try {
+    const receivedBills = await WoodBill.find({ 
+      receiverStatus: "Received"
+    }).sort({ receivedAt: -1 });
+    
+    res.json(receivedBills);
+  } catch (err) {
+    console.error("Get received bills error:", err);
+    res.status(500).json({ error: "Failed to fetch received bills" });
+  }
+});
+
 // DELETE wood bill
 app.delete("/api/wood-bill/:id", async (req, res) => {
   try {
@@ -322,7 +401,6 @@ app.delete("/api/wood-bill/:id", async (req, res) => {
       success: true, 
       message: "Wood bill deleted successfully" 
     });
-    
   } catch (error) {
     console.error("Delete wood bill error:", error);
     res.status(500).json({ 
@@ -331,6 +409,9 @@ app.delete("/api/wood-bill/:id", async (req, res) => {
     });
   }
 });
+
+// ===================== END WOOD BILL ROUTES =====================
+
 // User Management Endpoints
 app.post("/api/create-user", uploadUser.single("profilePic"), async (req, res) => {
   try {
@@ -789,9 +870,12 @@ app.get('/api/unread-counts/:userId', authMiddleware, async (req, res) => {
   }
 });
 
+// 404 Handler for undefined routes
+app.use((req, res) => {
+  res.status(404).json({ success: false, message: "Route not found" });
+});
+
 // Start Server
 server.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);
 });
-
-
