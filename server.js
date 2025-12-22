@@ -85,7 +85,7 @@ mongoose.connect(process.env.MONGODB_URI || "mongodb://127.0.0.1:27017/bab_syste
 .then(() => console.log("✅ MongoDB Connected"))
 .catch(err => console.error("❌ MongoDB connection error:", err));
 
-// Socket.io Setup
+// Socket.io Setup with Wood Bill Updates
 const onlineUsers = {};
 io.on("connection", (socket) => {
   console.log("🔌 User connected:", socket.id);
@@ -211,6 +211,12 @@ io.on("connection", (socket) => {
     }
   });
 
+  // ✅ Wood Bill Status Updates
+  socket.on("woodBillUpdated", (data) => {
+    // Broadcast to all connected clients
+    io.emit("woodBillStatusChanged", data);
+  });
+
   // ✅ Disconnect
   socket.on("disconnect", () => {
     if (socket.userId) {
@@ -247,8 +253,8 @@ app.use("/api/long-body", longBodyRoutes);
 
 // ===================== WOOD BILL ROUTES =====================
 
-// GET all wood bills
-app.get("/api/wood-bill", authMiddleware, async (req, res) => {
+// GET all wood bills (PUBLIC - no auth for view)
+app.get("/api/wood-bill", async (req, res) => {
   try {
     const woodBills = await WoodBill.find().sort({ sapDate: -1 });
     res.json(woodBills);
@@ -258,7 +264,21 @@ app.get("/api/wood-bill", authMiddleware, async (req, res) => {
   }
 });
 
-// POST create new wood bill
+// GET single wood bill by ID
+app.get("/api/wood-bill/:id", async (req, res) => {
+  try {
+    const woodBill = await WoodBill.findById(req.params.id);
+    if (!woodBill) {
+      return res.status(404).json({ success: false, message: "Wood bill not found" });
+    }
+    res.json(woodBill);
+  } catch (err) {
+    console.error("Get wood bill error:", err);
+    res.status(500).json({ error: "Failed to fetch wood bill" });
+  }
+});
+
+// POST create new wood bill (with auth)
 app.post("/api/wood-bill", authMiddleware, async (req, res) => {
   try {
     const woodBillData = req.body;
@@ -271,7 +291,9 @@ app.post("/api/wood-bill", authMiddleware, async (req, res) => {
       woodBillData.receivedAt = new Date();
     } else if (woodBillData.plant === 'C3') {
       woodBillData.receiverStatus = "Pending by Receiver";
+      woodBillData.receiverName = ""; // Empty until received
       woodBillData.isReceived = false;
+      woodBillData.receivedAt = null;
     }
     
     const newWoodBill = new WoodBill(woodBillData);
@@ -280,6 +302,7 @@ app.post("/api/wood-bill", authMiddleware, async (req, res) => {
     res.status(201).json({
       success: true,
       id: newWoodBill._id,
+      data: newWoodBill,
       message: "Wood bill saved successfully"
     });
   } catch (error) {
@@ -291,7 +314,7 @@ app.post("/api/wood-bill", authMiddleware, async (req, res) => {
   }
 });
 
-// PUT update wood bill
+// PUT update wood bill (with auth)
 app.put("/api/wood-bill/:id", authMiddleware, async (req, res) => {
   try {
     const updatedWoodBill = await WoodBill.findByIdAndUpdate(
@@ -309,7 +332,8 @@ app.put("/api/wood-bill/:id", authMiddleware, async (req, res) => {
     
     res.json({ 
       success: true, 
-      message: "Updated successfully" 
+      message: "Updated successfully",
+      data: updatedWoodBill
     });
   } catch (error) {
     console.error("Update wood bill error:", error);
@@ -320,33 +344,54 @@ app.put("/api/wood-bill/:id", authMiddleware, async (req, res) => {
   }
 });
 
-// PUT receive wood bill (for C3 bills)
+// PUT receive wood bill (for C3 bills - with auth)
 app.put("/api/wood-bill/:id/receive", authMiddleware, async (req, res) => {
   try {
     const { receivedBy } = req.body;
     
-    const updatedWoodBill = await WoodBill.findByIdAndUpdate(
-      req.params.id,
-      { 
-        receiverName: receivedBy,
-        receiverStatus: "Received",
-        receivedAt: new Date(),
-        isReceived: true
-      },
-      { new: true }
-    );
-    
-    if (!updatedWoodBill) {
+    const bill = await WoodBill.findById(req.params.id);
+    if (!bill) {
       return res.status(404).json({ 
         success: false, 
         message: "Wood bill not found" 
       });
     }
     
+    // Check if bill can be received (only C3 and pending)
+    if (bill.plant !== 'C3') {
+      return res.status(400).json({ 
+        success: false, 
+        message: "Only C3 plant bills can be received" 
+      });
+    }
+    
+    if (bill.receiverStatus === "Received") {
+      return res.status(400).json({ 
+        success: false, 
+        message: "Bill already received" 
+      });
+    }
+    
+    // Update the bill
+    bill.receiverName = receivedBy;
+    bill.receiverStatus = "Received";
+    bill.isReceived = true;
+    bill.receivedAt = new Date();
+    
+    await bill.save();
+    
+    // Emit socket event for real-time update
+    io.emit("woodBillStatusChanged", {
+      action: 'received',
+      billId: bill._id,
+      receiverName: receivedBy,
+      timestamp: new Date()
+    });
+    
     res.json({ 
       success: true, 
       message: "Wood bill received successfully",
-      data: updatedWoodBill
+      data: bill
     });
   } catch (error) {
     console.error("Receive wood bill error:", error);
@@ -357,8 +402,8 @@ app.put("/api/wood-bill/:id/receive", authMiddleware, async (req, res) => {
   }
 });
 
-// GET pending C3 bills for receiver panel
-app.get("/api/wood-bill/pending/c3", authMiddleware, async (req, res) => {
+// GET pending C3 bills for receiver panel (PUBLIC)
+app.get("/api/wood-bill/pending/c3", async (req, res) => {
   try {
     const pendingBills = await WoodBill.find({ 
       plant: 'C3',
@@ -372,8 +417,8 @@ app.get("/api/wood-bill/pending/c3", authMiddleware, async (req, res) => {
   }
 });
 
-// GET all received bills for receiver panel
-app.get("/api/wood-bill/received", authMiddleware, async (req, res) => {
+// GET all received bills for receiver panel (PUBLIC)
+app.get("/api/wood-bill/received", async (req, res) => {
   try {
     const receivedBills = await WoodBill.find({ 
       receiverStatus: "Received"
@@ -386,7 +431,34 @@ app.get("/api/wood-bill/received", authMiddleware, async (req, res) => {
   }
 });
 
-// DELETE wood bill
+// GET wood bills by date range (PUBLIC)
+app.get("/api/wood-bill/filter", async (req, res) => {
+  try {
+    const { startDate, endDate, plant, status, submittedBy, receiver } = req.query;
+    
+    let filter = {};
+    
+    if (startDate || endDate) {
+      filter.sapDate = {};
+      if (startDate) filter.sapDate.$gte = new Date(startDate);
+      if (endDate) filter.sapDate.$lte = new Date(endDate);
+    }
+    
+    if (plant) filter.plant = plant;
+    if (status) filter.receiverStatus = status;
+    if (submittedBy) filter.submittedBy = submittedBy;
+    if (receiver) filter.receiverName = receiver;
+    
+    const filteredBills = await WoodBill.find(filter).sort({ sapDate: -1 });
+    
+    res.json(filteredBills);
+  } catch (err) {
+    console.error("Filter wood bills error:", err);
+    res.status(500).json({ error: "Failed to filter wood bills" });
+  }
+});
+
+// DELETE wood bill (with auth)
 app.delete("/api/wood-bill/:id", authMiddleware, async (req, res) => {
   try {
     const deletedWoodBill = await WoodBill.findByIdAndDelete(req.params.id);
@@ -516,7 +588,7 @@ app.get('/:page', (req, res, next) => {
       return res.sendFile(filePath);
     }
     
-    return res.status(404).send('File not found');
+    return next();
   } else {
     // Try with .html extension in public
     filePath = path.join(__dirname, 'public', `${page}.html`);
@@ -542,7 +614,7 @@ app.get('/:page', (req, res, next) => {
       return res.sendFile(filePath);
     }
     
-    return res.status(404).send('File not found');
+    return next();
   }
 });
 
@@ -655,6 +727,9 @@ app.get("/api/get-redirect-path", authMiddleware, async (req, res) => {
     }
     else if (user.department === "H R") {
       redirectPath = "/hr.html";
+    }
+    else if (user.department === "Production") {
+      redirectPath = "/wood-bill-register.html"; // Production users to register
     }
     else {
       // Agar koi page nahi hai to index.html pe redirect karo
@@ -984,12 +1059,42 @@ app.get('/api/debug-files', (req, res) => {
   res.json(files);
 });
 
+// Health check endpoint
+app.get('/api/health', (req, res) => {
+  res.json({
+    status: 'OK',
+    timestamp: new Date(),
+    uptime: process.uptime(),
+    woodBillCount: WoodBill.countDocuments()
+  });
+});
+
 // 404 Handler for undefined routes
 app.use((req, res) => {
   res.status(404).json({ 
     success: false, 
     message: "Route not found",
-    requestedPath: req.path 
+    requestedPath: req.path,
+    availableRoutes: [
+      "/api/wood-bill",
+      "/api/wood-bill/pending/c3",
+      "/api/wood-bill/received",
+      "/api/wood-bill/filter",
+      "/api/login",
+      "/api/get-redirect-path",
+      "/api/users",
+      "/api/create-user"
+    ]
+  });
+});
+
+// Error handling middleware
+app.use((err, req, res, next) => {
+  console.error('Server error:', err);
+  res.status(500).json({
+    success: false,
+    message: 'Internal server error',
+    error: process.env.NODE_ENV === 'development' ? err.message : undefined
   });
 });
 
@@ -998,4 +1103,14 @@ server.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);
   console.log(`📁 Current directory: ${__dirname}`);
   console.log(`🌐 Access at: http://localhost:${PORT}`);
+  console.log(`📋 Wood Bill System APIs:`);
+  console.log(`   GET  /api/wood-bill - Get all wood bills`);
+  console.log(`   POST /api/wood-bill - Create new wood bill`);
+  console.log(`   PUT  /api/wood-bill/:id/receive - Receive C3 bill`);
+  console.log(`   GET  /api/wood-bill/pending/c3 - Get pending C3 bills`);
+  console.log(`   GET  /api/wood-bill/received - Get received bills`);
+  console.log(`📁 Pages:`);
+  console.log(`   /wood-bill-receive-panel.html - Receive Panel`);
+  console.log(`   /wood-bill-register.html - Register Page`);
+  console.log(`   /index.html - Login Page`);
 });
