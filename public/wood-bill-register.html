@@ -15,14 +15,23 @@
       padding: 20px;
       margin: 0;
     }
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
     h2 {
       text-align: center;
       text-shadow: 0 0 5px #00ffe7;
-      margin-bottom: 20px;
+      margin: 0;
+    }
+    .nav-buttons {
+      display: flex;
+      gap: 10px;
     }
     button {
       padding: 8px 16px;
-      margin: 10px 5px;
       border: 1px solid #00ffe7;
       background: transparent;
       color: #00ffe7;
@@ -69,24 +78,17 @@
       background: #1a1a1a;
       cursor: not-allowed;
     }
-    #filters {
-      display: none;
-      margin-top: 10px;
-      background: rgba(0, 255, 231, 0.05);
-      padding: 15px;
-      border-radius: 5px;
+    .status-pending {
+      color: #ff9900;
+      font-weight: bold;
     }
-    #filters input, #filters select {
-      width: auto;
-      margin: 5px;
-      min-width: 150px;
+    .status-received {
+      color: #00ff00;
+      font-weight: bold;
     }
-    .status-cell {
-      font-size: 18px;
-      text-align: center;
-    }
-    .editing {
-      background: rgba(0, 255, 231, 0.1);
+    .status-security {
+      color: #00ccff;
+      font-weight: bold;
     }
     .action-buttons {
       display: flex;
@@ -98,28 +100,6 @@
       margin: 0;
       font-size: 12px;
       min-width: 60px;
-    }
-    .action-buttons button.save-btn {
-      background: rgba(0, 255, 0, 0.1);
-      border-color: #00ff00;
-    }
-    .action-buttons button.edit-btn {
-      background: rgba(255, 255, 0, 0.1);
-      border-color: #ffff00;
-    }
-    .action-buttons button.delete-btn {
-      background: rgba(255, 0, 0, 0.1);
-      border-color: #ff0000;
-    }
-    .action-buttons button.cancel-btn {
-      background: rgba(128, 128, 128, 0.1);
-      border-color: #888;
-    }
-    .today-row {
-      background: rgba(0, 255, 231, 0.05);
-    }
-    .locked-row {
-      opacity: 0.7;
     }
     .alert {
       position: fixed;
@@ -153,30 +133,14 @@
 </head>
 <body onload="initPage()">
 
-  <h2>WOOD BILL SUBMIT REGISTER</h2>
-
-  <button onclick="showFill()">FILL REPORT</button>
-  <button id="addRowBtn" onclick="addNewRow()">ADD NEW ROW</button>
-  <button onclick="showView()">VIEW REPORT</button>
-
-  <!-- Filters -->
-  <div id="filters">
-    <input type="date" id="startDate" onchange="filterView()">
-    <input type="date" id="endDate" onchange="filterView()">
-    <select id="receiverFilter" onchange="filterView()">
-      <option value="">All Receivers</option>
-    </select>
-    <select id="submittedByFilter" onchange="filterView()">
-      <option value="">All Submitters</option>
-    </select>
-    <select id="plantFilter" onchange="filterView()">
-      <option value="">All Plants</option>
-      <option value="C34A">C34A</option>
-      <option value="C2">C2</option>
-      <option value="C3">C3</option>
-    </select>
-    <input type="text" id="searchBox" placeholder="Search..." oninput="filterView()">
-    <button onclick="clearFilters()">Clear Filters</button>
+  <div class="header">
+    <h2>WOOD BILL SUBMIT REGISTER</h2>
+    <div class="nav-buttons">
+      <button onclick="window.location.href='wood-bill-receive.html'">RECEIVE PANEL</button>
+      <button onclick="showFill()">FILL REPORT</button>
+      <button id="addRowBtn" onclick="addNewRow()">ADD NEW ROW</button>
+      <button onclick="showView()">VIEW REPORT</button>
+    </div>
   </div>
 
   <!-- Fill Table -->
@@ -192,7 +156,8 @@
           <th>RECEIVER NAME</th>
           <th>SUBMITTED BY</th>
           <th>PLANT</th>
-          <th width="200">ACTIONS</th>
+          <th>STATUS</th>
+          <th width="150">ACTIONS</th>
         </tr>
       </thead>
       <tbody></tbody>
@@ -212,6 +177,7 @@
           <th>RECEIVER NAME</th>
           <th>SUBMITTED BY</th>
           <th>PLANT</th>
+          <th>STATUS</th>
         </tr>
       </thead>
       <tbody></tbody>
@@ -222,7 +188,6 @@
   let currentUser = (localStorage.getItem("username") || "unknown").toUpperCase();
   let isEditingMode = false;
   let today = new Date().toISOString().split('T')[0];
-  let allData = [];
 
   function showAlert(message, type = 'success') {
     const alertDiv = document.createElement('div');
@@ -238,23 +203,17 @@
   function initPage() {
     loadSavedData();
     showFill();
-    
-    // Set today's date in date filters
-    document.getElementById('startDate').value = today;
-    document.getElementById('endDate').value = today;
   }
 
   function showFill() {
     document.getElementById("fillTableSection").style.display = "block";
     document.getElementById("viewSection").style.display = "none";
-    document.getElementById("filters").style.display = "none";
     document.getElementById("addRowBtn").style.display = "inline-block";
   }
 
   function showView() {
     document.getElementById("fillTableSection").style.display = "none";
     document.getElementById("viewSection").style.display = "block";
-    document.getElementById("filters").style.display = "block";
     document.getElementById("addRowBtn").style.display = "none";
     loadViewData();
   }
@@ -267,52 +226,58 @@
 
     const tbody = document.querySelector("#fillTable tbody");
     const row = document.createElement("tr");
-    row.className = "today-row";
+    row.className = "editing-row";
     row.innerHTML = `
-      <td class="status-cell">📝</td>
-      <td><input type="date" value="${today}"></td>
-      <td><input type="date" value="${today}"></td>
-      <td><input type="number" min="1" placeholder="Quantity"></td>
-      <td><input type="time" value="${new Date().toTimeString().slice(0,5)}"></td>
-      <td><input type="text" placeholder="Receiver Name"></td>
-      <td><input type="text" value="${currentUser}" readonly></td>
+      <td>📝</td>
+      <td><input type="date" value="${today}" id="sapDate"></td>
+      <td><input type="date" value="${today}" id="billDate"></td>
+      <td><input type="number" min="1" placeholder="Quantity" id="quantity"></td>
+      <td><input type="time" value="${new Date().toTimeString().slice(0,5)}" id="submitTime"></td>
+      <td><input type="text" id="receiverName" readonly placeholder="Auto-filled by plant"></td>
+      <td><input type="text" value="${currentUser}" readonly id="submittedBy"></td>
       <td>
-        <select>
+        <select id="plantSelect" onchange="handlePlantChange(this)">
           <option value="">Select Plant</option>
           <option value="C34A">C34A</option>
           <option value="C2">C2</option>
           <option value="C3">C3</option>
         </select>
       </td>
+      <td id="statusCell">-</td>
       <td class="action-buttons">
-        <button class="save-btn" onclick="saveRow(this)">Save</button>
-        <button class="cancel-btn" onclick="cancelAdd(this)">Cancel</button>
+        <button onclick="saveRow(this)" style="background:#00ff00;color:#000">Save</button>
+        <button onclick="cancelAdd(this)" style="background:#ff0000;color:#fff">Cancel</button>
       </td>
     `;
     
     tbody.insertBefore(row, tbody.firstChild);
     isEditingMode = true;
-    row.querySelector('input').focus();
+  }
+
+  function handlePlantChange(select) {
+    const row = select.closest("tr");
+    const receiverInput = row.querySelector("#receiverName");
+    const statusCell = row.querySelector("#statusCell");
+    
+    if (select.value === 'C2' || select.value === 'C34A') {
+      receiverInput.value = "SECURITY";
+      statusCell.innerHTML = '<span class="status-security">SECURITY</span>';
+      receiverInput.readOnly = true;
+    } else if (select.value === 'C3') {
+      receiverInput.value = "";
+      statusCell.innerHTML = '<span class="status-pending">PENDING</span>';
+      receiverInput.readOnly = false;
+    } else {
+      receiverInput.value = "";
+      statusCell.innerHTML = '-';
+      receiverInput.readOnly = false;
+    }
   }
 
   async function saveRow(btn) {
     const row = btn.closest("tr");
     const inputs = row.querySelectorAll("input, select");
     
-    // Get current date to check if editing is allowed
-    const currentDate = new Date();
-    const sapDate = new Date(inputs[0].value);
-    const billDate = new Date(inputs[1].value);
-    
-    // Check if dates are today
-    const isSapDateToday = sapDate.toDateString() === currentDate.toDateString();
-    const isBillDateToday = billDate.toDateString() === currentDate.toDateString();
-    
-    if (!isSapDateToday || !isBillDateToday) {
-      showAlert('You can only add entries for today\'s date!', 'error');
-      return;
-    }
-
     const data = {
       sapDate: inputs[0].value,
       billDate: inputs[1].value,
@@ -325,13 +290,19 @@
 
     // Validation
     if (!data.sapDate || !data.billDate || !data.quantity || !data.submitTime || 
-        !data.receiverName || !data.plant) {
+        !data.plant) {
       showAlert('Please fill all fields!', 'error');
       return;
     }
 
     if (isNaN(data.quantity) || data.quantity <= 0) {
       showAlert('Please enter valid quantity!', 'error');
+      return;
+    }
+
+    // C3 के लिए receiver name check
+    if (data.plant === 'C3' && !data.receiverName) {
+      showAlert('For C3 plant, receiver name is required!', 'error');
       return;
     }
 
@@ -345,23 +316,9 @@
       const result = await res.json();
       
       if (result.success) {
-        showAlert('Row saved successfully!', 'success');
-        row.innerHTML = `
-          <td class="status-cell">✅</td>
-          <td>${data.sapDate}</td>
-          <td>${data.billDate}</td>
-          <td>${data.quantity}</td>
-          <td>${data.submitTime}</td>
-          <td>${data.receiverName}</td>
-          <td>${data.submittedBy}</td>
-          <td>${data.plant}</td>
-          <td class="action-buttons">
-            <button class="edit-btn" onclick="editRow(this, '${result.id || result._id}')">Edit</button>
-            <button class="delete-btn" onclick="deleteRow(this, '${result.id || result._id}')">Delete</button>
-          </td>
-        `;
+        showAlert('Bill saved successfully!', 'success');
         isEditingMode = false;
-        loadSavedData(); // Refresh the data
+        loadSavedData();
       } else {
         showAlert(result.message || 'Save failed!', 'error');
       }
@@ -382,7 +339,7 @@
       const res = await fetch("/api/wood-bill");
       if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
       
-      allData = await res.json();
+      const allData = await res.json();
       const tbody = document.querySelector("#fillTable tbody");
       tbody.innerHTML = "";
 
@@ -391,35 +348,40 @@
         return;
       }
 
-      // Sort by date (newest first)
-      allData.sort((a, b) => new Date(b.sapDate) - new Date(a.sapDate));
-
       allData.forEach((d, index) => {
         const sapDate = d.sapDate ? d.sapDate.split('T')[0] : '';
         const billDate = d.billDate ? d.billDate.split('T')[0] : '';
-        const currentDate = new Date().toDateString();
-        const rowDate = new Date(sapDate).toDateString();
         
-        // Check if this entry can be edited (only if same user and same date)
-        const canEdit = d.submittedBy === currentUser && rowDate === currentDate;
+        let statusText = "";
+        let statusClass = "";
         
-        const rowClass = rowDate === currentDate ? 'today-row' : 'locked-row';
+        if (d.receiverStatus === "Pending by Receiver") {
+          statusText = "PENDING";
+          statusClass = "status-pending";
+        } else if (d.receiverStatus === "Received by Security") {
+          statusText = "SECURITY";
+          statusClass = "status-security";
+        } else if (d.receiverStatus === "Received") {
+          statusText = "RECEIVED";
+          statusClass = "status-received";
+        }
         
         tbody.innerHTML += `
-          <tr class="${rowClass}">
-            <td class="status-cell">${index + 1}</td>
+          <tr>
+            <td>${index + 1}</td>
             <td>${sapDate}</td>
             <td>${billDate}</td>
             <td>${d.quantity}</td>
             <td>${d.submitTime}</td>
-            <td>${d.receiverName}</td>
+            <td>${d.receiverName || '-'}</td>
             <td>${d.submittedBy}</td>
             <td>${d.plant}</td>
+            <td class="${statusClass}">${statusText}</td>
             <td class="action-buttons">
-              ${canEdit ? 
-                `<button class="edit-btn" onclick="editRow(this, '${d._id}')">Edit</button>
-                 <button class="delete-btn" onclick="deleteRow(this, '${d._id}')">Delete</button>` :
-                `<span style="color:gray; font-size:12px;">Locked</span>`
+              ${d.submittedBy === currentUser && d.receiverStatus !== "Received" ? 
+                `<button onclick="editRow(this, '${d._id}')">Edit</button>
+                 <button onclick="deleteRow(this, '${d._id}')" style="background:#ff0000;color:#fff">Delete</button>` :
+                `<span style="color:gray;">Locked</span>`
               }
             </td>
           </tr>
@@ -428,150 +390,6 @@
     } catch (error) {
       console.error("Error loading data:", error);
       showAlert('Failed to load data!', 'error');
-    }
-  }
-
-  function editRow(btn, id) {
-    if (isEditingMode) {
-      showAlert('Please finish current edit first!', 'warning');
-      return;
-    }
-
-    const row = btn.closest("tr");
-    const cells = row.querySelectorAll("td");
-    
-    // Get current values
-    const data = {
-      sapDate: cells[1].textContent,
-      billDate: cells[2].textContent,
-      quantity: cells[3].textContent,
-      submitTime: cells[4].textContent,
-      receiverName: cells[5].textContent,
-      plant: cells[7].textContent
-    };
-
-    // Check if date is today
-    const currentDate = new Date().toDateString();
-    const rowDate = new Date(data.sapDate).toDateString();
-    
-    if (rowDate !== currentDate) {
-      showAlert('You can only edit today\'s entries!', 'error');
-      return;
-    }
-
-    isEditingMode = true;
-    
-    row.innerHTML = `
-      <td class="status-cell">📝</td>
-      <td><input type="date" value="${data.sapDate}" readonly></td>
-      <td><input type="date" value="${data.billDate}" readonly></td>
-      <td><input type="number" value="${data.quantity}" min="1"></td>
-      <td><input type="time" value="${data.submitTime}"></td>
-      <td><input type="text" value="${data.receiverName}"></td>
-      <td><input type="text" value="${currentUser}" readonly></td>
-      <td>
-        <select>
-          <option value="C34A" ${data.plant === 'C34A' ? 'selected' : ''}>C34A</option>
-          <option value="C2" ${data.plant === 'C2' ? 'selected' : ''}>C2</option>
-          <option value="C3" ${data.plant === 'C3' ? 'selected' : ''}>C3</option>
-        </select>
-      </td>
-      <td class="action-buttons">
-        <button class="save-btn" onclick="updateRow(this, '${id}')">Update</button>
-        <button class="cancel-btn" onclick="cancelEdit(this, '${id}')">Cancel</button>
-      </td>
-    `;
-    
-    row.classList.add('editing');
-    row.querySelector('input').focus();
-  }
-
-  function cancelEdit(btn, id) {
-    loadSavedData();
-    isEditingMode = false;
-  }
-
-  async function updateRow(btn, id) {
-    const row = btn.closest("tr");
-    const inputs = row.querySelectorAll("input, select");
-
-    const data = {
-      sapDate: inputs[0].value,
-      billDate: inputs[1].value,
-      quantity: parseFloat(inputs[2].value),
-      submitTime: inputs[3].value,
-      receiverName: inputs[4].value.trim().toUpperCase(),
-      submittedBy: currentUser,
-      plant: inputs[6].value.toUpperCase()
-    };
-
-    // Validation
-    if (!data.sapDate || !data.billDate || !data.quantity || !data.submitTime || 
-        !data.receiverName || !data.plant) {
-      showAlert('Please fill all fields!', 'error');
-      return;
-    }
-
-    if (isNaN(data.quantity) || data.quantity <= 0) {
-      showAlert('Please enter valid quantity!', 'error');
-      return;
-    }
-
-    try {
-      const res = await fetch(`/api/wood-bill/${id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data)
-      });
-
-      const result = await res.json();
-      
-      if (result.success) {
-        showAlert('Row updated successfully!', 'success');
-        isEditingMode = false;
-        loadSavedData();
-      } else {
-        showAlert(result.message || 'Update failed!', 'error');
-      }
-    } catch (error) {
-      console.error('Update error:', error);
-      showAlert('Network error! Please try again.', 'error');
-    }
-  }
-
-  async function deleteRow(btn, id) {
-    if (!confirm('Are you sure you want to delete this row?')) {
-      return;
-    }
-
-    const row = btn.closest("tr");
-    const sapDate = row.children[1].textContent;
-    const currentDate = new Date().toDateString();
-    const rowDate = new Date(sapDate).toDateString();
-    
-    if (rowDate !== currentDate) {
-      showAlert('You can only delete today\'s entries!', 'error');
-      return;
-    }
-
-    try {
-      const res = await fetch(`/api/wood-bill/${id}`, {
-        method: "DELETE",
-        headers: { "Content-Type": "application/json" }
-      });
-
-      const result = await res.json();
-      
-      if (result.success) {
-        showAlert('Row deleted successfully!', 'success');
-        row.remove();
-        loadSavedData(); // Refresh data
-      } else {
-        showAlert(result.message || 'Delete failed!', 'error');
-      }
-    } catch (error) {
-      console.error('Delete error:', error);
-      showAlert('Network error! Please try again.', 'error');
     }
   }
 
@@ -589,12 +407,23 @@
         return;
       }
 
-      const receivers = new Set();
-      const submitters = new Set();
-
       rows.forEach((d, i) => {
         const sapDate = d.sapDate ? d.sapDate.split('T')[0] : '';
         const billDate = d.billDate ? d.billDate.split('T')[0] : '';
+        
+        let statusText = "";
+        let statusClass = "";
+        
+        if (d.receiverStatus === "Pending by Receiver") {
+          statusText = "PENDING";
+          statusClass = "status-pending";
+        } else if (d.receiverStatus === "Received by Security") {
+          statusText = "SECURITY";
+          statusClass = "status-security";
+        } else if (d.receiverStatus === "Received") {
+          statusText = "RECEIVED";
+          statusClass = "status-received";
+        }
         
         tbody.innerHTML += `
           <tr>
@@ -603,121 +432,43 @@
             <td>${billDate}</td>
             <td>${d.quantity}</td>
             <td>${d.submitTime}</td>
-            <td>${d.receiverName}</td>
+            <td>${d.receiverName || '-'}</td>
             <td>${d.submittedBy}</td>
             <td>${d.plant}</td>
+            <td class="${statusClass}">${statusText}</td>
           </tr>
         `;
-        if (d.receiverName) receivers.add(d.receiverName);
-        if (d.submittedBy) submitters.add(d.submittedBy);
       });
-
-      // Update filters
-      document.getElementById("receiverFilter").innerHTML =
-        `<option value="">All Receivers</option>` +
-        [...receivers].map(r => `<option value="${r}">${r}</option>`).join("");
-
-      document.getElementById("submittedByFilter").innerHTML =
-        `<option value="">All Submitters</option>` +
-        [...submitters].map(s => `<option value="${s}">${s}</option>`).join("");
-        
     } catch (error) {
       console.error("Error loading view data:", error);
       showAlert('Failed to load view data!', 'error');
     }
   }
 
-  function filterView() {
-    const startDate = document.getElementById("startDate").value;
-    const endDate = document.getElementById("endDate").value;
-    const receiver = document.getElementById("receiverFilter").value.toLowerCase();
-    const submittedBy = document.getElementById("submittedByFilter").value.toLowerCase();
-    const plant = document.getElementById("plantFilter").value;
-    const searchText = document.getElementById("searchBox").value.toLowerCase();
+  async function deleteRow(btn, id) {
+    if (!confirm('Are you sure you want to delete this bill?')) {
+      return;
+    }
 
-    fetch("/api/wood-bill")
-      .then(res => res.json())
-      .then(data => {
-        const filtered = data.filter(d => {
-          const sapDate = d.sapDate ? new Date(d.sapDate).toISOString().split('T')[0] : '';
-          
-          const inDateRange =
-            (!startDate || sapDate >= startDate) &&
-            (!endDate || sapDate <= endDate);
-          
-          const matchesReceiver = !receiver || 
-            (d.receiverName && d.receiverName.toLowerCase().includes(receiver));
-          
-          const matchesSubmitter = !submittedBy || 
-            (d.submittedBy && d.submittedBy.toLowerCase().includes(submittedBy));
-          
-          const matchesPlant = !plant || d.plant === plant;
-          
-          const matchesSearch = !searchText || 
-            Object.values(d).some(val => 
-              val && String(val).toLowerCase().includes(searchText)
-            );
-          
-          return inDateRange && matchesReceiver && matchesSubmitter && matchesPlant && matchesSearch;
-        });
-
-        const tbody = document.querySelector("#viewTable tbody");
-        tbody.innerHTML = "";
-        
-        filtered.forEach((d, i) => {
-          tbody.innerHTML += `
-            <tr>
-              <td>${i + 1}</td>
-              <td>${d.sapDate ? d.sapDate.split('T')[0] : ''}</td>
-              <td>${d.billDate ? d.billDate.split('T')[0] : ''}</td>
-              <td>${d.quantity}</td>
-              <td>${d.submitTime}</td>
-              <td>${d.receiverName}</td>
-              <td>${d.submittedBy}</td>
-              <td>${d.plant}</td>
-            </tr>
-          `;
-        });
-      })
-      .catch(error => {
-        console.error("Error filtering data:", error);
-        showAlert('Failed to filter data!', 'error');
+    try {
+      const res = await fetch(`/api/wood-bill/${id}`, {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" }
       });
-  }
 
-  function clearFilters() {
-    document.getElementById("startDate").value = today;
-    document.getElementById("endDate").value = today;
-    document.getElementById("receiverFilter").value = "";
-    document.getElementById("submittedByFilter").value = "";
-    document.getElementById("plantFilter").value = "";
-    document.getElementById("searchBox").value = "";
-    filterView();
-  }
-
-  // Auto-refresh data every 30 seconds
-  setInterval(() => {
-    if (!isEditingMode) {
-      loadSavedData();
-    }
-  }, 30000);
-
-  // Listen for Enter key to save
-  document.addEventListener('keydown', function(e) {
-    if (e.key === 'Enter' && isEditingMode) {
-      const saveBtn = document.querySelector('.editing .save-btn');
-      if (saveBtn) {
-        saveBtn.click();
+      const result = await res.json();
+      
+      if (result.success) {
+        showAlert('Bill deleted successfully!', 'success');
+        loadSavedData();
+      } else {
+        showAlert(result.message || 'Delete failed!', 'error');
       }
+    } catch (error) {
+      console.error('Delete error:', error);
+      showAlert('Network error! Please try again.', 'error');
     }
-    
-    if (e.key === 'Escape' && isEditingMode) {
-      const cancelBtn = document.querySelector('.editing .cancel-btn');
-      if (cancelBtn) {
-        cancelBtn.click();
-      }
-    }
-  });
+  }
 </script>
 
 </body>
