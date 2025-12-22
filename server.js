@@ -45,12 +45,13 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Static files
+// Static files - UPDATED TO SERVE FROM ROOT AND PUBLIC
+app.use(express.static(__dirname)); // Serve from root directory
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 app.use('/bg', express.static(path.join(__dirname, 'bg')));
 app.use('/assets', express.static(path.join(__dirname, 'assets')));
 app.use('/Files', express.static(path.join(__dirname, 'Files')));
-app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static(path.join(__dirname, 'public'))); // Serve from public directory
 
 // Multer Setup
 const storage = new CloudinaryStorage({
@@ -247,7 +248,7 @@ app.use("/api/long-body", longBodyRoutes);
 // ===================== WOOD BILL ROUTES =====================
 
 // GET all wood bills
-app.get("/api/wood-bill", async (req, res) => {
+app.get("/api/wood-bill", authMiddleware, async (req, res) => {
   try {
     const woodBills = await WoodBill.find().sort({ sapDate: -1 });
     res.json(woodBills);
@@ -258,7 +259,7 @@ app.get("/api/wood-bill", async (req, res) => {
 });
 
 // POST create new wood bill
-app.post("/api/wood-bill", async (req, res) => {
+app.post("/api/wood-bill", authMiddleware, async (req, res) => {
   try {
     const woodBillData = req.body;
     
@@ -291,7 +292,7 @@ app.post("/api/wood-bill", async (req, res) => {
 });
 
 // PUT update wood bill
-app.put("/api/wood-bill/:id", async (req, res) => {
+app.put("/api/wood-bill/:id", authMiddleware, async (req, res) => {
   try {
     const updatedWoodBill = await WoodBill.findByIdAndUpdate(
       req.params.id,
@@ -320,7 +321,7 @@ app.put("/api/wood-bill/:id", async (req, res) => {
 });
 
 // PUT receive wood bill (for C3 bills)
-app.put("/api/wood-bill/:id/receive", async (req, res) => {
+app.put("/api/wood-bill/:id/receive", authMiddleware, async (req, res) => {
   try {
     const { receivedBy } = req.body;
     
@@ -357,7 +358,7 @@ app.put("/api/wood-bill/:id/receive", async (req, res) => {
 });
 
 // GET pending C3 bills for receiver panel
-app.get("/api/wood-bill/pending/c3", async (req, res) => {
+app.get("/api/wood-bill/pending/c3", authMiddleware, async (req, res) => {
   try {
     const pendingBills = await WoodBill.find({ 
       plant: 'C3',
@@ -372,7 +373,7 @@ app.get("/api/wood-bill/pending/c3", async (req, res) => {
 });
 
 // GET all received bills for receiver panel
-app.get("/api/wood-bill/received", async (req, res) => {
+app.get("/api/wood-bill/received", authMiddleware, async (req, res) => {
   try {
     const receivedBills = await WoodBill.find({ 
       receiverStatus: "Received"
@@ -386,7 +387,7 @@ app.get("/api/wood-bill/received", async (req, res) => {
 });
 
 // DELETE wood bill
-app.delete("/api/wood-bill/:id", async (req, res) => {
+app.delete("/api/wood-bill/:id", authMiddleware, async (req, res) => {
   try {
     const deletedWoodBill = await WoodBill.findByIdAndDelete(req.params.id);
     
@@ -489,19 +490,99 @@ app.post("/api/create-user", uploadUser.single("profilePic"), async (req, res) =
   }
 });
 
+// Serve HTML files with or without .html extension - UPDATED FIX
 app.get('/:page', (req, res, next) => {
   const page = req.params.page;
-  const filePath = path.join(__dirname, 'public', `${page}.html`);
-
-  fs.access(filePath, fs.constants.F_OK, (err) => {
-    if (err) {
-      next(); // Agar file exist nahi karti → next middleware (404)
-    } else {
-      res.sendFile(filePath);
+  let filePath;
+  
+  // Check if page already has .html extension
+  if (page.endsWith('.html')) {
+    // Try public directory first
+    filePath = path.join(__dirname, 'public', page);
+    if (fs.existsSync(filePath)) {
+      return res.sendFile(filePath);
     }
-  });
+    
+    // Try root directory
+    filePath = path.join(__dirname, page);
+    if (fs.existsSync(filePath)) {
+      return res.sendFile(filePath);
+    }
+    
+    // Try without .html extension in public
+    const withoutExt = page.replace('.html', '');
+    filePath = path.join(__dirname, 'public', `${withoutExt}.html`);
+    if (fs.existsSync(filePath)) {
+      return res.sendFile(filePath);
+    }
+    
+    return res.status(404).send('File not found');
+  } else {
+    // Try with .html extension in public
+    filePath = path.join(__dirname, 'public', `${page}.html`);
+    if (fs.existsSync(filePath)) {
+      return res.sendFile(filePath);
+    }
+    
+    // Try with .html extension in root
+    filePath = path.join(__dirname, `${page}.html`);
+    if (fs.existsSync(filePath)) {
+      return res.sendFile(filePath);
+    }
+    
+    // Try as is in public
+    filePath = path.join(__dirname, 'public', page);
+    if (fs.existsSync(filePath)) {
+      return res.sendFile(filePath);
+    }
+    
+    // Try as is in root
+    filePath = path.join(__dirname, page);
+    if (fs.existsSync(filePath)) {
+      return res.sendFile(filePath);
+    }
+    
+    return res.status(404).send('File not found');
+  }
 });
 
+// Direct routes for specific files
+app.get('/wood-bill-receive-panel.html', (req, res) => {
+  let filePath = path.join(__dirname, 'public', 'wood-bill-receive-panel.html');
+  
+  if (fs.existsSync(filePath)) {
+    return res.sendFile(filePath);
+  }
+  
+  filePath = path.join(__dirname, 'wood-bill-receive-panel.html');
+  if (fs.existsSync(filePath)) {
+    return res.sendFile(filePath);
+  }
+  
+  res.status(404).send(`
+    <h1>404 - File Not Found</h1>
+    <p>wood-bill-receive-panel.html not found in:</p>
+    <ul>
+      <li>${path.join(__dirname, 'public', 'wood-bill-receive-panel.html')}</li>
+      <li>${path.join(__dirname, 'wood-bill-receive-panel.html')}</li>
+    </ul>
+  `);
+});
+
+app.get('/wood-bill-register.html', (req, res) => {
+  let filePath = path.join(__dirname, 'public', 'wood-bill-register.html');
+  
+  if (fs.existsSync(filePath)) {
+    return res.sendFile(filePath);
+  }
+  
+  filePath = path.join(__dirname, 'wood-bill-register.html');
+  if (fs.existsSync(filePath)) {
+    return res.sendFile(filePath);
+  }
+  
+  res.status(404).send('wood-bill-register.html not found');
+});
 
 app.get("/api/users", async (req, res) => {
   try {
@@ -871,13 +952,50 @@ app.get('/api/unread-counts/:userId', authMiddleware, async (req, res) => {
   }
 });
 
+// Serve index.html for root route
+app.get('/', (req, res) => {
+  let filePath = path.join(__dirname, 'public', 'index.html');
+  
+  if (fs.existsSync(filePath)) {
+    return res.sendFile(filePath);
+  }
+  
+  filePath = path.join(__dirname, 'index.html');
+  if (fs.existsSync(filePath)) {
+    return res.sendFile(filePath);
+  }
+  
+  res.send('<h1>Welcome to Wood Bill System</h1><p>Please place index.html in root or public folder</p>');
+});
+
+// Debug endpoint to check file locations
+app.get('/api/debug-files', (req, res) => {
+  const files = {
+    'public/wood-bill-receive-panel.html': fs.existsSync(path.join(__dirname, 'public', 'wood-bill-receive-panel.html')),
+    'root/wood-bill-receive-panel.html': fs.existsSync(path.join(__dirname, 'wood-bill-receive-panel.html')),
+    'public/wood-bill-register.html': fs.existsSync(path.join(__dirname, 'public', 'wood-bill-register.html')),
+    'root/wood-bill-register.html': fs.existsSync(path.join(__dirname, 'wood-bill-register.html')),
+    'public/index.html': fs.existsSync(path.join(__dirname, 'public', 'index.html')),
+    'root/index.html': fs.existsSync(path.join(__dirname, 'index.html')),
+    'public directory exists': fs.existsSync(path.join(__dirname, 'public')),
+    'current directory': __dirname
+  };
+  
+  res.json(files);
+});
+
 // 404 Handler for undefined routes
 app.use((req, res) => {
-  res.status(404).json({ success: false, message: "Route not found" });
+  res.status(404).json({ 
+    success: false, 
+    message: "Route not found",
+    requestedPath: req.path 
+  });
 });
 
 // Start Server
 server.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);
-});
-
+  console.log(`📁 Current directory: ${__dirname}`);
+  console.log(`🌐 Access at: http://localhost:${PORT}`);
+});v
