@@ -190,15 +190,6 @@
       background: #00ff00;
       color: #000;
     }
-    .locked-action {
-      color: #888;
-      font-size: 12px;
-      font-style: italic;
-    }
-    .edit-disabled {
-      opacity: 0.6;
-      cursor: not-allowed;
-    }
   </style>
 </head>
 <body>
@@ -316,7 +307,6 @@
 
 <script>
   let currentUser = (localStorage.getItem("username") || "unknown").toUpperCase();
-  let currentUserDate = new Date().toISOString().split('T')[0]; // Today's date for current user
   let isEditingMode = false;
   let today = new Date().toISOString().split('T')[0];
   let allViewData = [];
@@ -430,71 +420,73 @@
     }
   }
 
-  async function saveRow(btn) {
-    const row = btn.closest("tr");
-    const inputs = row.querySelectorAll("input, select");
-    
-    const data = {
-      sapDate: inputs[0].value,
-      billDate: inputs[1].value,
-      quantity: parseFloat(inputs[2].value),
-      submitTime: inputs[3].value,
-      receiverName: inputs[4].value.trim().toUpperCase(),
-      submittedBy: currentUser,
-      plant: inputs[6].value.toUpperCase(),
-      userDate: currentUserDate // Store the date when user is creating/editing
-    };
+async function saveRow(btn) {
+  const row = btn.closest("tr");
+  const inputs = row.querySelectorAll("input, select");
+  
+  const data = {
+    sapDate: inputs[0].value,
+    billDate: inputs[1].value,
+    quantity: parseFloat(inputs[2].value),
+    submitTime: inputs[3].value,
+    receiverName: inputs[4].value.trim().toUpperCase(),
+    submittedBy: currentUser,
+    plant: inputs[6].value.toUpperCase()
+  };
 
-    // Validation
-    if (!data.sapDate || !data.billDate || !data.quantity || !data.submitTime || 
-        !data.plant) {
-      showAlert('Please fill all fields!', 'error');
-      return;
-    }
-
-    if (isNaN(data.quantity) || data.quantity <= 0) {
-      showAlert('Please enter valid quantity!', 'error');
-      return;
-    }
-
-    try {
-      // Get token from localStorage
-      const token = localStorage.getItem('token');
-      
-      if (!token) {
-        showAlert('Please login again!', 'error');
-        window.location.href = 'index.html';
-        return;
-      }
-      
-      const res = await fetch("/api/wood-bill", {
-        method: "POST",
-        headers: { 
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`
-        },
-        body: JSON.stringify(data)
-      });
-
-      const result = await res.json();
-      
-      if (result.success) {
-        showAlert('Bill saved successfully!', 'success');
-        isEditingMode = false;
-        
-        if (data.plant === 'C3') {
-          showAlert('C3 Bill saved with PENDING status. Wait for receiver to accept in Receive Panel.', 'warning');
-        }
-        
-        loadSavedData();
-      } else {
-        showAlert(result.message || 'Save failed!', 'error');
-      }
-    } catch (error) {
-      console.error('Save error:', error);
-      showAlert('Network error! Please try again.', 'error');
-    }
+  // Validation
+  if (!data.sapDate || !data.billDate || !data.quantity || !data.submitTime || 
+      !data.plant) {
+    showAlert('Please fill all fields!', 'error');
+    return;
   }
+
+  if (isNaN(data.quantity) || data.quantity <= 0) {
+    showAlert('Please enter valid quantity!', 'error');
+    return;
+  }
+
+  try {
+    // Get token from localStorage
+    const token = localStorage.getItem('token');
+    
+    if (!token) {
+      showAlert('Please login again!', 'error');
+      window.location.href = 'index.html';
+      return;
+    }
+    
+    const res = await fetch("/api/wood-bill", {
+      method: "POST",
+      headers: { 
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${token}`
+      },
+      body: JSON.stringify(data)
+    });
+
+    const result = await res.json();
+    
+    if (result.success) {
+      showAlert('Bill saved successfully!', 'success');
+      isEditingMode = false;
+      
+      if (data.plant === 'C3') {
+        showAlert('C3 Bill saved with PENDING status. Wait for receiver to accept in Receive Panel.', 'warning');
+      }
+      
+      loadSavedData();
+    } else {
+      showAlert(result.message || 'Save failed!', 'error');
+    }
+  } catch (error) {
+    console.error('Save error:', error);
+    showAlert('Network error! Please try again.', 'error');
+  }
+  }
+
+
+  
 
   function cancelAdd(btn) {
     const row = btn.closest("tr");
@@ -538,14 +530,6 @@
           statusClass = "status-received";
         }
         
-        // Check if record can be edited/deleted
-        // Condition: Same user AND same date (userDate) AND status is not "Received"
-        const canEditDelete = (
-          d.submittedBy === currentUser && 
-          d.userDate === currentUserDate && 
-          d.receiverStatus !== "Received"
-        );
-        
         tbody.innerHTML += `
           <tr class="${rowClass}">
             <td>${index + 1}</td>
@@ -558,10 +542,10 @@
             <td>${d.plant}</td>
             <td class="${statusClass}">${statusText}</td>
             <td class="action-buttons">
-              ${canEditDelete ? 
+              ${d.submittedBy === currentUser && d.receiverStatus !== "Received" ? 
                 `<button onclick="editRow(this, '${d._id}')">Edit</button>
                  <button onclick="deleteRow(this, '${d._id}')" style="background:#ff0000;color:#fff">Delete</button>` :
-                `<span class="locked-action">Locked</span>`
+                `<span style="color:gray;">Locked</span>`
               }
             </td>
           </tr>
@@ -571,161 +555,6 @@
       console.error("Error loading data:", error);
       showAlert('Failed to load data!', 'error');
     }
-  }
-
-  async function editRow(btn, id) {
-    if (isEditingMode) {
-      showAlert('Please save or cancel the current edit first!', 'warning');
-      return;
-    }
-
-    try {
-      const res = await fetch(`/api/wood-bill/${id}`);
-      if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
-      
-      const data = await res.json();
-      
-      if (!data) {
-        showAlert('Record not found!', 'error');
-        return;
-      }
-
-      // Check if user can edit this record
-      if (data.submittedBy !== currentUser || data.userDate !== currentUserDate) {
-        showAlert('You can only edit records created by you on the same date!', 'error');
-        return;
-      }
-
-      if (data.receiverStatus === "Received") {
-        showAlert('Cannot edit received bills!', 'error');
-        return;
-      }
-
-      const row = btn.closest("tr");
-      const rowIndex = row.rowIndex;
-      const tbody = document.querySelector("#fillTable tbody");
-      
-      // Create edit row
-      const editRow = document.createElement("tr");
-      editRow.className = "editing-row";
-      editRow.innerHTML = `
-        <td>✏️</td>
-        <td><input type="date" value="${data.sapDate ? data.sapDate.split('T')[0] : today}" id="editSapDate"></td>
-        <td><input type="date" value="${data.billDate ? data.billDate.split('T')[0] : today}" id="editBillDate"></td>
-        <td><input type="number" min="1" value="${data.quantity}" id="editQuantity"></td>
-        <td><input type="time" value="${data.submitTime}" id="editSubmitTime"></td>
-        <td>
-          <input type="text" value="${data.receiverName || ''}" 
-                 id="editReceiverName" 
-                 readonly 
-                 style="background:#1a1a1a; cursor:not-allowed;">
-          ${data.receiverName ? '<br><small style="color:#888;">(Cannot edit receiver)</small>' : ''}
-        </td>
-        <td><input type="text" value="${data.submittedBy}" readonly id="editSubmittedBy"></td>
-        <td>
-          <select id="editPlantSelect" onchange="handleEditPlantChange(this)">
-            <option value="C34A" ${data.plant === 'C34A' ? 'selected' : ''}>C34A</option>
-            <option value="C2" ${data.plant === 'C2' ? 'selected' : ''}>C2</option>
-            <option value="C3" ${data.plant === 'C3' ? 'selected' : ''}>C3</option>
-          </select>
-        </td>
-        <td id="editStatusCell">
-          ${data.receiverStatus === "Pending by Receiver" ? '<span class="status-pending">PENDING</span>' :
-            data.receiverStatus === "Received by Security" ? '<span class="status-security">SECURITY</span>' :
-            data.receiverStatus === "Received" ? '<span class="status-received">RECEIVED</span>' : '-'}
-        </td>
-        <td class="action-buttons">
-          <button onclick="saveEdit(this, '${id}')" style="background:#00ff00;color:#000">Update</button>
-          <button onclick="cancelEdit(this)" style="background:#ff0000;color:#fff">Cancel</button>
-        </td>
-      `;
-      
-      // Replace the row
-      tbody.replaceChild(editRow, row);
-      isEditingMode = true;
-      
-      // Update receiver field based on plant
-      const plantSelect = editRow.querySelector("#editPlantSelect");
-      handleEditPlantChange(plantSelect);
-      
-    } catch (error) {
-      console.error('Edit error:', error);
-      showAlert('Failed to load record for editing!', 'error');
-    }
-  }
-
-  function handleEditPlantChange(select) {
-    const row = select.closest("tr");
-    const receiverInput = row.querySelector("#editReceiverName");
-    
-    if (select.value === 'C2' || select.value === 'C34A') {
-      receiverInput.value = "SECURITY";
-    } else if (select.value === 'C3') {
-      receiverInput.value = receiverInput.value || "";
-      receiverInput.placeholder = "Will be filled after receiving";
-    }
-  }
-
-  async function saveEdit(btn, id) {
-    const row = btn.closest("tr");
-    const inputs = row.querySelectorAll("input, select");
-    
-    const data = {
-      sapDate: inputs[0].value,
-      billDate: inputs[1].value,
-      quantity: parseFloat(inputs[2].value),
-      submitTime: inputs[3].value,
-      receiverName: inputs[4].value.trim().toUpperCase(),
-      submittedBy: inputs[6].value,
-      plant: inputs[7].value.toUpperCase(),
-      userDate: currentUserDate // Keep the same user date
-    };
-
-    // Validation
-    if (!data.sapDate || !data.billDate || !data.quantity || !data.submitTime || 
-        !data.plant) {
-      showAlert('Please fill all fields!', 'error');
-      return;
-    }
-
-    if (isNaN(data.quantity) || data.quantity <= 0) {
-      showAlert('Please enter valid quantity!', 'error');
-      return;
-    }
-
-    // IMPORTANT: Receiver name cannot be edited for any plant
-    // The receiver field is readonly, so this should already be enforced
-    
-    try {
-      const token = localStorage.getItem('token');
-      
-      const res = await fetch(`/api/wood-bill/${id}`, {
-        method: "PUT",
-        headers: { 
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`
-        },
-        body: JSON.stringify(data)
-      });
-
-      const result = await res.json();
-      
-      if (result.success) {
-        showAlert('Bill updated successfully!', 'success');
-        isEditingMode = false;
-        loadSavedData();
-      } else {
-        showAlert(result.message || 'Update failed!', 'error');
-      }
-    } catch (error) {
-      console.error('Update error:', error);
-      showAlert('Network error! Please try again.', 'error');
-    }
-  }
-
-  function cancelEdit(btn) {
-    isEditingMode = false;
-    loadSavedData();
   }
 
   async function loadViewData() {
@@ -963,26 +792,9 @@
     }
 
     try {
-      // First check if user can delete this record
-      const checkRes = await fetch(`/api/wood-bill/${id}`);
-      const checkData = await checkRes.json();
-      
-      if (checkData.submittedBy !== currentUser || checkData.userDate !== currentUserDate) {
-        showAlert('You can only delete records created by you on the same date!', 'error');
-        return;
-      }
-
-      if (checkData.receiverStatus === "Received") {
-        showAlert('Cannot delete received bills!', 'error');
-        return;
-      }
-
       const res = await fetch(`/api/wood-bill/${id}`, {
         method: "DELETE",
-        headers: { 
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${localStorage.getItem('token')}`
-        }
+        headers: { "Content-Type": "application/json" }
       });
 
       const result = await res.json();
