@@ -243,7 +243,69 @@ app.use("/api/shift-report", shiftRoutes);
 app.use("/api/updates", updateRoutes);
 app.use("/api/reports/shift", shiftReportRoutes);
 app.use("/api/long-body", longBodyRoutes);
+// ===================== WOOD BILL ROUTES =====================
 
+// GET all wood bills
+app.get("/api/wood-bill", async (req, res) => {
+  try {
+    const woodBills = await WoodBill.find().sort({ sapDate: -1 });
+    res.json(woodBills); // Return array directly for your frontend
+  } catch (err) {
+    console.error("Get wood bills error:", err);
+    res.status(500).json({ error: "Failed to fetch wood bills" });
+  }
+});
+
+// POST create new wood bill
+app.post("/api/wood-bill", async (req, res) => {
+  try {
+    const woodBillData = req.body;
+    const newWoodBill = new WoodBill(woodBillData);
+    await newWoodBill.save();
+    
+    // Return with id field for your frontend
+    res.status(201).json({
+      success: true,
+      id: newWoodBill._id,
+      message: "Wood bill saved successfully"
+    });
+  } catch (error) {
+    console.error("Create wood bill error:", error);
+    res.status(500).json({ 
+      success: false, 
+      message: "Failed to save wood bill" 
+    });
+  }
+});
+
+// PUT update wood bill
+app.put("/api/wood-bill/:id", async (req, res) => {
+  try {
+    const updatedWoodBill = await WoodBill.findByIdAndUpdate(
+      req.params.id,
+      req.body,
+      { new: true }
+    );
+    
+    if (!updatedWoodBill) {
+      return res.status(404).json({ 
+        success: false, 
+        message: "Wood bill not found" 
+      });
+    }
+    
+    res.json({ 
+      success: true, 
+      message: "Updated successfully" 
+    });
+  } catch (error) {
+    console.error("Update wood bill error:", error);
+    res.status(500).json({ 
+      success: false, 
+      message: "Failed to update wood bill" 
+    });
+  }
+});
 // User Management Endpoints
 app.post("/api/create-user", uploadUser.single("profilePic"), async (req, res) => {
   try {
@@ -706,3 +768,4 @@ app.get('/api/unread-counts/:userId', authMiddleware, async (req, res) => {
 server.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);
 });
+
