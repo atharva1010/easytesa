@@ -33,12 +33,16 @@ const Methanol = require("./models/Methanol");
 const LongBodyReport = require('./models/LongBodyReport');
 const ShiftReport = require("./models/ShiftReport");
 const Notification = require("./models/Notification");
+const Token = require("./models/Token.js");
+const GateEntry = require("./models/GateEntry.js");
 
 // Routes
 const shiftReportRoutes = require("./routes/shiftReportRoutes");
 const updateRoutes = require("./routes/updateRoutes");
 const shiftRoutes = require("./routes/shiftRoutes");
 const longBodyRoutes = require('./routes/longBody');
+const Token = require("./routes/tokenRoutes.js");
+const GateEntry = require("./routes/gateRoutes.js");
 
 // Middleware
 app.use(cors());
@@ -1114,3 +1118,4 @@ server.listen(PORT, () => {
   console.log(`   /wood-bill-register.html - Register Page`);
   console.log(`   /index.html - Login Page`);
 });
+
