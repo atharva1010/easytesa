@@ -15,6 +15,28 @@
       padding: 20px;
       margin: 0;
     }
+    .access-denied {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      text-align: center;
+    }
+    .access-denied h1 {
+      color: #ff0000;
+      text-shadow: 0 0 10px #ff0000;
+      margin-bottom: 20px;
+    }
+    .access-denied button {
+      margin-top: 20px;
+      padding: 10px 20px;
+      background: rgba(0, 255, 231, 0.1);
+      border: 1px solid #00ffe7;
+      color: #00ffe7;
+      border-radius: 5px;
+      cursor: pointer;
+    }
     .header {
       display: flex;
       justify-content: space-between;
@@ -35,6 +57,9 @@
       padding: 10px 15px;
       border-radius: 5px;
       border: 1px solid #00ffe7;
+      display: flex;
+      align-items: center;
+      gap: 10px;
     }
     .tabs {
       display: flex;
@@ -179,7 +204,6 @@
       padding: 8px 16px;
       border-radius: 5px;
       cursor: pointer;
-      margin-left: 10px;
     }
     .refresh-btn:hover {
       background: #00ffe7;
@@ -222,135 +246,199 @@
       font-size: 12px;
       margin-left: 5px;
     }
+    .logout-btn {
+      background: rgba(255, 0, 0, 0.1);
+      border: 1px solid #ff0000;
+      color: #ff0000;
+      padding: 8px 16px;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    .logout-btn:hover {
+      background: #ff0000;
+      color: #fff;
+    }
   </style>
 </head>
 <body>
 
-  <div class="header">
-    <a href="index.html" class="back-btn">← BACK TO HOME</a>
-    <h1>WOOD MM BILL RECEIVE PANEL</h1>
-    <div class="user-info">
-      USER: <span id="currentUser">LOADING...</span>
-      <button class="refresh-btn" onclick="refreshAllData()">🔄 REFRESH</button>
+  <div id="mainContent" style="display: none;">
+    <div class="header">
+      <button class="back-btn" onclick="goToHome()">← BACK TO HOME</button>
+      <h1>WOOD MM BILL RECEIVE PANEL</h1>
+      <div class="user-info">
+        <div>
+          <strong>USER:</strong> <span id="currentUser">LOADING...</span><br>
+          <small style="color: #00ccff;">DEPT: <span id="currentDept"></span></small>
+        </div>
+        <button class="refresh-btn" onclick="refreshAllData()">🔄 REFRESH</button>
+        <button class="logout-btn" onclick="logout()">LOGOUT</button>
+      </div>
+    </div>
+
+    <div class="filters">
+      <select id="plantFilter" onchange="applyFilters()">
+        <option value="">ALL PLANTS</option>
+        <option value="C34A">C34A</option>
+        <option value="C2">C2</option>
+        <option value="C3">C3</option>
+      </select>
+      <select id="statusFilter" onchange="applyFilters()">
+        <option value="">ALL STATUS</option>
+        <option value="Pending by Receiver">PENDING</option>
+        <option value="Received by Security">SECURITY</option>
+        <option value="Received">RECEIVED</option>
+      </select>
+      <input type="date" id="dateFilter" onchange="applyFilters()">
+      <input type="text" id="searchFilter" placeholder="Search..." oninput="applyFilters()">
+    </div>
+
+    <div class="tabs">
+      <button class="tab active" onclick="showTab('all')">
+        📊 ALL BILLS
+      </button>
+      <button class="tab" onclick="showTab('pending')">
+        📋 PENDING C3 BILLS <span id="pendingCount" class="count-badge">0</span>
+      </button>
+      <button class="tab" onclick="showTab('received')">
+        ✅ RECEIVED BILLS <span id="receivedCount" class="count-badge">0</span>
+      </button>
+    </div>
+
+    <!-- All Bills Tab -->
+    <div id="allTab" class="tab-content">
+      <table>
+        <thead>
+          <tr>
+            <th>S.NO</th>
+            <th>SAP DATE</th>
+            <th>BILL DATE</th>
+            <th>QUANTITY</th>
+            <th>RECEIVER NAME</th>
+            <th>SUBMITTED BY</th>
+            <th>PLANT</th>
+            <th>STATUS</th>
+            <th>ACTION</th>
+          </tr>
+        </thead>
+        <tbody id="allTableBody">
+          <tr>
+            <td colspan="9" class="no-data">Loading all bills...</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Pending C3 Bills Tab -->
+    <div id="pendingTab" class="tab-content" style="display: none;">
+      <table>
+        <thead>
+          <tr>
+            <th>S.NO</th>
+            <th>SAP DATE</th>
+            <th>BILL DATE</th>
+            <th>QUANTITY</th>
+            <th>SUBMITTED BY</th>
+            <th>PLANT</th>
+            <th>STATUS</th>
+            <th>ACTION</th>
+          </tr>
+        </thead>
+        <tbody id="pendingTableBody">
+          <tr>
+            <td colspan="8" class="no-data">Loading pending bills...</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Received Bills Tab -->
+    <div id="receivedTab" class="tab-content" style="display: none;">
+      <table>
+        <thead>
+          <tr>
+            <th>S.NO</th>
+            <th>SAP DATE</th>
+            <th>BILL DATE</th>
+            <th>QUANTITY</th>
+            <th>RECEIVER NAME</th>
+            <th>SUBMITTED BY</th>
+            <th>PLANT</th>
+            <th>STATUS</th>
+            <th>RECEIVED AT</th>
+          </tr>
+        </thead>
+        <tbody id="receivedTableBody">
+          <tr>
+            <td colspan="9" class="no-data">Loading received bills...</td>
+          </tr>
+        </tbody>
+      </table>
     </div>
   </div>
 
-  <div class="filters">
-    <select id="plantFilter" onchange="applyFilters()">
-      <option value="">ALL PLANTS</option>
-      <option value="C34A">C34A</option>
-      <option value="C2">C2</option>
-      <option value="C3">C3</option>
-    </select>
-    <select id="statusFilter" onchange="applyFilters()">
-      <option value="">ALL STATUS</option>
-      <option value="Pending by Receiver">PENDING</option>
-      <option value="Received by Security">SECURITY</option>
-      <option value="Received">RECEIVED</option>
-    </select>
-    <input type="date" id="dateFilter" onchange="applyFilters()">
-    <input type="text" id="searchFilter" placeholder="Search..." oninput="applyFilters()">
-  </div>
-
-  <div class="tabs">
-    <button class="tab active" onclick="showTab('all')">
-      📊 ALL BILLS
-    </button>
-    <button class="tab" onclick="showTab('pending')">
-      📋 PENDING C3 BILLS <span id="pendingCount" class="count-badge">0</span>
-    </button>
-    <button class="tab" onclick="showTab('received')">
-      ✅ RECEIVED BILLS <span id="receivedCount" class="count-badge">0</span>
-    </button>
-  </div>
-
-  <!-- All Bills Tab -->
-  <div id="allTab" class="tab-content">
-    <table>
-      <thead>
-        <tr>
-          <th>S.NO</th>
-          <th>SAP DATE</th>
-          <th>BILL DATE</th>
-          <th>QUANTITY</th>
-          <th>RECEIVER NAME</th>
-          <th>SUBMITTED BY</th>
-          <th>PLANT</th>
-          <th>STATUS</th>
-          <th>ACTION</th>
-        </tr>
-      </thead>
-      <tbody id="allTableBody">
-        <tr>
-          <td colspan="9" class="no-data">Loading all bills...</td>
-        </tr>
-      </tbody>
-    </table>
-  </div>
-
-  <!-- Pending C3 Bills Tab -->
-  <div id="pendingTab" class="tab-content" style="display: none;">
-    <table>
-      <thead>
-        <tr>
-          <th>S.NO</th>
-          <th>SAP DATE</th>
-          <th>BILL DATE</th>
-          <th>QUANTITY</th>
-          <th>SUBMITTED BY</th>
-          <th>PLANT</th>
-          <th>STATUS</th>
-          <th>ACTION</th>
-        </tr>
-      </thead>
-      <tbody id="pendingTableBody">
-        <tr>
-          <td colspan="8" class="no-data">Loading pending bills...</td>
-        </tr>
-      </tbody>
-    </table>
-  </div>
-
-  <!-- Received Bills Tab -->
-  <div id="receivedTab" class="tab-content" style="display: none;">
-    <table>
-      <thead>
-        <tr>
-          <th>S.NO</th>
-          <th>SAP DATE</th>
-          <th>BILL DATE</th>
-          <th>QUANTITY</th>
-          <th>RECEIVER NAME</th>
-          <th>SUBMITTED BY</th>
-          <th>PLANT</th>
-          <th>STATUS</th>
-          <th>RECEIVED AT</th>
-        </tr>
-      </thead>
-      <tbody id="receivedTableBody">
-        <tr>
-          <td colspan="9" class="no-data">Loading received bills...</td>
-        </tr>
-      </tbody>
-    </table>
+  <div id="accessDenied" class="access-denied" style="display: none;">
+    <h1>⚠️ ACCESS DENIED</h1>
+    <p style="font-size: 18px; margin: 20px 0;">
+      This panel is only accessible to <strong>WOOD MM DEPARTMENT</strong> users.
+    </p>
+    <p style="color: #888; margin-bottom: 30px;">
+      Your department: <span id="userDeptInfo" style="color: #ff9900;"></span>
+    </p>
+    <button onclick="goToHome()">Go to Home Page</button>
   </div>
 
 <script>
-  let currentUser = (localStorage.getItem("username") || "unknown").toUpperCase();
+  let currentUser = "";
+  let userDepartment = "";
   let allBillsData = [];
   let filteredBills = [];
   let refreshInterval;
 
   document.addEventListener("DOMContentLoaded", function() {
+    // Check authentication and department
+    checkAccess();
+  });
+
+  async function checkAccess() {
+    const token = localStorage.getItem("token");
+    const username = localStorage.getItem("username");
+    userDepartment = localStorage.getItem("department") || "";
+    
+    if (!token || !username) {
+      window.location.href = "index.html";
+      return;
+    }
+    
+    // Set current user
+    currentUser = username.toUpperCase();
+    
+    // Check if user is from Wood MM department
+    if (userDepartment !== "Wood MM") {
+      // Show access denied message
+      document.getElementById("mainContent").style.display = "none";
+      document.getElementById("accessDenied").style.display = "flex";
+      document.getElementById("userDeptInfo").textContent = userDepartment || "Not Assigned";
+      return;
+    }
+    
+    // User is from Wood MM department - show panel
+    document.getElementById("accessDenied").style.display = "none";
+    document.getElementById("mainContent").style.display = "block";
+    
+    // Set user info
     document.getElementById("currentUser").textContent = currentUser;
-    initReceivePanel();
+    document.getElementById("currentDept").textContent = userDepartment;
     
     // Set today's date in date filter
     document.getElementById("dateFilter").value = new Date().toISOString().split('T')[0];
     
+    // Initialize panel
+    initReceivePanel();
+    
     // Auto-refresh every 15 seconds
     refreshInterval = setInterval(refreshAllData, 15000);
-  });
+  }
 
   function showAlert(message, type = 'success') {
     const alertDiv = document.createElement('div');
@@ -361,6 +449,21 @@
     setTimeout(() => {
       alertDiv.remove();
     }, 3000);
+  }
+
+  function goToHome() {
+    // Redirect based on user department
+    if (userDepartment === "Wood MM") {
+      // Stay on this page
+      return;
+    } else {
+      window.location.href = "index.html";
+    }
+  }
+
+  function logout() {
+    localStorage.clear();
+    window.location.href = "index.html";
   }
 
   function initReceivePanel() {
@@ -392,8 +495,25 @@
 
   async function loadAllBills() {
     try {
-      const res = await fetch("/api/wood-bill");
-      if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+      const token = localStorage.getItem("token");
+      if (!token) {
+        logout();
+        return;
+      }
+      
+      const res = await fetch("/api/wood-bill", {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      
+      if (!res.ok) {
+        if (res.status === 401) {
+          logout();
+          return;
+        }
+        throw new Error(`HTTP error! status: ${res.status}`);
+      }
       
       allBillsData = await res.json();
       
@@ -617,11 +737,20 @@
     btn.innerHTML = 'PROCESSING...';
 
     try {
+      const token = localStorage.getItem("token");
       const res = await fetch(`/api/wood-bill/${billId}/receive`, {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        },
         body: JSON.stringify({ receivedBy: currentUser })
       });
+
+      if (res.status === 401) {
+        logout();
+        return;
+      }
 
       const result = await res.json();
       
@@ -644,7 +773,9 @@
 
   // Clear interval on page unload
   window.addEventListener('beforeunload', function() {
-    clearInterval(refreshInterval);
+    if (refreshInterval) {
+      clearInterval(refreshInterval);
+    }
   });
 </script>
 
