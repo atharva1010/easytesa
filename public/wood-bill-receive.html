@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>WOOD MM BILL RECEIVE PANEL</title>
+  <style>
+    * {
+      text-transform: uppercase;
+      box-sizing: border-box;
+    }
+    body {
+      background-color: #0f2027;
+      color: #00ffe7;
+      font-family: 'Segoe UI', sans-serif;
+      padding: 20px;
+      margin: 0;
+    }
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+    h2 {
+      text-align: center;
+      text-shadow: 0 0 5px #00ffe7;
+      margin: 0;
+    }
+    .back-btn {
+      padding: 8px 16px;
+      border: 1px solid #00ffe7;
+      background: transparent;
+      color: #00ffe7;
+      border-radius: 5px;
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-block;
+    }
+    .back-btn:hover {
+      background: #00ffe7;
+      color: #0f2027;
+    }
+    .tabs {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+    .tab {
+      padding: 10px 20px;
+      border: 1px solid #00ffe7;
+      background: transparent;
+      color: #00ffe7;
+      cursor: pointer;
+      border-radius: 5px;
+    }
+    .tab.active {
+      background: #00ffe7;
+      color: #0f2027;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      box-shadow: 0 0 10px #00ffe7;
+    }
+    th, td {
+      padding: 12px;
+      border: 1px solid #00ffe7;
+      text-align: center;
+    }
+    th {
+      background: rgba(0, 255, 231, 0.1);
+    }
+    .pending-row {
+      background: rgba(255, 153, 0, 0.1);
+    }
+    .received-row {
+      background: rgba(0, 255, 0, 0.1);
+    }
+    .security-row {
+      background: rgba(0, 204, 255, 0.1);
+    }
+    .status-pending {
+      color: #ff9900;
+      font-weight: bold;
+    }
+    .status-received {
+      color: #00ff00;
+      font-weight: bold;
+    }
+    .status-security {
+      color: #00ccff;
+      font-weight: bold;
+    }
+    button {
+      padding: 6px 12px;
+      border: 1px solid #00ffe7;
+      background: transparent;
+      color: #00ffe7;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+    button:hover {
+      background: #00ffe7;
+      color: #0f2027;
+    }
+    .receive-btn {
+      background: rgba(0, 255, 0, 0.2);
+      border-color: #00ff00;
+    }
+    .alert {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      padding: 15px;
+      border-radius: 5px;
+      z-index: 1000;
+      animation: slideIn 0.3s;
+    }
+    .success {
+      background: rgba(0, 255, 0, 0.2);
+      border: 1px solid #00ff00;
+      color: #00ff00;
+    }
+    .error {
+      background: rgba(255, 0, 0, 0.2);
+      border: 1px solid #ff0000;
+      color: #ff0000;
+    }
+    @keyframes slideIn {
+      from { transform: translateX(100%); opacity: 0; }
+      to { transform: translateX(0); opacity: 1; }
+    }
+  </style>
+</head>
+<body onload="initReceivePanel()">
+
+  <div class="header">
+    <a href="wood-bill-register.html" class="back-btn">← BACK TO REGISTER</a>
+    <h2>WOOD MM BILL RECEIVE PANEL</h2>
+    <div style="width: 100px;"></div> <!-- Spacer for alignment -->
+  </div>
+
+  <div class="tabs">
+    <button class="tab active" onclick="showTab('pending')">PENDING C3 BILLS</button>
+    <button class="tab" onclick="showTab('received')">RECEIVED BILLS</button>
+    <button class="tab" onclick="showTab('all')">ALL BILLS</button>
+  </div>
+
+  <!-- Pending C3 Bills -->
+  <div id="pendingTab" class="tab-content">
+    <table>
+      <thead>
+        <tr>
+          <th>S.NO</th>
+          <th>SAP DATE</th>
+          <th>BILL DATE</th>
+          <th>QUANTITY</th>
+          <th>SUBMIT TIME</th>
+          <th>SUBMITTED BY</th>
+          <th>PLANT</th>
+          <th>STATUS</th>
+          <th>ACTION</th>
+        </tr>
+      </thead>
+      <tbody id="pendingTableBody"></tbody>
+    </table>
+  </div>
+
+  <!-- Received Bills -->
+  <div id="receivedTab" class="tab-content" style="display: none;">
+    <table>
+      <thead>
+        <tr>
+          <th>S.NO</th>
+          <th>SAP DATE</th>
+          <th>BILL DATE</th>
+          <th>QUANTITY</th>
+          <th>RECEIVER NAME</th>
+          <th>SUBMITTED BY</th>
+          <th>PLANT</th>
+          <th>STATUS</th>
+          <th>RECEIVED AT</th>
+        </tr>
+      </thead>
+      <tbody id="receivedTableBody"></tbody>
+    </table>
+  </div>
+
+  <!-- All Bills -->
+  <div id="allTab" class="tab-content" style="display: none;">
+    <table>
+      <thead>
+        <tr>
+          <th>S.NO</th>
+          <th>SAP DATE</th>
+          <th>BILL DATE</th>
+          <th>QUANTITY</th>
+          <th>RECEIVER NAME</th>
+          <th>SUBMITTED BY</th>
+          <th>PLANT</th>
+          <th>STATUS</th>
+        </tr>
+      </thead>
+      <tbody id="allTableBody"></tbody>
+    </table>
+  </div>
+
+<script>
+  let currentUser = (localStorage.getItem("username") || "unknown").toUpperCase();
+
+  function showAlert(message, type = 'success') {
+    const alertDiv = document.createElement('div');
+    alertDiv.className = `alert ${type}`;
+    alertDiv.textContent = message;
+    document.body.appendChild(alertDiv);
+    
+    setTimeout(() => {
+      alertDiv.remove();
+    }, 3000);
+  }
+
+  function initReceivePanel() {
+    loadPendingC3Bills();
+  }
+
+  function showTab(tabName) {
+    // Update active tab
+    document.querySelectorAll('.tab').forEach(tab => {
+      tab.classList.remove('active');
+    });
+    event.target.classList.add('active');
+    
+    // Show selected tab content
+    document.querySelectorAll('.tab-content').forEach(content => {
+      content.style.display = 'none';
+    });
+    
+    document.getElementById(tabName + 'Tab').style.display = 'block';
+    
+    // Load data for tab
+    if (tabName === 'pending') {
+      loadPendingC3Bills();
+    } else if (tabName === 'received') {
+      loadReceivedBills();
+    } else if (tabName === 'all') {
+      loadAllBills();
+    }
+  }
+
+  async function loadPendingC3Bills() {
+    try {
+      const res = await fetch("/api/wood-bill/pending/c3");
+      if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+      
+      const bills = await res.json();
+      const tbody = document.getElementById("pendingTableBody");
+      tbody.innerHTML = "";
+
+      if (!Array.isArray(bills)) {
+        console.error("Expected array but got:", bills);
+        return;
+      }
+
+      bills.forEach((bill, index) => {
+        const sapDate = bill.sapDate ? bill.sapDate.split('T')[0] : '';
+        const billDate = bill.billDate ? bill.billDate.split('T')[0] : '';
+        
+        tbody.innerHTML += `
+          <tr class="pending-row">
+            <td>${index + 1}</td>
+            <td>${sapDate}</td>
+            <td>${billDate}</td>
+            <td>${bill.quantity}</td>
+            <td>${bill.submitTime}</td>
+            <td>${bill.submittedBy}</td>
+            <td>${bill.plant}</td>
+            <td class="status-pending">PENDING</td>
+            <td>
+              <button class="receive-btn" onclick="receiveBill('${bill._id}')">
+                RECEIVE
+              </button>
+            </td>
+          </tr>
+        `;
+      });
+      
+      if (bills.length === 0) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="9" style="text-align: center; padding: 20px;">
+              No pending C3 bills found
+            </td>
+          </tr>
+        `;
+      }
+    } catch (error) {
+      console.error("Error loading pending bills:", error);
+      showAlert('Failed to load pending bills!', 'error');
+    }
+  }
+
+  async function loadReceivedBills() {
+    try {
+      const res = await fetch("/api/wood-bill/received");
+      if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+      
+      const bills = await res.json();
+      const tbody = document.getElementById("receivedTableBody");
+      tbody.innerHTML = "";
+
+      if (!Array.isArray(bills)) {
+        console.error("Expected array but got:", bills);
+        return;
+      }
+
+      bills.forEach((bill, index) => {
+        const sapDate = bill.sapDate ? bill.sapDate.split('T')[0] : '';
+        const billDate = bill.billDate ? bill.billDate.split('T')[0] : '';
+        const receivedAt = bill.receivedAt ? new Date(bill.receivedAt).toLocaleString() : '-';
+        
+        tbody.innerHTML += `
+          <tr class="received-row">
+            <td>${index + 1}</td>
+            <td>${sapDate}</td>
+            <td>${billDate}</td>
+            <td>${bill.quantity}</td>
+            <td>${bill.receiverName}</td>
+            <td>${bill.submittedBy}</td>
+            <td>${bill.plant}</td>
+            <td class="status-received">RECEIVED</td>
+            <td>${receivedAt}</td>
+          </tr>
+        `;
+      });
+      
+      if (bills.length === 0) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="9" style="text-align: center; padding: 20px;">
+              No received bills found
+            </td>
+          </tr>
+        `;
+      }
+    } catch (error) {
+      console.error("Error loading received bills:", error);
+      showAlert('Failed to load received bills!', 'error');
+    }
+  }
+
+  async function loadAllBills() {
+    try {
+      const res = await fetch("/api/wood-bill");
+      if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+      
+      const bills = await res.json();
+      const tbody = document.getElementById("allTableBody");
+      tbody.innerHTML = "";
+
+      if (!Array.isArray(bills)) {
+        console.error("Expected array but got:", bills);
+        return;
+      }
+
+      bills.forEach((bill, index) => {
+        const sapDate = bill.sapDate ? bill.sapDate.split('T')[0] : '';
+        const billDate = bill.billDate ? bill.billDate.split('T')[0] : '';
+        
+        let rowClass = "";
+        let statusText = "";
+        let statusClass = "";
+        
+        if (bill.receiverStatus === "Pending by Receiver") {
+          rowClass = "pending-row";
+          statusText = "PENDING";
+          statusClass = "status-pending";
+        } else if (bill.receiverStatus === "Received by Security") {
+          rowClass = "security-row";
+          statusText = "SECURITY";
+          statusClass = "status-security";
+        } else if (bill.receiverStatus === "Received") {
+          rowClass = "received-row";
+          statusText = "RECEIVED";
+          statusClass = "status-received";
+        }
+        
+        tbody.innerHTML += `
+          <tr class="${rowClass}">
+            <td>${index + 1}</td>
+            <td>${sapDate}</td>
+            <td>${billDate}</td>
+            <td>${bill.quantity}</td
