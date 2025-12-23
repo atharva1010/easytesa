@@ -1,129 +1,378 @@
- <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<title>WOOD BILL RECEIVE PANEL</title>
-
-<style>
-:root{
-  --neon:#00ffe7;
-  --dark:#0b1e25;
-  --glass:rgba(255,255,255,0.06);
-}
-
-*{box-sizing:border-box;text-transform:uppercase}
-body{
-  margin:0;
-  font-family:Segoe UI,system-ui;
-  background:linear-gradient(135deg,#0f2027,#203a43);
-  color:var(--neon);
-  padding:20px;
-}
-
-/* HEADER */
-.header{
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  padding:15px 20px;
-  background:var(--glass);
-  border-radius:12px;
-  border:1px solid var(--neon);
-  backdrop-filter:blur(10px);
-}
-.header h1{
-  margin:0;
-  font-size:22px;
-  letter-spacing:1px;
-}
-.user{
-  padding:8px 14px;
-  border:1px solid var(--neon);
-  border-radius:8px;
-  font-weight:600;
-}
-
-/* TABS */
-.tabs{
-  display:flex;
-  gap:12px;
-  justify-content:center;
-  margin:25px 0;
-}
-.tab{
-  padding:10px 22px;
-  border-radius:20px;
-  border:1px solid var(--neon);
-  cursor:pointer;
-  transition:.3s;
-}
-.tab.active,.tab:hover{
-  background:var(--neon);
-  color:#000;
-}
-
-/* FILTERS */
-.filters{
-  display:grid;
-  grid-template-columns:repeat(auto-fit,minmax(200px,1fr));
-  gap:15px;
-  background:var(--glass);
-  padding:15px;
-  border-radius:12px;
-  border:1px solid var(--neon);
-}
-input,select{
-  padding:10px;
-  border-radius:6px;
-  border:1px solid var(--neon);
-  background:#000;
-  color:var(--neon);
-}
-
-/* TABLE */
-table{
-  width:100%;
-  margin-top:25px;
-  border-collapse:collapse;
-  background:var(--glass);
-  border-radius:12px;
-  overflow:hidden;
-}
-th,td{
-  padding:14px;
-  text-align:center;
-}
-th{
-  background:rgba(0,255,231,.15);
-}
-tr:not(:last-child){
-  border-bottom:1px solid rgba(0,255,231,.2);
-}
-
-/* STATUS */
-.badge{
-  padding:6px 14px;
-  border-radius:20px;
-  font-weight:700;
-}
-.pending{background:#ff980033;color:#ff9800}
-.received{background:#00ff0033;color:#00ff00}
-
-/* BUTTONS */
-button{
-  padding:8px 18px;
-  border-radius:20px;
-  border:none;
-  cursor:pointer;
-  font-weight:700;
-}
-.receive{
-  background:linear-gradient(45deg,#00ff00,#00cc66);
-}
-.receive:hover{transform:scale(1.05)}
-
-</style>
-vv
+  <meta charset="UTF-8" />
+  <title>WOOD BILL RECEIVE PANEL</title>
+  <style>
+    * {
+      text-transform: uppercase;
+      box-sizing: border-box;
+    }
+    body {
+      background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+      color: #00ffe7;
+      font-family: 'Segoe UI', sans-serif;
+      padding: 20px;
+      margin: 0;
+      min-height: 100vh;
+    }
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 25px;
+      padding: 15px 20px;
+      background: rgba(0, 255, 231, 0.1);
+      border-radius: 10px;
+      border: 2px solid #00ffe7;
+      box-shadow: 0 0 20px rgba(0, 255, 231, 0.3);
+    }
+    h1 {
+      text-align: center;
+      text-shadow: 0 0 15px #00ffe7;
+      margin: 0;
+      color: #00ffe7;
+      font-size: 32px;
+      letter-spacing: 1px;
+      flex-grow: 1;
+    }
+    .user-info {
+      background: rgba(0, 255, 231, 0.15);
+      padding: 12px 20px;
+      border-radius: 8px;
+      border: 1px solid #00ffe7;
+      font-weight: bold;
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+    .tabs {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 25px;
+      justify-content: center;
+      background: rgba(0, 255, 231, 0.05);
+      padding: 15px;
+      border-radius: 10px;
+      border: 1px solid #00ffe7;
+    }
+    .tab {
+      padding: 14px 28px;
+      border: 2px solid #00ffe7;
+      background: transparent;
+      color: #00ffe7;
+      cursor: pointer;
+      border-radius: 8px;
+      font-weight: bold;
+      transition: all 0.3s;
+      min-width: 180px;
+      text-align: center;
+      font-size: 16px;
+      position: relative;
+    }
+    .tab:hover {
+      background: rgba(0, 255, 231, 0.2);
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(0, 255, 231, 0.3);
+    }
+    .tab.active {
+      background: linear-gradient(45deg, #00ffe7, #00ccff);
+      color: #0f2027;
+      box-shadow: 0 0 20px #00ffe7;
+      border-color: #00ffe7;
+    }
+    .filters-section {
+      background: rgba(0, 255, 231, 0.08);
+      padding: 20px;
+      border-radius: 10px;
+      margin-bottom: 25px;
+      border: 1px solid #00ffe7;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 15px;
+    }
+    .filter-group {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .filter-group label {
+      color: #00ccff;
+      font-weight: bold;
+      font-size: 14px;
+    }
+    input, select {
+      padding: 12px;
+      background: rgba(0, 0, 0, 0.5);
+      color: #00ffe7;
+      border: 1px solid #00ffe7;
+      border-radius: 6px;
+      width: 100%;
+      font-size: 14px;
+    }
+    input:focus, select:focus {
+      outline: none;
+      box-shadow: 0 0 10px #00ffe7;
+      border-color: #00ffe7;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      box-shadow: 0 0 25px rgba(0, 255, 231, 0.2);
+      border-radius: 10px;
+      overflow: hidden;
+      margin-top: 20px;
+    }
+    th {
+      background: linear-gradient(45deg, rgba(0, 255, 231, 0.3), rgba(0, 204, 255, 0.3));
+      padding: 18px;
+      border: 2px solid #00ffe7;
+      font-size: 16px;
+      text-align: center;
+      position: sticky;
+      top: 0;
+    }
+    td {
+      padding: 15px;
+      border: 1px solid #00ffe7;
+      text-align: center;
+      vertical-align: middle;
+    }
+    .pending-row {
+      background: linear-gradient(45deg, rgba(255, 153, 0, 0.1), rgba(255, 165, 0, 0.15));
+      animation: pulse 2s infinite;
+      border-left: 5px solid #ff9900;
+    }
+    .received-row {
+      background: linear-gradient(45deg, rgba(0, 255, 0, 0.1), rgba(0, 200, 0, 0.15));
+      border-left: 5px solid #00ff00;
+    }
+    .security-row {
+      background: linear-gradient(45deg, rgba(0, 204, 255, 0.1), rgba(0, 150, 255, 0.15));
+      border-left: 5px solid #00ccff;
+    }
+    .status-pending {
+      color: #ff9900;
+      font-weight: bold;
+      background: rgba(255, 153, 0, 0.2);
+      padding: 8px 16px;
+      border-radius: 20px;
+      display: inline-block;
+      border: 1px solid #ff9900;
+    }
+    .status-received {
+      color: #00ff00;
+      font-weight: bold;
+      background: rgba(0, 255, 0, 0.2);
+      padding: 8px 16px;
+      border-radius: 20px;
+      display: inline-block;
+      border: 1px solid #00ff00;
+    }
+    .status-security {
+      color: #00ccff;
+      font-weight: bold;
+      background: rgba(0, 204, 255, 0.2);
+      padding: 8px 16px;
+      border-radius: 20px;
+      display: inline-block;
+      border: 1px solid #00ccff;
+    }
+    button {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.3s;
+      font-weight: bold;
+      font-size: 14px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+    .receive-btn {
+      background: linear-gradient(45deg, #00ff00, #00cc00);
+      color: #000;
+      border: 1px solid #00ff00;
+      min-width: 120px;
+    }
+    .receive-btn:hover {
+      background: linear-gradient(45deg, #00cc00, #009900);
+      box-shadow: 0 0 15px #00ff00;
+      transform: scale(1.05);
+    }
+    .receive-btn:disabled {
+      background: #666;
+      cursor: not-allowed;
+      opacity: 0.5;
+      transform: none;
+    }
+    .action-buttons {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+    }
+    .refresh-btn {
+      background: linear-gradient(45deg, #00ffe7, #00aaff);
+      color: #000;
+      border: 1px solid #00ffe7;
+      padding: 10px 20px;
+    }
+    .refresh-btn:hover {
+      background: linear-gradient(45deg, #00aaff, #0088cc);
+      box-shadow: 0 0 15px #00ffe7;
+    }
+    .back-btn {
+      background: linear-gradient(45deg, #ff9900, #ff6600);
+      color: #000;
+      border: 1px solid #ff9900;
+      padding: 10px 20px;
+      text-decoration: none;
+    }
+    .back-btn:hover {
+      background: linear-gradient(45deg, #ff6600, #cc5500);
+      box-shadow: 0 0 15px #ff9900;
+    }
+    .alert {
+      position: fixed;
+      top: 30px;
+      right: 30px;
+      padding: 20px;
+      border-radius: 10px;
+      z-index: 1000;
+      animation: slideIn 0.3s;
+      font-weight: bold;
+      min-width: 300px;
+      backdrop-filter: blur(10px);
+    }
+    .success {
+      background: rgba(0, 255, 0, 0.2);
+      border: 2px solid #00ff00;
+      color: #00ff00;
+      box-shadow: 0 0 20px #00ff00;
+    }
+    .error {
+      background: rgba(255, 0, 0, 0.2);
+      border: 2px solid #ff0000;
+      color: #ff0000;
+      box-shadow: 0 0 20px #ff0000;
+    }
+    .warning {
+      background: rgba(255, 255, 0, 0.2);
+      border: 2px solid #ffff00;
+      color: #ffff00;
+      box-shadow: 0 0 20px #ffff00;
+    }
+    @keyframes slideIn {
+      from { transform: translateX(100%); opacity: 0; }
+      to { transform: translateX(0); opacity: 1; }
+    }
+    @keyframes pulse {
+      0% { box-shadow: inset 0 0 0 0 rgba(255, 153, 0, 0.4); }
+      70% { box-shadow: inset 0 0 0 15px rgba(255, 153, 0, 0); }
+      100% { box-shadow: inset 0 0 0 0 rgba(255, 153, 0, 0); }
+    }
+    .no-data {
+      text-align: center;
+      padding: 50px;
+      font-size: 18px;
+      color: #888;
+      grid-column: 1 / -1;
+    }
+    .stats-container {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 15px;
+      margin-bottom: 25px;
+    }
+    .stat-card {
+      background: rgba(0, 255, 231, 0.1);
+      padding: 20px;
+      border-radius: 10px;
+      border: 1px solid #00ffe7;
+      text-align: center;
+    }
+    .stat-value {
+      font-size: 36px;
+      font-weight: bold;
+      margin: 10px 0;
+    }
+    .stat-pending .stat-value {
+      color: #ff9900;
+      text-shadow: 0 0 10px rgba(255, 153, 0, 0.5);
+    }
+    .stat-received .stat-value {
+      color: #00ff00;
+      text-shadow: 0 0 10px rgba(0, 255, 0, 0.5);
+    }
+    .stat-security .stat-value {
+      color: #00ccff;
+      text-shadow: 0 0 10px rgba(0, 204, 255, 0.5);
+    }
+    .stat-total .stat-value {
+      color: #ffffff;
+      text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+    }
+    .clear-btn {
+      background: linear-gradient(45deg, #ff4444, #cc0000);
+      color: #fff;
+      border: 1px solid #ff4444;
+      width: 100%;
+      margin-top: 10px;
+    }
+    .clear-btn:hover {
+      background: linear-gradient(45deg, #cc0000, #990000);
+      box-shadow: 0 0 15px #ff4444;
+    }
+    .export-btn {
+      background: linear-gradient(45deg, #9933ff, #6600cc);
+      color: #fff;
+      border: 1px solid #9933ff;
+      width: 100%;
+      margin-top: 10px;
+    }
+    .export-btn:hover {
+      background: linear-gradient(45deg, #6600cc, #440099);
+      box-shadow: 0 0 15px #9933ff;
+    }
+    .filter-actions {
+      grid-column: 1 / -1;
+      display: flex;
+      gap: 15px;
+      margin-top: 10px;
+    }
+    .tab-badge {
+      position: absolute;
+      top: -8px;
+      right: -8px;
+      background: #ff4444;
+      color: white;
+      border-radius: 50%;
+      width: 24px;
+      height: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      font-weight: bold;
+    }
+    .loading {
+      text-align: center;
+      padding: 40px;
+      color: #00ffe7;
+      font-size: 18px;
+    }
+    .loading::after {
+      content: '...';
+      animation: dots 1.5s infinite;
+    }
+    @keyframes dots {
+      0%, 20% { content: '.'; }
+      40% { content: '..'; }
+      60%, 100% { content: '...'; }
+    }
+  </style>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
