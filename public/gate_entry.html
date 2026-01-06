@@ -1541,6 +1541,267 @@ function checkMobile() {
   }
 }
 
+    // Upload modal functions
+function showUploadModal() {
+  document.getElementById('uploadModal').classList.add('show');
+}
+
+function hideUploadModal() {
+  document.getElementById('uploadModal').classList.remove('show');
+  resetUploadForm();
+}
+
+function resetUploadForm() {
+  document.getElementById('selectedFileName').textContent = '';
+  document.getElementById('uploadBtn').style.display = 'none';
+  document.getElementById('uploadProgress').style.display = 'none';
+  document.getElementById('uploadResult').style.display = 'none';
+  document.getElementById('uploadArea').style.borderColor = '#4f46e5';
+  document.getElementById('excelFileInput').value = '';
+}
+
+// File handling functions
+function handleDragOver(event) {
+  event.preventDefault();
+  event.stopPropagation();
+  document.getElementById('uploadArea').style.borderColor = '#10b981';
+  document.getElementById('uploadArea').style.background = '#f0f9ff';
+}
+
+function handleDrop(event) {
+  event.preventDefault();
+  event.stopPropagation();
+  document.getElementById('uploadArea').style.borderColor = '#4f46e5';
+  document.getElementById('uploadArea').style.background = 'transparent';
+  
+  const files = event.dataTransfer.files;
+  if (files.length > 0) {
+    handleFile(files[0]);
+  }
+}
+
+function handleFileSelect(event) {
+  const file = event.target.files[0];
+  handleFile(file);
+}
+
+function handleFile(file) {
+  if (!file) return;
+  
+  // Check file type
+  const validTypes = ['application/vnd.ms-excel', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'];
+  if (!validTypes.includes(file.type) && !file.name.match(/\.(xlsx|xls)$/)) {
+    showToast('Please select an Excel file (.xlsx or .xls)');
+    return;
+  }
+  
+  // Check file size (max 10MB)
+  if (file.size > 10 * 1024 * 1024) {
+    showToast('File size should be less than 10MB');
+    return;
+  }
+  
+  // Update UI
+  document.getElementById('selectedFileName').textContent = `Selected: ${file.name} (${(file.size / 1024 / 1024).toFixed(2)} MB)`;
+  document.getElementById('uploadBtn').style.display = 'block';
+  document.getElementById('uploadArea').style.borderColor = '#10b981';
+}
+
+// Upload function
+async function uploadExcelFile() {
+  const fileInput = document.getElementById('excelFileInput');
+  const file = fileInput.files[0];
+  
+  if (!file) {
+    showToast('Please select a file first');
+    return;
+  }
+  
+  const formData = new FormData();
+  formData.append('excelFile', file);
+  
+  // Show progress
+  document.getElementById('uploadProgress').style.display = 'block';
+  document.getElementById('uploadBtn').style.display = 'none';
+  document.getElementById('uploadStatus').textContent = 'Uploading...';
+  document.getElementById('uploadStatus').style.color = '#4f46e5';
+  
+  // Simulate progress
+  let progress = 0;
+  const progressInterval = setInterval(() => {
+    progress += 5;
+    if (progress > 90) clearInterval(progressInterval);
+    document.getElementById('progressBar').style.width = `${progress}%`;
+    document.getElementById('progressText').textContent = `${progress}%`;
+  }, 100);
+  
+  try {
+    const token = localStorage.getItem('token');
+    const response = await fetch('/api/upload-wood-po', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`
+      },
+      body: formData
+    });
+    
+    clearInterval(progressInterval);
+    document.getElementById('progressBar').style.width = '100%';
+    document.getElementById('progressText').textContent = '100%';
+    
+    const result = await response.json();
+    
+    if (result.success) {
+      document.getElementById('uploadStatus').textContent = 'Upload successful!';
+      document.getElementById('uploadStatus').style.color = '#10b981';
+      
+      // Show result
+      const resultDiv = document.getElementById('uploadResult');
+      resultDiv.style.display = 'block';
+      resultDiv.style.background = '#f0f9ff';
+      resultDiv.innerHTML = `
+        <h4 style="color: #10b981; margin-bottom: 10px;"><i class="fas fa-check-circle"></i> Upload Successful</h4>
+        <p><strong>Upload Date:</strong> ${new Date().toLocaleString()}</p>
+        <p><strong>POs Uploaded:</strong> ${result.count}</p>
+        <p><strong>First 10 POs:</strong> ${result.poNumbers.join(', ')}</p>
+        <button onclick="loadUpdatedPOs()" style="margin-top: 10px; padding: 8px 15px; background: #10b981; color: white; border: none; border-radius: 6px; cursor: pointer;">
+          <i class="fas fa-sync"></i> Refresh PO Table
+        </button>
+      `;
+      
+      // Send notification
+      sendUploadNotification(result.count);
+      
+    } else {
+      throw new Error(result.message || 'Upload failed');
+    }
+    
+  } catch (error) {
+    console.error('Upload error:', error);
+    document.getElementById('uploadStatus').textContent = `Error: ${error.message}`;
+    document.getElementById('uploadStatus').style.color = '#ef4444';
+    document.getElementById('progressBar').style.background = '#ef4444';
+    showToast(`Upload failed: ${error.message}`);
+  }
+}
+
+// Load updated POs
+function loadUpdatedPOs() {
+  loadTable('WOOD PO');
+  hideUploadModal();
+  showToast('WOOD PO table refreshed with latest data');
+}
+
+// Download template
+function downloadTemplate() {
+  // Create a simple Excel template
+  const templateData = [
+    ['PO Number', 'Vendor Name', 'Date', 'Material', 'Quantity', 'Rate', 'Amount', 'Status'],
+    ['PO-001', 'ABC Suppliers', '2024-01-15', 'Teak Wood', '100', '1500', '150000', 'Pending'],
+    ['PO-002', 'XYZ Traders', '2024-01-16', 'Pine Wood', '200', '1200', '240000', 'Approved'],
+    ['PO-003', 'LMN Enterprises', '2024-01-17', 'MDF Board', '150', '800', '120000', 'Completed']
+  ];
+  
+  const ws = XLSX.utils.aoa_to_sheet(templateData);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'WOOD PO Template');
+  
+  // Download
+  XLSX.writeFile(wb, 'WOOD_PO_Template.xlsx');
+  showToast('Template downloaded successfully');
+}
+
+// Send notification about upload
+async function sendUploadNotification(poCount) {
+  try {
+    const token = localStorage.getItem('token');
+    await fetch('/api/notifications', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify({
+        title: 'WOOD PO Uploaded',
+        message: `${currentUser.username} uploaded ${poCount} PO(s)`,
+        type: 'success',
+        userId: 'all' // Or specific users
+      })
+    });
+  } catch (error) {
+    console.error('Failed to send notification:', error);
+  }
+}
+
+// Modify loadTable function to show upload date
+function loadTable(category) {
+  currentCategory = category;
+  
+  if (category === 'WOOD PO') {
+    // Use new endpoint that includes upload history
+    fetch(`/api/wood-po-with-history`)
+      .then(res => res.json())
+      .then(res => {
+        if (res.success) {
+          // Process data to include upload date column
+          processWoodPOData(res.data);
+        }
+      })
+      .catch(() => {
+        // Fallback to original endpoint
+        fetch(`/api/excel-data/${category}`)
+          .then(res => res.json())
+          .then(res => {
+            if (res.success) {
+              originalData = res.data;
+              renderTable(res.data);
+            }
+          });
+      });
+  } else {
+    // Original code for other categories
+    fetch(`/api/excel-data/${category}`)
+      .then(res => res.json())
+      .then(res => {
+        if (res.success) {
+          originalData = res.data;
+          renderTable(res.data);
+        }
+      });
+  }
+}
+
+// Process WOOD PO data with upload history
+function processWoodPOData(data) {
+  // Transform data to include upload date
+  // This depends on your database structure
+  
+  // Example transformation:
+  const headers = ['PO Number', 'Vendor', 'Date', 'Material', 'Quantity', 'Rate', 'Amount', 'Status', 'Uploaded By', 'Upload Date'];
+  
+  const rows = data.map(item => [
+    item.poNumber,
+    item.vendor,
+    item.date,
+    item.material,
+    item.quantity,
+    item.rate,
+    item.amount,
+    item.status,
+    item.uploadedBy,
+    new Date(item.uploadDate).toLocaleDateString()
+  ]);
+  
+  originalData = [headers, ...rows];
+  renderTable(originalData);
+  
+  // Update material filter
+  const filter = document.getElementById("materialFilter");
+  const materialSet = new Set(rows.map(row => row[3]));
+  filter.innerHTML = '<option value="">All Materials</option>' + 
+                    [...materialSet].map(m => `<option>${m}</option>`).join('');
+  filter.style.display = 'block';
+}
 // Setup all event listeners
 function setupEventListeners() {
   // Window resize handler
