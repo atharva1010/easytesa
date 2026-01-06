@@ -1264,12 +1264,13 @@ th {
     </div>
     
     <div class="data-buttons" id="topButtons">
-      <button class="data-btn" onclick="loadTable('WOOD PO')">WOOD PO</button>
-      <button class="data-btn" onclick="loadTable('CONTACTS')">CONTACTS</button>
-      <button class="data-btn" onclick="loadTable('ID PASSWORD')">ID PASSWORD</button>
-      <button class="data-btn" onclick="loadTable('SHIFT SCHEDULE')">SHIFT SCHEDULE</button>
-      <button class="data-btn" onclick="loadTable('T-CODE')">T-CODE</button>
-    </div>
+  <button class="data-btn" onclick="loadTable('WOOD PO')">WOOD PO</button>
+  <button class="data-btn" onclick="showUploadModal()">Upload WOOD PO</button>
+  <button class="data-btn" onclick="loadTable('CONTACTS')">CONTACTS</button>
+  <button class="data-btn" onclick="loadTable('ID PASSWORD')">ID PASSWORD</button>
+  <button class="data-btn" onclick="loadTable('SHIFT SCHEDULE')">SHIFT SCHEDULE</button>
+  <button class="data-btn" onclick="loadTable('T-CODE')">T-CODE</button>
+</div>
 
     <!-- Table Display Area -->
     <div class="table-container" id="tableSection">
@@ -1320,6 +1321,66 @@ th {
     </div>
   </div>
 
+  <!-- Upload Modal -->
+<div id="uploadModal" class="modal-overlay">
+  <div class="team-modal" style="max-width: 500px;">
+    <button class="close-modal" onclick="hideUploadModal()">
+      <i class="fas fa-times"></i>
+    </button>
+    <h3><i class="fas fa-file-upload"></i> Upload WOOD PO Excel</h3>
+    
+    <div style="margin: 20px 0;">
+      <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 15px;">
+        <h4 style="margin-bottom: 10px;"><i class="fas fa-info-circle"></i> Instructions:</h4>
+        <ul style="margin-left: 20px; font-size: 0.9rem;">
+          <li>Only .xlsx or .xls files are allowed</li>
+          <li>First row should contain column headers</li>
+          <li>PO Number should be in first column</li>
+          <li>File should follow the standard format</li>
+        </ul>
+      </div>
+      
+      <div id="uploadArea" style="border: 2px dashed #4f46e5; border-radius: 10px; padding: 30px; text-align: center; cursor: pointer; transition: all 0.3s;"
+           ondrop="handleDrop(event)" ondragover="handleDragOver(event)">
+        <i class="fas fa-cloud-upload-alt" style="font-size: 48px; color: #4f46e5; margin-bottom: 15px;"></i>
+        <h4 style="margin-bottom: 10px;">Drag & Drop Excel File Here</h4>
+        <p style="color: #666; margin-bottom: 20px;">or</p>
+        <input type="file" id="excelFileInput" accept=".xlsx,.xls" style="display: none;" onchange="handleFileSelect(event)">
+        <button onclick="document.getElementById('excelFileInput').click()" 
+                style="background: linear-gradient(135deg, var(--primary), var(--primary-dark)); color: white; border: none; padding: 10px 25px; border-radius: 8px; cursor: pointer; font-weight: 500;">
+          <i class="fas fa-folder-open"></i> Browse Files
+        </button>
+        <p id="selectedFileName" style="margin-top: 15px; font-size: 0.9rem; color: #666;"></p>
+      </div>
+      
+      <div style="margin-top: 20px; display: none;" id="uploadProgress">
+        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
+          <div style="flex: 1; height: 8px; background: #e5e7eb; border-radius: 4px; overflow: hidden;">
+            <div id="progressBar" style="height: 100%; background: #10b981; width: 0%; transition: width 0.3s;"></div>
+          </div>
+          <span id="progressText">0%</span>
+        </div>
+        <p id="uploadStatus" style="text-align: center; font-size: 0.9rem;"></p>
+      </div>
+      
+      <button onclick="uploadExcelFile()" 
+              id="uploadBtn"
+              style="width: 100%; margin-top: 20px; padding: 12px; background: linear-gradient(135deg, var(--primary), var(--primary-dark)); color: white; border: none; border-radius: 8px; font-weight: 500; cursor: pointer; display: none;">
+        <i class="fas fa-upload"></i> Upload Excel File
+      </button>
+      
+      <div id="uploadResult" style="display: none; margin-top: 20px; padding: 15px; border-radius: 8px; background: #f0f9ff;"></div>
+    </div>
+    
+    <!-- Excel Format Template -->
+    <div style="margin-top: 20px; border-top: 1px solid #e5e7eb; padding-top: 15px;">
+      <button onclick="downloadTemplate()" 
+              style="background: none; border: 1px solid #4f46e5; color: #4f46e5; padding: 8px 15px; border-radius: 6px; cursor: pointer; font-size: 0.9rem;">
+        <i class="fas fa-download"></i> Download Template
+      </button>
+    </div>
+  </div>
+</div>
   <!-- Chat Box -->
   <div id="chatBox" class="chat-box">
     <div class="chat-header">
