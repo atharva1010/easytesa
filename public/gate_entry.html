@@ -1726,6 +1726,8 @@ let currentPage = 1;
 let isLoadingMessages = false;
 let hasMoreMessages = true;
 let unreadUpdatesCount = 0;
+let editingPasswordRowIndex = -1;
+let editingPasswordRowData = null;
 
 // Initialize the app when page loads
 window.onload = function() {
@@ -1759,44 +1761,12 @@ function initApp() {
     
     // Load initial data
     loadUnreadCounts();
-    // Remove this line: loadLastActiveChat();
     loadNotifications();
   }
   
   initNotifications();
 }
-    async function loadLastActiveChat() {
-  const lastActiveChatId = localStorage.getItem('lastActiveChat');
-  if (lastActiveChatId) {
-    try {
-      const userResponse = await fetch(`/api/users`);
-      const users = await userResponse.json();
-      const chatUser = users.find(u => u.userId === lastActiveChatId);
-      
-      if (chatUser) {
-        const messagesResponse = await fetch(`/api/chat-history/${userId}/${lastActiveChatId}`);
-        const { messages } = await messagesResponse.json();
-        
-        // Just store the messages, don't open the chat UI
-        allMessages = messages || [];
-        
-        // Update unread counts if needed
-        const unread = messages.filter(m => 
-          m.from === lastActiveChatId && 
-          m.to === userId && 
-          !m.seen
-        ).length;
-        
-        if (unread > 0) {
-          unreadSenders.add(lastActiveChatId);
-          updateTotalUnreadCount();
-        }
-      }
-    } catch (error) {
-      console.error("Failed to load last active chat:", error);
-    }
-  }
-}
+
 // Check if device is mobile
 function checkMobile() {
   isMobile = window.matchMedia("(max-width: 768px)").matches || 
@@ -1813,7 +1783,79 @@ function checkMobile() {
   }
 }
 
-    // Upload modal functions
+// Setup all event listeners
+function setupEventListeners() {
+  // Window resize handler
+  window.addEventListener('resize', checkMobile);
+
+  // Click outside handlers
+  window.addEventListener('click', function(e) {
+    if (!document.getElementById('profileImage').contains(e.target) && 
+        !document.getElementById('profileCard').contains(e.target)) {
+      hideProfileCard();
+    }
+    
+    if (!document.getElementById('notification-icon').contains(e.target) && 
+        !document.getElementById('updatePanel').contains(e.target)) {
+      hideNotifications();
+    }
+    
+    if (!document.getElementById('message-icon').contains(e.target) && 
+        !document.getElementById('chatUserList').contains(e.target) &&
+        !document.getElementById('chatBox').contains(e.target) &&
+        !document.getElementById('fullScreenChat').contains(e.target) &&
+        !document.getElementById('fullScreenUserList').contains(e.target)) {
+      hideChatUserList();
+    }
+
+    if (!e.target.closest('.message-content') && !e.target.closest('.context-menu')) {
+      document.getElementById('contextMenu').style.display = 'none';
+    }
+    
+    if (!e.target.closest('#passwordEditModal') && !e.target.closest('.edit-btn')) {
+      hidePasswordEditModal();
+    }
+    
+    if (!e.target.closest('#uploadModal') && !e.target.closest('#uploadSection')) {
+      hideUploadModal();
+    }
+  });
+
+  // Active nav item highlighting
+  document.querySelectorAll('.nav-item').forEach(item => {
+    item.addEventListener('click', function() {
+      document.querySelectorAll('.nav-item').forEach(nav => nav.classList.remove('active'));
+      this.classList.add('active');
+    });
+  });
+
+  // Infinite scroll for chat messages
+  const chatContainer = isMobile ? 
+    document.getElementById('fullChatMessages') : 
+    document.getElementById('chatMessages');
+  
+  if (chatContainer) {
+    chatContainer.addEventListener('scroll', function() {
+      if (this.scrollTop < 100 && !isLoadingMessages && hasMoreMessages && activeChatUser) {
+        loadMoreMessages();
+      }
+    });
+  }
+  
+  // Password input real-time validation
+  const newPasswordInput = document.getElementById('newPassword');
+  const confirmPasswordInput = document.getElementById('confirmPassword');
+  
+  if (newPasswordInput) {
+    newPasswordInput.addEventListener('input', checkPasswordStrength);
+  }
+  
+  if (confirmPasswordInput) {
+    confirmPasswordInput.addEventListener('input', checkPasswordMatch);
+  }
+}
+
+// WOOD PO Upload Functions
 function showUploadModal() {
   document.getElementById('uploadModal').classList.add('show');
 }
@@ -1832,7 +1874,6 @@ function resetUploadForm() {
   document.getElementById('excelFileInput').value = '';
 }
 
-// File handling functions
 function handleDragOver(event) {
   event.preventDefault();
   event.stopPropagation();
@@ -1879,7 +1920,6 @@ function handleFile(file) {
   document.getElementById('uploadArea').style.borderColor = '#10b981';
 }
 
-// Upload function
 async function uploadExcelFile() {
   const fileInput = document.getElementById('excelFileInput');
   const file = fileInput.files[0];
@@ -1893,19 +1933,16 @@ async function uploadExcelFile() {
   formData.append('excelFile', file);
   
   // Show progress
-  document.getElementById('uploadProgress').style.display = 'block';
-  document.getElementById('uploadBtn').style.display = 'none';
-  document.getElementById('uploadStatus').textContent = 'Uploading...';
-  document.getElementById('uploadStatus').style.color = '#4f46e5';
+  const uploadBtn = document.getElementById('uploadBtn');
+  const uploadProgress = document.getElementById('uploadProgress');
+  const uploadStatus = document.getElementById('uploadStatus');
+  const progressBar = document.getElementById('progressBar');
+  const progressText = document.getElementById('progressText');
   
-  // Simulate progress
-  let progress = 0;
-  const progressInterval = setInterval(() => {
-    progress += 5;
-    if (progress > 90) clearInterval(progressInterval);
-    document.getElementById('progressBar').style.width = `${progress}%`;
-    document.getElementById('progressText').textContent = `${progress}%`;
-  }, 100);
+  uploadProgress.style.display = 'block';
+  uploadBtn.style.display = 'none';
+  uploadStatus.textContent = 'Uploading...';
+  uploadStatus.style.color = '#4f46e5';
   
   try {
     const token = localStorage.getItem('token');
@@ -1917,32 +1954,71 @@ async function uploadExcelFile() {
       body: formData
     });
     
-    clearInterval(progressInterval);
-    document.getElementById('progressBar').style.width = '100%';
-    document.getElementById('progressText').textContent = '100%';
-    
     const result = await response.json();
     
     if (result.success) {
-      document.getElementById('uploadStatus').textContent = 'Upload successful!';
-      document.getElementById('uploadStatus').style.color = '#10b981';
+      progressBar.style.width = '100%';
+      progressText.textContent = '100%';
+      uploadStatus.textContent = 'Upload successful!';
+      uploadStatus.style.color = '#10b981';
       
-      // Show result
+      // Update last upload time
+      document.getElementById('lastUploadTime').textContent = new Date().toLocaleString();
+      
+      // Show success message
       const resultDiv = document.getElementById('uploadResult');
       resultDiv.style.display = 'block';
       resultDiv.style.background = '#f0f9ff';
       resultDiv.innerHTML = `
-        <h4 style="color: #10b981; margin-bottom: 10px;"><i class="fas fa-check-circle"></i> Upload Successful</h4>
-        <p><strong>Upload Date:</strong> ${new Date().toLocaleString()}</p>
-        <p><strong>POs Uploaded:</strong> ${result.count}</p>
-        <p><strong>First 10 POs:</strong> ${result.poNumbers.join(', ')}</p>
-        <button onclick="loadUpdatedPOs()" style="margin-top: 10px; padding: 8px 15px; background: #10b981; color: white; border: none; border-radius: 6px; cursor: pointer;">
-          <i class="fas fa-sync"></i> Refresh PO Table
-        </button>
+        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
+          <i class="fas fa-check-circle" style="color: #10b981; font-size: 24px;"></i>
+          <div>
+            <h4 style="color: #10b981; margin: 0;">Upload Successful!</h4>
+            <p style="margin: 5px 0 0 0; color: #666;">${result.count} POs uploaded</p>
+          </div>
+        </div>
+        <div style="background: white; padding: 10px; border-radius: 6px; margin-top: 10px;">
+          <p style="margin: 5px 0;"><strong>Uploaded By:</strong> ${currentUser?.username || 'User'}</p>
+          <p style="margin: 5px 0;"><strong>Upload Time:</strong> ${new Date().toLocaleString()}</p>
+          <p style="margin: 5px 0;"><strong>File:</strong> ${file.name}</p>
+        </div>
+        <div style="display: flex; gap: 10px; margin-top: 15px;">
+          <button onclick="loadTable('WOOD PO')" 
+                  style="flex: 1; padding: 10px; background: #10b981; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 500;">
+            <i class="fas fa-sync"></i> Refresh Table
+          </button>
+          <button onclick="hideUploadModal()" 
+                  style="flex: 1; padding: 10px; background: #6b7280; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 500;">
+            <i class="fas fa-times"></i> Close
+          </button>
+        </div>
       `;
+      
+      // Save upload history
+      try {
+        await fetch('/api/wood-po/save-upload-history', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({
+            userId: currentUser.userId,
+            fileName: file.name,
+            recordCount: result.count
+          })
+        });
+      } catch (error) {
+        console.error('Failed to save upload history:', error);
+      }
       
       // Send notification
       sendUploadNotification(result.count);
+      
+      // Auto-refresh table after 2 seconds
+      setTimeout(() => {
+        loadTable('WOOD PO');
+      }, 2000);
       
     } else {
       throw new Error(result.message || 'Upload failed');
@@ -1950,37 +2026,417 @@ async function uploadExcelFile() {
     
   } catch (error) {
     console.error('Upload error:', error);
-    document.getElementById('uploadStatus').textContent = `Error: ${error.message}`;
-    document.getElementById('uploadStatus').style.color = '#ef4444';
-    document.getElementById('progressBar').style.background = '#ef4444';
+    uploadStatus.textContent = `Error: ${error.message}`;
+    uploadStatus.style.color = '#ef4444';
+    progressBar.style.background = '#ef4444';
     showToast(`Upload failed: ${error.message}`);
   }
 }
 
-// Load updated POs
-function loadUpdatedPOs() {
-  loadTable('WOOD PO');
-  hideUploadModal();
-  showToast('WOOD PO table refreshed with latest data');
+function exportWoodPO() {
+  if (originalData.length === 0) {
+    showToast('No data to export');
+    return;
+  }
+  
+  try {
+    const wb = XLSX.utils.book_new();
+    const ws = XLSX.utils.aoa_to_sheet(originalData);
+    
+    // Add column widths
+    const colWidths = originalData[0].map((_, index) => ({ wch: 20 }));
+    ws['!cols'] = colWidths;
+    
+    // Add workbook
+    XLSX.utils.book_append_sheet(wb, ws, 'WOOD PO Data');
+    
+    // Download
+    XLSX.writeFile(wb, `WOOD_PO_${new Date().toISOString().split('T')[0]}.xlsx`);
+    showToast('Data exported successfully');
+    
+  } catch (error) {
+    console.error('Export error:', error);
+    showToast('Error exporting data');
+  }
 }
 
-// Download template
 function downloadTemplate() {
-  // Create a simple Excel template
-  const templateData = [
-    ['PO Number', 'Vendor Name', 'Date', 'Material', 'Quantity', 'Rate', 'Amount', 'Status'],
-    ['PO-001', 'ABC Suppliers', '2024-01-15', 'Teak Wood', '100', '1500', '150000', 'Pending'],
-    ['PO-002', 'XYZ Traders', '2024-01-16', 'Pine Wood', '200', '1200', '240000', 'Approved'],
-    ['PO-003', 'LMN Enterprises', '2024-01-17', 'MDF Board', '150', '800', '120000', 'Completed']
-  ];
+  try {
+    const templateData = [
+      ['PO Number', 'Vendor Name', 'PO Date', 'Material Type', 'Quantity (Cubic Feet)', 'Rate (₹/CFT)', 'Amount (₹)', 'Status', 'Delivery Date', 'Remarks'],
+      ['PO-WD-2024-001', 'ABC Wood Suppliers', '2024-01-15', 'Teak Wood', '100', '1500', '150000', 'Pending', '2024-01-30', 'First quality required'],
+      ['PO-WD-2024-002', 'XYZ Timber Mart', '2024-01-16', 'Sagwan Wood', '200', '1200', '240000', 'Approved', '2024-02-10', 'Grade A quality'],
+      ['PO-WD-2024-003', 'LMN Forest Products', '2024-01-17', 'Pine Wood', '150', '800', '120000', 'Delivered', '2024-01-25', 'Completed delivery'],
+      ['PO-WD-2024-004', 'PQR Hardwoods', '2024-01-18', 'MDF Board', '300', '600', '180000', 'In Progress', '2024-02-15', 'Urgent requirement']
+    ];
+    
+    const wb = XLSX.utils.book_new();
+    const ws = XLSX.utils.aoa_to_sheet(templateData);
+    
+    // Set column widths
+    const colWidths = [
+      { wch: 15 }, { wch: 20 }, { wch: 12 }, { wch: 15 }, { wch: 15 },
+      { wch: 12 }, { wch: 15 }, { wch: 12 }, { wch: 15 }, { wch: 25 }
+    ];
+    ws['!cols'] = colWidths;
+    
+    XLSX.utils.book_append_sheet(wb, ws, 'WOOD PO Template');
+    XLSX.writeFile(wb, 'WOOD_PO_Template.xlsx');
+    
+    showToast('Template downloaded successfully');
+    
+  } catch (error) {
+    console.error('Error creating template:', error);
+    showToast('Error downloading template');
+  }
+}
+
+async function loadLastUploadTime() {
+  try {
+    const token = localStorage.getItem('token');
+    const response = await fetch('/api/wood-po/last-upload', {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+    
+    if (response.ok) {
+      const data = await response.json();
+      if (data.success && data.lastUpload) {
+        document.getElementById('lastUploadTime').textContent = 
+          new Date(data.lastUpload).toLocaleString();
+      }
+    }
+  } catch (error) {
+    console.error('Error loading last upload time:', error);
+  }
+}
+
+function updateLastUploadTimeFromData(data) {
+  if (data.length > 1 && data[0].length > 0) {
+    const uploadDates = data.slice(1)
+      .map(row => row[row.length - 1])
+      .filter(date => date);
+    
+    if (uploadDates.length > 0) {
+      const latestDate = uploadDates.reduce((latest, date) => {
+        try {
+          const dateObj = new Date(date);
+          return dateObj > latest ? dateObj : latest;
+        } catch {
+          return latest;
+        }
+      }, new Date(0));
+      
+      if (latestDate.getTime() > 0) {
+        document.getElementById('lastUploadTime').textContent = 
+          latestDate.toLocaleString();
+      }
+    }
+  }
+}
+
+// Modified loadTable function
+function loadTable(category) {
+  currentCategory = category;
   
-  const ws = XLSX.utils.aoa_to_sheet(templateData);
-  const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, 'WOOD PO Template');
+  // Show/hide upload section
+  const uploadSection = document.getElementById('uploadSection');
+  if (category === 'WOOD PO') {
+    uploadSection.style.display = 'block';
+    loadLastUploadTime();
+  } else {
+    uploadSection.style.display = 'none';
+  }
   
-  // Download
-  XLSX.writeFile(wb, 'WOOD_PO_Template.xlsx');
-  showToast('Template downloaded successfully');
+  fetch(`/api/excel-data/${category}`)
+    .then(res => res.json())
+    .then(res => {
+      if (res.success) {
+        originalData = res.data;
+        renderTable(res.data);
+
+        const filter = document.getElementById("materialFilter");
+        if (category === 'WOOD PO') {
+          const materialSet = new Set(res.data.slice(1).map(row => row[3]));
+          filter.innerHTML = '<option value="">All Materials</option>' + 
+                             [...materialSet].map(m => `<option>${m}</option>`).join('');
+          filter.style.display = 'block';
+          
+          // Update last upload time if available
+          updateLastUploadTimeFromData(res.data);
+        } else {
+          filter.style.display = 'none';
+        }
+      }
+    })
+    .catch(error => {
+      console.error('Error loading table:', error);
+      showToast('Failed to load data');
+    });
+}
+
+// Render table with edit functionality for ID PASSWORD
+function renderTable(data) {
+  const thead = document.querySelector("#dataTable thead");
+  const tbody = document.querySelector("#dataTable tbody");
+  thead.innerHTML = "";
+  tbody.innerHTML = "";
+
+  if (data.length === 0) return;
+
+  const table = document.getElementById("dataTable");
+  table.className = currentCategory === 'SHIFT SCHEDULE' ? 'shift-schedule-freeze' : '';
+
+  // Create header row
+  const headerRow = document.createElement("tr");
+  data[0].forEach((col, index) => {
+    const th = document.createElement("th");
+    th.textContent = col;
+    if (currentCategory === 'SHIFT SCHEDULE' && index < 5) {
+      th.classList.add('freeze-col');
+    }
+    headerRow.appendChild(th);
+  });
+  thead.appendChild(headerRow);
+
+  // Create data rows
+  data.slice(1).forEach((row, rowIndex) => {
+    const tr = document.createElement("tr");
+    tr.dataset.rowIndex = rowIndex;
+
+    const rowText = row.map(cell => String(cell).toUpperCase()).join(" ");
+    if (currentCategory === 'WOOD PO') {
+      if (rowText.includes("RAMPUR")) tr.style.background = "#00ff40";
+      else if (rowText.includes("SITAPUR")) tr.style.background = "#ff00ff";
+      else if (rowText.includes("OTHER")) tr.style.background = "#00ffff";
+    }
+
+    row.forEach((cell, colIndex) => {
+      const td = document.createElement("td");
+      const value = typeof cell === 'object' ? (cell.text || '') : String(cell);
+
+      if (currentCategory === 'WOOD PO' && colIndex === 0) {
+        td.innerHTML = `<button onclick="copyText('${value}', 'PO Copied')" style="background:var(--primary); color:white; border:none; padding:0.3rem 0.6rem; border-radius:4px; cursor:pointer;">${value}</button>`;
+      } else if (currentCategory === 'ID PASSWORD' && colIndex === 1) {
+        // Password column with edit button
+        td.className = 'password-cell';
+        td.innerHTML = `
+          <div style="display:flex; align-items:center; gap:5px;">
+            <span id="password-${rowIndex}" style="font-family:monospace;">${isMobile ? value : '••••••••'}</span>
+            <button onclick="editPassword(${rowIndex})" class="edit-btn">
+              <i class="fas fa-edit"></i> Edit
+            </button>
+          </div>
+        `;
+      } else {
+        td.textContent = value;
+      }
+
+      if (currentCategory === 'SHIFT SCHEDULE') {
+        if (rowIndex < 2 || colIndex < 5) td.style.background = 'rgba(173, 216, 230, 0.3)';
+        if (value === 'R') td.style.background = 'green';
+        else if (value === 'L') td.style.background = 'red';
+        else if (value === 'G') td.style.background = 'yellow';
+      }
+
+      if (currentCategory === 'SHIFT SCHEDULE' && colIndex < 5) {
+        td.classList.add('freeze-col');
+      }
+
+      tr.appendChild(td);
+    });
+
+    tbody.appendChild(tr);
+  });
+}
+
+// Password Edit Functions
+function editPassword(rowIndex) {
+  editingPasswordRowIndex = rowIndex;
+  editingPasswordRowData = originalData[rowIndex + 1]; // +1 because originalData[0] is header
+  
+  document.getElementById('editUserId').textContent = editingPasswordRowData[0] || '';
+  document.getElementById('editPlatform').textContent = editingPasswordRowData[2] || '';
+  document.getElementById('editUsername').textContent = editingPasswordRowData[3] || '';
+  
+  // Clear previous values
+  document.getElementById('newPassword').value = '';
+  document.getElementById('confirmPassword').value = '';
+  document.getElementById('passwordStrength').style.display = 'none';
+  document.getElementById('passwordUpdateResult').style.display = 'none';
+  
+  // Show modal
+  document.getElementById('passwordEditModal').classList.add('show');
+}
+
+function hidePasswordEditModal() {
+  document.getElementById('passwordEditModal').classList.remove('show');
+  editingPasswordRowIndex = -1;
+  editingPasswordRowData = null;
+}
+
+function togglePasswordVisibility() {
+  const showCheckbox = document.getElementById('showPasswordCheckbox');
+  const newPasswordInput = document.getElementById('newPassword');
+  const confirmPasswordInput = document.getElementById('confirmPassword');
+  
+  if (showCheckbox.checked) {
+    newPasswordInput.type = 'text';
+    confirmPasswordInput.type = 'text';
+  } else {
+    newPasswordInput.type = 'password';
+    confirmPasswordInput.type = 'password';
+  }
+}
+
+function checkPasswordStrength() {
+  const password = document.getElementById('newPassword').value;
+  const strengthDiv = document.getElementById('passwordStrength');
+  
+  if (!password) {
+    strengthDiv.style.display = 'none';
+    return;
+  }
+  
+  let strength = 0;
+  let feedback = '';
+  
+  // Check length
+  if (password.length >= 8) strength++;
+  if (password.length >= 12) strength++;
+  
+  // Check complexity
+  if (/[A-Z]/.test(password)) strength++;
+  if (/[a-z]/.test(password)) strength++;
+  if (/[0-9]/.test(password)) strength++;
+  if (/[^A-Za-z0-9]/.test(password)) strength++;
+  
+  // Determine strength level
+  if (strength <= 2) {
+    strengthDiv.className = 'weak';
+    feedback = 'Weak password';
+  } else if (strength <= 4) {
+    strengthDiv.className = 'medium';
+    feedback = 'Medium password';
+  } else {
+    strengthDiv.className = 'strong';
+    feedback = 'Strong password';
+  }
+  
+  strengthDiv.textContent = feedback;
+  strengthDiv.style.display = 'block';
+}
+
+function checkPasswordMatch() {
+  const password = document.getElementById('newPassword').value;
+  const confirm = document.getElementById('confirmPassword').value;
+  
+  if (confirm && password !== confirm) {
+    document.getElementById('confirmPassword').style.borderColor = '#ef4444';
+  } else {
+    document.getElementById('confirmPassword').style.borderColor = '#e5e7eb';
+  }
+}
+
+function generatePassword() {
+  const length = 12;
+  const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*";
+  let password = "";
+  
+  for (let i = 0; i < length; i++) {
+    const randomIndex = Math.floor(Math.random() * charset.length);
+    password += charset[randomIndex];
+  }
+  
+  document.getElementById('newPassword').value = password;
+  document.getElementById('confirmPassword').value = password;
+  
+  // Trigger strength check
+  checkPasswordStrength();
+  checkPasswordMatch();
+}
+
+async function updatePassword() {
+  const newPassword = document.getElementById('newPassword').value;
+  const confirmPassword = document.getElementById('confirmPassword').value;
+  const resultDiv = document.getElementById('passwordUpdateResult');
+  
+  // Validation
+  if (!newPassword) {
+    resultDiv.className = 'error';
+    resultDiv.textContent = 'Please enter a new password';
+    resultDiv.style.display = 'block';
+    return;
+  }
+  
+  if (newPassword !== confirmPassword) {
+    resultDiv.className = 'error';
+    resultDiv.textContent = 'Passwords do not match';
+    resultDiv.style.display = 'block';
+    return;
+  }
+  
+  if (newPassword.length < 6) {
+    resultDiv.className = 'error';
+    resultDiv.textContent = 'Password must be at least 6 characters long';
+    resultDiv.style.display = 'block';
+    return;
+  }
+  
+  try {
+    const token = localStorage.getItem('token');
+    const response = await fetch('/api/update-password', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify({
+        rowIndex: editingPasswordRowIndex,
+        userId: editingPasswordRowData[0],
+        platform: editingPasswordRowData[2],
+        username: editingPasswordRowData[3],
+        newPassword: newPassword,
+        updatedBy: currentUser.userId
+      })
+    });
+    
+    const result = await response.json();
+    
+    if (result.success) {
+      // Update local data
+      originalData[editingPasswordRowIndex + 1][1] = newPassword;
+      
+      // Update UI
+      const passwordSpan = document.getElementById(`password-${editingPasswordRowIndex}`);
+      if (passwordSpan) {
+        passwordSpan.textContent = isMobile ? newPassword : '••••••••';
+      }
+      
+      // Show success message
+      resultDiv.className = 'success';
+      resultDiv.textContent = 'Password updated successfully!';
+      resultDiv.style.display = 'block';
+      
+      // Show toast
+      showToast('Password updated successfully');
+      
+      // Close modal after 2 seconds
+      setTimeout(() => {
+        hidePasswordEditModal();
+      }, 2000);
+      
+    } else {
+      throw new Error(result.message || 'Failed to update password');
+    }
+    
+  } catch (error) {
+    console.error('Error updating password:', error);
+    resultDiv.className = 'error';
+    resultDiv.textContent = `Error: ${error.message}`;
+    resultDiv.style.display = 'block';
+  }
 }
 
 // Send notification about upload
@@ -1997,7 +2453,7 @@ async function sendUploadNotification(poCount) {
         title: 'WOOD PO Uploaded',
         message: `${currentUser.username} uploaded ${poCount} PO(s)`,
         type: 'success',
-        userId: 'all' // Or specific users
+        userId: 'all'
       })
     });
   } catch (error) {
@@ -2005,128 +2461,7 @@ async function sendUploadNotification(poCount) {
   }
 }
 
-// Modify loadTable function to show upload date
-function loadTable(category) {
-  currentCategory = category;
-  
-  if (category === 'WOOD PO') {
-    // Use new endpoint that includes upload history
-    fetch(`/api/wood-po-with-history`)
-      .then(res => res.json())
-      .then(res => {
-        if (res.success) {
-          // Process data to include upload date column
-          processWoodPOData(res.data);
-        }
-      })
-      .catch(() => {
-        // Fallback to original endpoint
-        fetch(`/api/excel-data/${category}`)
-          .then(res => res.json())
-          .then(res => {
-            if (res.success) {
-              originalData = res.data;
-              renderTable(res.data);
-            }
-          });
-      });
-  } else {
-    // Original code for other categories
-    fetch(`/api/excel-data/${category}`)
-      .then(res => res.json())
-      .then(res => {
-        if (res.success) {
-          originalData = res.data;
-          renderTable(res.data);
-        }
-      });
-  }
-}
-
-// Process WOOD PO data with upload history
-function processWoodPOData(data) {
-  // Transform data to include upload date
-  // This depends on your database structure
-  
-  // Example transformation:
-  const headers = ['PO Number', 'Vendor', 'Date', 'Material', 'Quantity', 'Rate', 'Amount', 'Status', 'Uploaded By', 'Upload Date'];
-  
-  const rows = data.map(item => [
-    item.poNumber,
-    item.vendor,
-    item.date,
-    item.material,
-    item.quantity,
-    item.rate,
-    item.amount,
-    item.status,
-    item.uploadedBy,
-    new Date(item.uploadDate).toLocaleDateString()
-  ]);
-  
-  originalData = [headers, ...rows];
-  renderTable(originalData);
-  
-  // Update material filter
-  const filter = document.getElementById("materialFilter");
-  const materialSet = new Set(rows.map(row => row[3]));
-  filter.innerHTML = '<option value="">All Materials</option>' + 
-                    [...materialSet].map(m => `<option>${m}</option>`).join('');
-  filter.style.display = 'block';
-}
-// Setup all event listeners
-function setupEventListeners() {
-  // Window resize handler
-  window.addEventListener('resize', checkMobile);
-
-  // Click outside handlers
-  window.addEventListener('click', function(e) {
-    if (!document.getElementById('profileImage').contains(e.target) && 
-        !document.getElementById('profileCard').contains(e.target)) {
-      hideProfileCard();
-    }
-    
-    if (!document.getElementById('notification-icon').contains(e.target) && 
-        !document.getElementById('updatePanel').contains(e.target)) {
-      hideNotifications();
-    }
-    
-    if (!document.getElementById('message-icon').contains(e.target) && 
-        !document.getElementById('chatUserList').contains(e.target) &&
-        !document.getElementById('chatBox').contains(e.target) &&
-        !document.getElementById('fullScreenChat').contains(e.target) &&
-        !document.getElementById('fullScreenUserList').contains(e.target)) {
-      hideChatUserList();
-    }
-
-    if (!e.target.closest('.message-content') && !e.target.closest('.context-menu')) {
-      document.getElementById('contextMenu').style.display = 'none';
-    }
-  });
-
-  // Active nav item highlighting
-  document.querySelectorAll('.nav-item').forEach(item => {
-    item.addEventListener('click', function() {
-      document.querySelectorAll('.nav-item').forEach(nav => nav.classList.remove('active'));
-      this.classList.add('active');
-    });
-  });
-
-  // Infinite scroll for chat messages
-  const chatContainer = isMobile ? 
-    document.getElementById('fullChatMessages') : 
-    document.getElementById('chatMessages');
-  
-  if (chatContainer) {
-    chatContainer.addEventListener('scroll', function() {
-      if (this.scrollTop < 100 && !isLoadingMessages && hasMoreMessages && activeChatUser) {
-        loadMoreMessages();
-      }
-    });
-  }
-}
-
-// Load more messages for infinite scroll
+// Existing functions (unchanged from your code)
 async function loadMoreMessages() {
   if (isLoadingMessages || !hasMoreMessages || !activeChatUser) return;
   
@@ -2166,7 +2501,6 @@ async function loadMoreMessages() {
   }
 }
 
-// Show loading indicator
 function showLoadingIndicator() {
   const loadingDiv = document.createElement('div');
   loadingDiv.className = 'loading-messages';
@@ -2179,7 +2513,6 @@ function showLoadingIndicator() {
   chatContainer.prepend(loadingDiv);
 }
 
-// Hide loading indicator
 function hideLoadingIndicator() {
   const loadingDiv = document.querySelector('.loading-messages');
   if (loadingDiv) {
@@ -2187,9 +2520,8 @@ function hideLoadingIndicator() {
   }
 }
 
-// Setup socket listeners
+// Setup socket listeners (existing code)
 function setupSocketListeners() {
-  // Load messages from server
   socket.on("loadMessages", (messages) => {
     allMessages = messages;
 
@@ -2205,7 +2537,6 @@ function setupSocketListeners() {
     if (activeChatUser) renderMessages();
   });
 
-  // New message received
   socket.on("chatMessage", (data) => {
     allMessages.push(data);
 
@@ -2222,24 +2553,18 @@ function setupSocketListeners() {
     appendMessage(data);
   });
 
-  // Online users update
   socket.on("onlineUsers", (users) => {
     onlineUsers = new Set(users);
     updateOnlineStatusIndicators();
   });
 
-  // Message seen confirmation
-socket.on("messageSeen", (data) => {
-  // Update the specific message
-  updateMessageSeenStatus(data.messageId);
-  
-  // Update the user list item
-  if (data.senderId) {
-    updateUserListItem(data.senderId);
-  }
-});
+  socket.on("messageSeen", (data) => {
+    updateMessageSeenStatus(data.messageId);
+    if (data.senderId) {
+      updateUserListItem(data.senderId);
+    }
+  });
 
-  // Message edited confirmation
   socket.on("messageEdited", (data) => {
     const msgIndex = allMessages.findIndex(m => m.id === data.messageId);
     if (msgIndex !== -1) {
@@ -2249,24 +2574,21 @@ socket.on("messageSeen", (data) => {
     }
   });
 
-  // Message deleted confirmation
   socket.on("messageDeleted", (data) => {
     allMessages = allMessages.filter(m => m.id !== data.messageId);
     renderMessages();
   });
 }
 
-// Load unread message and notification counts
+// Other existing functions (simplified for brevity)
 async function loadUnreadCounts() {
   try {
-    // Load unread message count
     const messagesResponse = await fetch(`/api/messages/unread-count/${userId}`);
     const messagesData = await messagesResponse.json();
     if (messagesData.success) {
       updateTotalUnreadCount(messagesData.count);
     }
 
-    // Load unread notification count
     const notificationsResponse = await fetch(`/api/notifications/unread-count/${userId}`);
     const notificationsData = await notificationsResponse.json();
     if (notificationsData.success) {
@@ -2277,7 +2599,6 @@ async function loadUnreadCounts() {
   }
 }
 
-// Count unread messages from a specific sender
 function countUnreadMessages(senderId) {
   return allMessages.filter(m => 
     m.from === senderId && 
@@ -2286,7 +2607,6 @@ function countUnreadMessages(senderId) {
   ).length;
 }
 
-// Update total unread count in header
 function updateTotalUnreadCount(count) {
   const totalUnread = count || Array.from(unreadSenders).reduce((total, senderId) => {
     return total + countUnreadMessages(senderId);
@@ -2301,7 +2621,6 @@ function updateTotalUnreadCount(count) {
   }
 }
 
-// Update notification unread count
 function updateNotificationUnreadCount(count) {
   unreadUpdatesCount = count;
   const badge = document.getElementById("notificationCountBadge");
@@ -2313,14 +2632,12 @@ function updateNotificationUnreadCount(count) {
   }
 }
 
-// Initialize notification permission
 function initNotifications() {
   if ("Notification" in window) {
     Notification.requestPermission();
   }
 }
 
-// Play notification sound
 function playNotificationSound() {
   if (notifySound) {
     try {
@@ -2332,7 +2649,6 @@ function playNotificationSound() {
   }
 }
 
-// Toggle sidebar
 function toggleSidebar() {
   document.getElementById('sidebar').classList.toggle('show');
   document.getElementById('mainContent').classList.toggle('expanded');
@@ -2343,7 +2659,6 @@ function hideSidebar() {
   document.getElementById('mainContent').classList.remove('expanded');
 }
 
-// Toggle profile card
 function toggleProfileCard() {
   const profileCard = document.getElementById('profileCard');
   profileCard.classList.toggle('show');
@@ -2353,7 +2668,6 @@ function hideProfileCard() {
   document.getElementById('profileCard').classList.remove('show');
 }
 
-// Toggle notifications
 function toggleNotifications() {
   const panel = document.getElementById('updatePanel');
   panel.classList.toggle('show');
@@ -2369,7 +2683,6 @@ function hideNotifications() {
   document.getElementById('updatePanel').classList.remove('show');
 }
 
-// Mark notifications as read
 async function markNotificationsAsRead() {
   try {
     const response = await fetch('/api/notifications/mark-as-read', {
@@ -2391,7 +2704,6 @@ async function markNotificationsAsRead() {
   }
 }
 
-// Toggle chat user list
 function toggleChatUserList() {
   if (isMobile) {
     document.getElementById('fullScreenUserList').classList.toggle('show');
@@ -2412,12 +2724,10 @@ function hideChatUserList() {
   document.getElementById('fullScreenUserList').classList.remove('show');
 }
 
-// Close full screen user list
 function closeFullScreenUserList() {
   document.getElementById('fullScreenUserList').classList.remove('show');
 }
 
-// Load chat users
 function loadChatUsers() {
   fetch("/api/users")
     .then(res => res.json())
@@ -2445,7 +2755,6 @@ function loadChatUsers() {
           </div>
         `;
         
-        // Only add unread count if there are unread messages
         if (unreadCount > 0) {
           const unreadBadge = document.createElement("span");
           unreadBadge.className = "user-unread-count";
@@ -2464,7 +2773,7 @@ function loadChatUsers() {
       container.innerHTML = '<p>Error loading users. Please try again.</p>';
     });
 }
-    // Update online status indicators
+
 function updateOnlineStatusIndicators() {
   Object.keys(userElements).forEach(userId => {
     const dot = document.getElementById(`online-${userId}`);
@@ -2474,7 +2783,6 @@ function updateOnlineStatusIndicators() {
   });
 }
 
-// Load user profile
 function loadUserProfile() {
   const token = localStorage.getItem('token');
   
@@ -2510,29 +2818,6 @@ function loadUserProfile() {
     });
 }
 
-// Load last active chat if exists
-async function loadLastActiveChat() {
-  const lastActiveChatId = localStorage.getItem('lastActiveChat');
-  if (lastActiveChatId) {
-    try {
-      const userResponse = await fetch(`/api/users`);
-      const users = await userResponse.json();
-      const chatUser = users.find(u => u.userId === lastActiveChatId);
-      
-      if (chatUser) {
-        const messagesResponse = await fetch(`/api/chat-history/${userId}/${lastActiveChatId}`);
-        const { messages } = await messagesResponse.json();
-        
-        allMessages = messages || [];
-        openChatWith(chatUser);
-      }
-    } catch (error) {
-      console.error("Failed to load last active chat:", error);
-    }
-  }
-}
-
-// Open chat with a user
 function openChatWith(user) {
   activeChatUser = user;
   localStorage.setItem('lastActiveChat', user.userId);
@@ -2548,7 +2833,7 @@ function openChatWith(user) {
     document.getElementById("chatInput").value = '';
     document.getElementById("chatWith").innerHTML = `<i class="fas fa-user"></i> Chat with ${user.username}`;
   }
-// Remove unread count from user list
+
   const userElement = userElements[user.userId];
   if (userElement) {
     const unreadBadge = userElement.querySelector('.user-unread-count');
@@ -2557,7 +2842,6 @@ function openChatWith(user) {
     }
   }
 
-  // Remove from unread senders and update counts
   unreadSenders.delete(user.userId);
   updateTotalUnreadCount();
   currentPage = 1;
@@ -2567,7 +2851,6 @@ function openChatWith(user) {
   markMessagesAsRead(user.userId);
 }
 
-  // Mark messages as read
 function updateUserListItem(userId) {
   const userElement = userElements[userId];
   if (userElement) {
@@ -2578,7 +2861,6 @@ function updateUserListItem(userId) {
   }
 }
 
-// Modified markMessagesAsRead function
 async function markMessagesAsRead(senderId) {
   try {
     const unseenMessages = allMessages.filter(m => 
@@ -2602,13 +2884,11 @@ async function markMessagesAsRead(senderId) {
       });
 
       if (response.ok) {
-        // Update local messages
         unseenMessages.forEach(msg => {
           msg.seen = true;
           msg.seenTimestamp = Date.now();
         });
         
-        // Update UI
         updateUserListItem(senderId);
         renderMessages();
         updateTotalUnreadCount();
@@ -2619,7 +2899,6 @@ async function markMessagesAsRead(senderId) {
   }
 }
 
-// Render messages in chat
 function renderMessages(isPrepend = false) {
   const box = isMobile ? document.getElementById("fullChatMessages") : document.getElementById("chatMessages");
   
@@ -2665,7 +2944,6 @@ function renderMessages(isPrepend = false) {
   }
 }
 
-// Create message element for DOM
 function createMessageElement(msg) {
   const isMe = msg.from === userId;
   
@@ -2726,7 +3004,6 @@ function createMessageElement(msg) {
   return messageDiv;
 }
 
-// Show context menu for message actions
 function showContextMenu(e, msg) {
   selectedMessage = msg;
   const menu = document.getElementById('contextMenu');
@@ -2739,7 +3016,6 @@ function showContextMenu(e, msg) {
   menu.style.top = `${y}px`;
 }
 
-// Edit selected message
 function editSelectedMessage() {
   if (!selectedMessage) return;
   
@@ -2764,7 +3040,6 @@ function editSelectedMessage() {
   document.getElementById('contextMenu').style.display = 'none';
 }
 
-// Delete selected message
 function deleteSelectedMessage() {
   if (!selectedMessage) return;
   
@@ -2781,7 +3056,6 @@ function deleteSelectedMessage() {
   document.getElementById('contextMenu').style.display = 'none';
 }
 
-// Update message seen status
 function updateMessageSeenStatus(messageId) {
   const msgIndex = allMessages.findIndex(m => m._id === messageId);
   if (msgIndex !== -1) {
@@ -2791,7 +3065,6 @@ function updateMessageSeenStatus(messageId) {
   }
 }
 
-// Send message
 function sendMessage() {
   const input = document.getElementById("chatInput");
   const message = input.value.trim();
@@ -2811,7 +3084,6 @@ function sendMessage() {
   input.value = "";
 }
 
-// Send message from full screen chat
 function sendFullScreenMessage() {
   const input = document.getElementById("fullChatInput");
   const message = input.value.trim();
@@ -2831,7 +3103,6 @@ function sendFullScreenMessage() {
   input.value = "";
 }
 
-    // Add this function to load notifications
 async function loadNotifications() {
   try {
     const response = await fetch('/api/updates');
@@ -2867,7 +3138,6 @@ async function loadNotifications() {
       updatesList.appendChild(updateItem);
     });
     
-    // Update unread count
     updateNotificationUnreadCount(updates.length);
     
   } catch (error) {
@@ -2876,7 +3146,6 @@ async function loadNotifications() {
   }
 }
 
-// Add this function to show update details
 function showUpdateDetail(update) {
   const modal = document.createElement('div');
   modal.style.position = 'fixed';
@@ -2912,7 +3181,6 @@ function showUpdateDetail(update) {
   modal.appendChild(content);
   document.body.appendChild(modal);
   
-  // Close modal when clicking outside
   modal.addEventListener('click', (e) => {
     if (e.target === modal) {
       modal.remove();
@@ -2920,26 +3188,22 @@ function showUpdateDetail(update) {
   });
 }
     
-// Append single message to chat
 function appendMessage(msg) {
   const box = isMobile ? document.getElementById("fullChatMessages") : document.getElementById("chatMessages");
   box.appendChild(createMessageElement(msg));
   box.scrollTop = box.scrollHeight;
 }
 
-// Close chat
 function closeChat() {
   document.getElementById("chatBox").classList.remove('show');
   activeChatUser = null;
 }
 
-// Close full screen chat
 function closeFullScreenChat() {
   document.getElementById("fullScreenChat").classList.remove('show');
   activeChatUser = null;
 }
 
-// Show desktop notification
 function showDesktopNotification(title, body) {
   if ("Notification" in window && Notification.permission === "granted") {
     new Notification(title, {
@@ -2949,7 +3213,6 @@ function showDesktopNotification(title, body) {
   }
 }
 
-// Show toast notification
 function showToast(message) {
   const toast = document.getElementById('toast');
   toast.textContent = message;
@@ -2964,100 +3227,11 @@ function showToast(message) {
   }, 2000);
 }
 
-// Logout function
 function logout(forceRedirect = false) {
   localStorage.clear();
   window.location.href = 'index.html';
 }
 
-// Load table data
-function loadTable(category) {
-  currentCategory = category;
-  fetch(`/api/excel-data/${category}`)
-    .then(res => res.json())
-    .then(res => {
-      if (res.success) {
-        originalData = res.data;
-        renderTable(res.data);
-
-        const filter = document.getElementById("materialFilter");
-        if (category === 'WOOD PO') {
-          const materialSet = new Set(res.data.slice(1).map(row => row[3]));
-          filter.innerHTML = '<option value="">All Materials</option>' + [...materialSet].map(m => `<option>${m}</option>`).join('');
-          filter.style.display = 'block';
-        } else {
-          filter.style.display = 'none';
-        }
-      }
-    });
-}
-
-// Render table
-function renderTable(data) {
-  const thead = document.querySelector("#dataTable thead");
-  const tbody = document.querySelector("#dataTable tbody");
-  thead.innerHTML = "";
-  tbody.innerHTML = "";
-
-  if (data.length === 0) return;
-
-  const table = document.getElementById("dataTable");
-  table.className = currentCategory === 'SHIFT SCHEDULE' ? 'shift-schedule-freeze' : '';
-
-  // Create header row
-  const headerRow = document.createElement("tr");
-  data[0].forEach((col, index) => {
-    const th = document.createElement("th");
-    th.textContent = col;
-    if (currentCategory === 'SHIFT SCHEDULE' && index < 5) {
-      th.classList.add('freeze-col');
-    }
-    headerRow.appendChild(th);
-  });
-  thead.appendChild(headerRow);
-
-  // Create data rows
-  data.slice(1).forEach((row, rowIndex) => {
-    const tr = document.createElement("tr");
-
-    const rowText = row.map(cell => String(cell).toUpperCase()).join(" ");
-    if (currentCategory === 'WOOD PO') {
-      if (rowText.includes("RAMPUR")) tr.style.background = "#00ff40";
-      else if (rowText.includes("SITAPUR")) tr.style.background = "#ff00ff";
-      else if (rowText.includes("OTHER")) tr.style.background = "#00ffff";
-    }
-
-    row.forEach((cell, colIndex) => {
-      const td = document.createElement("td");
-      const value = typeof cell === 'object' ? (cell.text || '') : String(cell);
-
-      if (currentCategory === 'WOOD PO' && colIndex === 0) {
-        td.innerHTML = `<button onclick="copyText('${value}', 'PO Copied')" style="background:var(--primary); color:white; border:none; padding:0.3rem 0.6rem; border-radius:4px; cursor:pointer;">${value}</button>`;
-      } else if (currentCategory === 'ID PASSWORD' && colIndex === 1) {
-        td.innerHTML = `<button onclick="copyText('${value}', 'Password Copied')" style="background:var(--success); color:white; border:none; padding:0.3rem 0.6rem; border-radius:4px; cursor:pointer;">${isMobile ? value : '******'}</button>`;
-      } else {
-        td.textContent = value;
-      }
-
-      if (currentCategory === 'SHIFT SCHEDULE') {
-        if (rowIndex < 2 || colIndex < 5) td.style.background = 'rgba(173, 216, 230, 0.3)';
-        if (value === 'R') td.style.background = 'green';
-        else if (value === 'L') td.style.background = 'red';
-        else if (value === 'G') td.style.background = 'yellow';
-      }
-
-      if (currentCategory === 'SHIFT SCHEDULE' && colIndex < 5) {
-        td.classList.add('freeze-col');
-      }
-
-      tr.appendChild(td);
-    });
-
-    tbody.appendChild(tr);
-  });
-}
-
-// Copy text to clipboard
 function copyText(text, message) {
   navigator.clipboard.writeText(text).then(() => {
     showToast(message);
@@ -3066,7 +3240,6 @@ function copyText(text, message) {
   });
 }
 
-// Apply filters to table
 function applyFilters() {
   let filtered = [...originalData];
   const searchVal = document.getElementById("searchBox").value.toLowerCase();
@@ -3082,7 +3255,6 @@ function applyFilters() {
   renderTable([originalData[0], ...filtered]);
 }
 
-// Show team modal
 function showTeam() {
   document.getElementById('teamModal').classList.add('show');
   fetch('/api/users')
@@ -3102,17 +3274,14 @@ function showTeam() {
     });
 }
 
-// Hide team modal
 function hideTeam() {
   document.getElementById('teamModal').classList.remove('show');
 }
 
-// Go to home page
 function goHome() {
   window.location.href = 'dashboard.html';
 }
 
-// Handle beforeunload event
 window.addEventListener("beforeunload", function(e) {
   if (socket && activeChatUser) {
     const unseenMessages = allMessages.filter(m => 
